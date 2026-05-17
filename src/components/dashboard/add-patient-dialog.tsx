@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Plus, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,23 +23,55 @@ const initialForm = {
 type PatientForm = typeof initialForm;
 
 export function AddPatientDialog() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<PatientForm>(initialForm);
-  const [saved, setSaved] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function updateField(field: keyof PatientForm, value: string) {
-    setSaved(false);
+    setMessage("");
+    setError("");
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaved(true);
+    setLoading(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to save patient details.");
+      }
+
+      setForm(initialForm);
+      setMessage(
+        payload.demo
+          ? "Patient saved in the local demo store. Add Supabase keys for permanent production storage."
+          : "Patient saved to Supabase. The registry will stay updated after refresh.",
+      );
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to save patient details.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function closeDialog() {
     setOpen(false);
-    setSaved(false);
+    setMessage("");
+    setError("");
   }
 
   return (
@@ -79,13 +112,15 @@ export function AddPatientDialog() {
             </div>
 
             <form onSubmit={handleSubmit} className="grid gap-5 p-5">
-              {saved ? (
+              {message ? (
                 <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
                   <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
-                  <span>
-                    Patient details captured for this demo. Connect Supabase to save new
-                    patients permanently.
-                  </span>
+                  <span>{message}</span>
+                </div>
+              ) : null}
+              {error ? (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
+                  {error}
                 </div>
               ) : null}
 
@@ -167,9 +202,9 @@ export function AddPatientDialog() {
                 <Button type="button" variant="secondary" onClick={closeDialog}>
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={loading}>
                   <Save className="size-4" />
-                  Save patient details
+                  {loading ? "Saving..." : "Save patient details"}
                 </Button>
               </div>
             </form>

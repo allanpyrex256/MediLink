@@ -101,6 +101,7 @@ create table public.patients (
   medical_history jsonb not null default '[]'::jsonb,
   allergies jsonb not null default '[]'::jsonb,
   emergency_contact jsonb,
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

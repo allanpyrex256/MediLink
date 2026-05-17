@@ -66,6 +66,27 @@ export async function saveLocalDemoAppointment({
   return appointment;
 }
 
+export async function saveLocalDemoPatient({
+  workspaceId,
+  patient,
+}: {
+  workspaceId: DemoWorkspaceId;
+  patient: Patient;
+}) {
+  const state = await readDemoState();
+  const workspace = state.workspaces[workspaceId] ?? emptyWorkspace();
+  const existingPatient = workspace.patients.find((item) => item.phone === patient.phone);
+  const storedPatient = existingPatient ? { ...patient, id: existingPatient.id } : patient;
+
+  workspace.patients = existingPatient
+    ? workspace.patients.map((item) => (item.id === existingPatient.id ? storedPatient : item))
+    : [...workspace.patients, storedPatient];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return storedPatient;
+}
+
 export async function saveLocalDemoPublicBooking({
   workspaceId,
   tenant,

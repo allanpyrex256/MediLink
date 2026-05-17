@@ -97,6 +97,7 @@ export interface Patient {
     name: string;
     phone: string;
   } | null;
+  metadata?: Record<string, unknown> | null;
   created_at: string;
 }
 
