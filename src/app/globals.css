@@ -9,6 +9,7 @@
   --surface-muted: #eaf4ff;
   --border-soft: #c3d2e4;
   --border-strong: #9fb1c7;
+  --border-tint: rgba(100, 116, 139, 0.32);
   --shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.16);
   --shadow-strong: 0 18px 42px rgba(15, 23, 42, 0.13), 0 0 0 1px rgba(148, 163, 184, 0.22);
 }
@@ -67,6 +68,10 @@ textarea {
   border-color: #aabbd0 !important;
 }
 
+.border-slate-400 {
+  border-color: #8ea1b8 !important;
+}
+
 .border-violet-100 {
   border-color: #ddd2ff !important;
 }
@@ -95,6 +100,22 @@ textarea {
   background-color: #e7f4ff !important;
 }
 
+.bg-emerald-50 {
+  background-color: #e9f8f0 !important;
+}
+
+.bg-violet-50 {
+  background-color: #f1ecff !important;
+}
+
+.bg-amber-50 {
+  background-color: #fff6da !important;
+}
+
+.bg-rose-50 {
+  background-color: #fff0f3 !important;
+}
+
 .shadow-sm {
   box-shadow: 0 3px 9px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.12) !important;
 }
@@ -104,8 +125,42 @@ textarea {
 }
 
 .shadow-lg,
-.shadow-xl {
+.shadow-xl,
+.shadow-2xl {
   box-shadow: var(--shadow-strong) !important;
+}
+
+:where(.divide-slate-100, .divide-slate-200) > :not([hidden]) ~ :not([hidden]) {
+  border-color: #d0dce9 !important;
+}
+
+:where([class*="rounded-md"], [class*="rounded-lg"], [class*="rounded-xl"])[class*="bg-white"]:not([class*="border"]) {
+  border: 1px solid var(--border-soft);
+}
+
+:where([class*="rounded-md"], [class*="rounded-lg"], [class*="rounded-xl"])[class*="bg-slate-50"]:not([class*="border"]) {
+  border: 1px solid #d0dce9;
+}
+
+:where([class*="rounded-md"], [class*="rounded-lg"], [class*="rounded-xl"])[class*="border"] {
+  background-clip: padding-box;
+}
+
+:where([class*="rounded-md"], [class*="rounded-lg"], [class*="rounded-xl"])[class*="border"][class*="bg-white"] {
+  box-shadow: var(--shadow-soft);
+}
+
+:where(header, aside)[class*="bg-white"] {
+  box-shadow: 0 1px 0 rgba(100, 116, 139, 0.18), 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+:where(table) {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+:where(th, td) {
+  border-color: #d0dce9;
 }
 
 input,
