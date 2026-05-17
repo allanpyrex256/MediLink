@@ -5,8 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import type { ElementType } from "react";
 import { useState } from "react";
 import {
+  Activity,
   Bell,
   BriefcaseBusiness,
+  Building2,
   CalendarDays,
   ChevronDown,
   ClipboardList,
@@ -16,8 +18,9 @@ import {
   LogOut,
   Menu,
   Package,
+  Pill,
+  ReceiptText,
   Settings,
-  ShieldCheck,
   Stethoscope,
   Users,
   X,
@@ -50,6 +53,20 @@ const baseNavigation: Array<{
   { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["admin"] },
 ];
 
+const platformNavigation: Array<{
+  href: string;
+  label: string;
+  icon: ElementType;
+}> = [
+  { href: "/super-admin", label: "Business Dashboard", icon: Home },
+  { href: "/super-admin/hospitals", label: "Hospitals", icon: Building2 },
+  { href: "/super-admin/pharmacies", label: "Pharmacies", icon: Pill },
+  { href: "/super-admin/billing", label: "Billing", icon: CreditCard },
+  { href: "/super-admin/plans", label: "Subscription Plans", icon: ReceiptText },
+  { href: "/super-admin/activity", label: "Tenant Activity", icon: Activity },
+  { href: "/super-admin/support", label: "Support Tickets", icon: Users },
+];
+
 export function AppShell({
   tenant,
   user,
@@ -64,16 +81,28 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
-  const roleLabel = user.role === "admin" ? "Administrator" : user.role;
+  const roleLabel = user.is_platform_admin
+    ? "SaaS Owner"
+    : user.role === "admin"
+      ? "Administrator"
+      : user.role;
   const roleNavigation = baseNavigation.filter(
     (item) => !item.roles || item.roles.includes(user.role),
   );
-  const navigation = user.is_platform_admin
+  const navigation = user.is_platform_admin ? platformNavigation : roleNavigation;
+  const quickActions = user.is_platform_admin
     ? [
-        ...roleNavigation,
-        { href: "/super-admin", label: "Super Admin", icon: ShieldCheck },
+        { href: "/super-admin/hospitals", label: "Manage hospitals", icon: Building2 },
+        { href: "/super-admin/pharmacies", label: "Manage pharmacies", icon: Pill },
+        { href: "/super-admin/billing", label: "Review billing", icon: CreditCard },
+        { href: "/super-admin/support", label: "Open tickets", icon: Users },
       ]
-    : roleNavigation;
+    : [
+        { href: "/dashboard/appointments", label: "New appointment", icon: CalendarDays },
+        { href: "/dashboard/patients", label: "Register patient", icon: Users },
+        { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
+        { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Package },
+      ];
 
   async function signOut() {
     if (hasSupabaseConfig()) {
@@ -89,7 +118,13 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#eef6ff_0%,#f8fbff_48%,#ecfdf5_100%)] text-[#07082f]">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[300px] border-r border-slate-300 bg-white/95 shadow-xl shadow-slate-200/60 lg:flex lg:flex-col">
-        <SidebarContent pathname={pathname} tenant={tenant} navigation={navigation} onSignOut={signOut} />
+        <SidebarContent
+          pathname={pathname}
+          tenant={tenant}
+          navigation={navigation}
+          onSignOut={signOut}
+          platformMode={user.is_platform_admin}
+        />
       </aside>
 
       <AnimatePresence>
@@ -118,14 +153,15 @@ export function AppShell({
                   <X className="size-5" />
                 </Button>
               </div>
-              <SidebarContent
-                pathname={pathname}
-                tenant={tenant}
-                navigation={navigation}
-                onNavigate={() => setMobileOpen(false)}
-                onSignOut={signOut}
-                compact
-              />
+                <SidebarContent
+                  pathname={pathname}
+                  tenant={tenant}
+                  navigation={navigation}
+                  onNavigate={() => setMobileOpen(false)}
+                  onSignOut={signOut}
+                  platformMode={user.is_platform_admin}
+                  compact
+                />
             </motion.aside>
           </motion.div>
         ) : null}
@@ -164,12 +200,7 @@ export function AppShell({
                       transition={{ duration: 0.16 }}
                       className="absolute right-0 mt-2 w-64 rounded-lg border border-slate-300 bg-white p-2 shadow-2xl shadow-slate-200"
                     >
-                      {[
-                        { href: "/dashboard/appointments", label: "New appointment", icon: CalendarDays },
-                        { href: "/dashboard/patients", label: "Register patient", icon: Users },
-                        { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
-                        { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Package },
-                      ].map((action) => {
+                      {quickActions.map((action) => {
                         const Icon = action.icon;
                         return (
                           <Link
@@ -230,14 +261,7 @@ export function AppShell({
         </header>
 
         <main className="px-5 py-7 sm:px-8">
-          <motion.div
-            key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {children}
-          </motion.div>
+          <div key={pathname}>{children}</div>
         </main>
       </div>
     </div>
@@ -251,6 +275,7 @@ function SidebarContent({
   onNavigate,
   onSignOut,
   compact = false,
+  platformMode = false,
 }: {
   pathname: string;
   tenant: Tenant;
@@ -258,6 +283,7 @@ function SidebarContent({
   onNavigate?: () => void;
   onSignOut: () => void;
   compact?: boolean;
+  platformMode?: boolean;
 }) {
   return (
     <>
@@ -274,18 +300,20 @@ function SidebarContent({
       <div className="mt-auto p-4">
         <div className="overflow-hidden rounded-lg border border-violet-200 bg-gradient-to-br from-white to-violet-50/70 shadow-md shadow-violet-100">
           <div className="p-4">
-            <p className="text-sm font-bold text-slate-950">{tenant.name}</p>
+            <p className="text-sm font-bold text-slate-950">
+              {platformMode ? "MediLink Platform" : tenant.name}
+            </p>
             <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-emerald-600">
               <span className="size-2 rounded-full bg-emerald-500" />
-              Active
+              {platformMode ? "Owner view" : "Active"}
             </p>
           </div>
           <Link
-            href="/dashboard/branches"
+            href={platformMode ? "/super-admin/hospitals" : "/dashboard/branches"}
             onClick={onNavigate}
             className="flex h-12 w-full items-center justify-between border-t border-violet-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-violet-50"
           >
-            All Branches
+            {platformMode ? "All Tenants" : "All Branches"}
             <ChevronDown className="size-4" />
           </Link>
           <button

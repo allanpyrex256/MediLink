@@ -13,6 +13,12 @@ export function formatUgandanCurrency(amount: number, currency = "UGX") {
   }).format(amount);
 }
 
+export function formatUgx(amount: number) {
+  return `UGX ${new Intl.NumberFormat("en-UG", {
+    maximumFractionDigits: 0,
+  }).format(amount)}`;
+}
+
 export function formatCompactNumber(value: number) {
   return new Intl.NumberFormat("en-UG", {
     notation: "compact",
