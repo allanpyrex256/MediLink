@@ -6,15 +6,15 @@ import {
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { platformMetrics, platformTenants, revenueGrowth } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
 import { formatUgx } from "@/lib/utils";
 
 export const metadata = {
   title: "Revenue | MediLink",
 };
 
-export default function RevenuePage() {
-  const metrics = platformMetrics();
+export default async function RevenuePage() {
+  const { metrics, tenants, revenueGrowth } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -38,7 +38,7 @@ export default function RevenuePage() {
           <PlatformRevenueChart data={revenueGrowth} />
         </CardContent>
       </Card>
-      <BillingLedger tenants={platformTenants} />
+      <BillingLedger tenants={tenants} />
     </div>
   );
 }

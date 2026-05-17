@@ -8,13 +8,15 @@ import {
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { platformTenants, subscriptionStatus, tenantGrowth } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
 
 export const metadata = {
   title: "Analytics | MediLink",
 };
 
-export default function AnalyticsPage() {
+export default async function AnalyticsPage() {
+  const { tenants, subscriptionStatus, tenantGrowth } = await getPlatformOverview();
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <PlatformSectionHeader
@@ -43,7 +45,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-      <ActivityList tenants={platformTenants} />
+      <ActivityList tenants={tenants} />
     </div>
   );
 }

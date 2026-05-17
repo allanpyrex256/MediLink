@@ -401,11 +401,29 @@ declare
   tenant_slug text;
   tenant_kind public.tenant_kind;
   user_role public.user_role;
+  subscription_plan text;
+  subscription_amount numeric(12, 2);
+  payment_method text;
+  billing_phone text;
 begin
   tenant_name := coalesce(new.raw_user_meta_data->>'tenant_name', 'New MediLink Clinic');
   tenant_slug := coalesce(new.raw_user_meta_data->>'tenant_slug', lower(regexp_replace(tenant_name, '[^a-zA-Z0-9]+', '-', 'g')));
   tenant_kind := coalesce((new.raw_user_meta_data->>'tenant_kind')::public.tenant_kind, 'clinic');
   user_role := coalesce((new.raw_user_meta_data->>'role')::public.user_role, 'admin');
+  subscription_plan := coalesce(new.raw_user_meta_data->>'subscription_plan', 'starter');
+  payment_method := coalesce(new.raw_user_meta_data->>'payment_method', 'mtn_momo');
+  billing_phone := coalesce(new.raw_user_meta_data->>'billing_phone', new.raw_user_meta_data->>'phone', '+256');
+
+  if subscription_plan not in ('starter', 'growth', 'enterprise') then
+    subscription_plan := 'starter';
+  end if;
+
+  subscription_amount := case subscription_plan
+    when 'starter' then 50000
+    when 'growth' then 150000
+    when 'enterprise' then 450000
+    else 50000
+  end;
 
   insert into public.tenants (tenant_kind, name, slug, legal_name, region, address, phone, email, status, subdomain, created_by)
   values (
@@ -415,7 +433,7 @@ begin
     tenant_name,
     coalesce(new.raw_user_meta_data->>'region', 'Uganda'),
     coalesce(new.raw_user_meta_data->>'address', 'Pending setup'),
-    coalesce(new.raw_user_meta_data->>'phone', '+256'),
+    billing_phone,
     new.email,
     'trialing',
     tenant_slug,
@@ -431,7 +449,7 @@ begin
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name', new.email),
     user_role,
-    new.raw_user_meta_data->>'phone',
+    billing_phone,
     new.raw_user_meta_data->>'avatar_url'
   )
   on conflict (id) do update
@@ -448,8 +466,8 @@ begin
     (created_tenant_id, 'patient', 'Patient portal access', '{"view_own_records": true}'::jsonb)
   on conflict (tenant_id, name) do nothing;
 
-  insert into public.subscriptions (tenant_id, plan, status, amount, currency)
-  values (created_tenant_id, 'starter', 'trialing', 0, 'UGX')
+  insert into public.subscriptions (tenant_id, plan, status, amount, currency, provider)
+  values (created_tenant_id, subscription_plan, 'trialing', subscription_amount, 'UGX', payment_method)
   on conflict do nothing;
 
   return new;

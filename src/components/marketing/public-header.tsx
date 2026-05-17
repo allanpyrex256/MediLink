@@ -71,7 +71,7 @@ export function PublicHeader({ active }: { active?: PublicNavKey }) {
             Log in
           </Link>
           <Link
-            href="/#contact"
+            href="/register?intent=demo&plan=growth"
             className="hidden h-12 items-center justify-center rounded-lg bg-violet-600 px-8 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 sm:inline-flex"
           >
             Request Demo
@@ -119,7 +119,7 @@ export function PublicHeader({ active }: { active?: PublicNavKey }) {
                 Log in
               </Link>
               <Link
-                href="/#contact"
+                href="/register?intent=demo&plan=growth"
                 onClick={() => setMobileOpen(false)}
                 className="rounded-lg bg-violet-600 px-4 py-3 text-sm font-bold text-white"
               >

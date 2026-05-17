@@ -21,15 +21,9 @@ import {
 } from "@/components/super-admin/platform-charts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  platformMetrics,
-  platformTenants,
-  revenueGrowth,
-  subscriptionStatus,
-  supportTickets,
-  tenantGrowth,
-} from "@/lib/platform-demo";
+import { supportTickets } from "@/lib/platform-demo";
 import type { PlatformTenant } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
 import { formatUgx } from "@/lib/utils";
 
 const statusTone = {
@@ -55,8 +49,14 @@ export const metadata = {
   title: "SaaS Owner Dashboard | MediLink",
 };
 
-export default function SuperAdminPage() {
-  const metrics = platformMetrics();
+export default async function SuperAdminPage() {
+  const {
+    metrics,
+    tenants: platformTenants,
+    revenueGrowth,
+    subscriptionStatus,
+    tenantGrowth,
+  } = await getPlatformOverview();
   const activeBusinesses = metrics.activeTenants + metrics.trialAccounts;
 
   return (

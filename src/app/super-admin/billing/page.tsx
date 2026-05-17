@@ -3,13 +3,15 @@ import {
   PlatformSectionHeader,
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
-import { platformTenants } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
 
 export const metadata = {
   title: "Billing | MediLink",
 };
 
-export default function BillingPage() {
+export default async function BillingPage() {
+  const { tenants } = await getPlatformOverview();
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <PlatformSectionHeader
@@ -18,7 +20,7 @@ export default function BillingPage() {
         description="Track payments, expired subscriptions, trial accounts, unpaid invoices, and upcoming renewals."
         icon={sectionIcons.billing}
       />
-      <BillingLedger tenants={platformTenants} />
+      <BillingLedger tenants={tenants} />
     </div>
   );
 }

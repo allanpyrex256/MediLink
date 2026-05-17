@@ -4,13 +4,15 @@ import {
   TenantDirectory,
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
-import { platformTenants } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
 
 export const metadata = {
   title: "Subscriptions | MediLink",
 };
 
-export default function SubscriptionsPage() {
+export default async function SubscriptionsPage() {
+  const { tenants } = await getPlatformOverview();
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <PlatformSectionHeader
@@ -21,7 +23,7 @@ export default function SubscriptionsPage() {
       />
       <PlanCards />
       <div className="mt-6">
-        <TenantDirectory tenants={platformTenants} />
+        <TenantDirectory tenants={tenants} />
       </div>
     </div>
   );

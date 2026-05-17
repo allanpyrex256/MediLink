@@ -3,13 +3,15 @@ import {
   TenantDirectory,
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
-import { platformTenants } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
 
 export const metadata = {
   title: "Hospitals | MediLink",
 };
 
-export default function HospitalsPage() {
+export default async function HospitalsPage() {
+  const { tenants } = await getPlatformOverview();
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <PlatformSectionHeader
@@ -18,7 +20,7 @@ export default function HospitalsPage() {
         description="Manage all hospitals using MediLink, including subscription plan, payment status, user count, and renewal dates."
         icon={sectionIcons.hospitals}
       />
-      <TenantDirectory tenants={platformTenants} kind="hospital" />
+      <TenantDirectory tenants={tenants} kind="hospital" />
     </div>
   );
 }

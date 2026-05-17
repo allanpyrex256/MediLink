@@ -10,7 +10,55 @@ import { Logo } from "@/components/ui/logo";
 import { Select } from "@/components/ui/select";
 import { demoAccountOptions, demoWorkspaceBranding } from "@/lib/demo-session";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
-import { slugify } from "@/lib/utils";
+import { formatUgx, slugify } from "@/lib/utils";
+
+const signupPlans = [
+  {
+    value: "starter",
+    label: "Starter",
+    description: "Small clinics and pharmacies",
+    amount: 50_000,
+  },
+  {
+    value: "growth",
+    label: "Clinic",
+    description: "Growing clinics and pharmacies",
+    amount: 150_000,
+  },
+  {
+    value: "enterprise",
+    label: "Hospital",
+    description: "Hospitals and larger facilities",
+    amount: 450_000,
+  },
+] as const;
+
+const paymentMethods = [
+  { value: "mtn_momo", label: "MTN MoMo" },
+  { value: "airtel_money", label: "Airtel Money" },
+  { value: "bank_transfer", label: "Bank transfer" },
+] as const;
+
+type SignupPlan = (typeof signupPlans)[number]["value"];
+type SignupPaymentMethod = (typeof paymentMethods)[number]["value"];
+
+function normalizeSignupPlan(value: FormDataEntryValue | string | null): SignupPlan {
+  const normalized = String(value ?? "").toLowerCase();
+  return signupPlans.some((plan) => plan.value === normalized)
+    ? (normalized as SignupPlan)
+    : "growth";
+}
+
+function normalizePaymentMethod(value: FormDataEntryValue | string | null): SignupPaymentMethod {
+  const normalized = String(value ?? "").toLowerCase();
+  return paymentMethods.some((method) => method.value === normalized)
+    ? (normalized as SignupPaymentMethod)
+    : "mtn_momo";
+}
+
+function planDetails(value: SignupPlan) {
+  return signupPlans.find((plan) => plan.value === value) ?? signupPlans[1];
+}
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -18,8 +66,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAccountEmail, setSelectedAccountEmail] = useState("admin@kampalahospital.ug");
+  const [selectedPlan, setSelectedPlan] = useState<SignupPlan>(
+    normalizeSignupPlan(searchParams.get("plan")),
+  );
   const next = searchParams.get("next") ?? "/dashboard";
   const configured = hasSupabaseConfig();
+  const selectedPlanDetails = planDetails(selectedPlan);
   const selectedAccount = demoAccountOptions.find((account) => account.email === selectedAccountEmail);
   const selectedBrand = selectedAccount ? demoWorkspaceBranding[selectedAccount.workspaceId] : null;
   const isPlatformOwner = selectedAccount?.isPlatformAdmin;
@@ -70,16 +122,39 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     setLoading(true);
     try {
+      let destination = next;
+
       if (mode === "login") {
         const { error: authError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (authError) throw authError;
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("users")
+            .select("is_platform_admin")
+            .eq("id", user.id)
+            .single();
+
+          if (profile?.is_platform_admin) {
+            destination = "/super-admin";
+          }
+        }
       } else {
         const tenantName = String(form.get("tenantName"));
         const tenantKind = String(form.get("tenantKind"));
         const fullName = String(form.get("fullName"));
+        const subscriptionPlan = normalizeSignupPlan(form.get("subscriptionPlan"));
+        const signupPlan = planDetails(subscriptionPlan);
+        const paymentMethod = normalizePaymentMethod(form.get("paymentMethod"));
+        const billingPhone = String(form.get("billingPhone") ?? "");
+        const region = String(form.get("region") ?? "");
+        const address = String(form.get("address") ?? "");
         const { error: authError } = await supabase.auth.signUp({
           email,
           password,
@@ -91,13 +166,20 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               tenant_slug: slugify(tenantName),
               tenant_kind: tenantKind,
               role: "admin",
+              subscription_plan: subscriptionPlan,
+              subscription_amount: signupPlan.amount,
+              payment_method: paymentMethod,
+              billing_phone: billingPhone,
+              phone: billingPhone,
+              region,
+              address,
             },
           },
         });
         if (authError) throw authError;
       }
 
-      router.push(next);
+      router.push(destination);
       router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Authentication failed");
@@ -138,7 +220,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <CardDescription>
             {mode === "login"
               ? "Access an isolated clinic, hospital, or pharmacy portal with role-based permissions."
-              : "Provision a clinic, hospital, or pharmacy tenant with a secure owner account."}
+              : "Provision a clinic, hospital, or pharmacy tenant, choose a demo plan, and add billing contact details."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -171,6 +253,36 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                 </Select>
                 <Input label="Clinic, hospital, or pharmacy name" name="tenantName" placeholder="Kampala Hospital" required />
                 <Input label="Owner full name" name="fullName" placeholder="Dr. Sarah Namusoke" required />
+                <div className="rounded-lg border border-violet-200 bg-violet-50 p-3">
+                  <Select
+                    label="Demo plan"
+                    name="subscriptionPlan"
+                    value={selectedPlan}
+                    onChange={(event) => setSelectedPlan(normalizeSignupPlan(event.target.value))}
+                  >
+                    {signupPlans.map((plan) => (
+                      <option key={plan.value} value={plan.value}>
+                        {plan.label} - {formatUgx(plan.amount)} / month
+                      </option>
+                    ))}
+                  </Select>
+                  <p className="mt-3 text-xs font-semibold leading-5 text-violet-700">
+                    {selectedPlanDetails.description}. Your 30-day demo starts now, and billing details appear in the MediLink owner dashboard for follow-up.
+                  </p>
+                </div>
+                <Select label="Preferred payment method" name="paymentMethod" defaultValue="mtn_momo" required>
+                  {paymentMethods.map((method) => (
+                    <option key={method.value} value={method.value}>
+                      {method.label}
+                    </option>
+                  ))}
+                </Select>
+                <Input label="Billing phone / MoMo number" name="billingPhone" placeholder="+256 7XX XXX XXX" required />
+                <Input label="Region or town" name="region" placeholder="Kampala" required />
+                <Input label="Business address" name="address" placeholder="Plot 14, Kampala Road" required />
+                <p className="rounded-lg bg-emerald-50 p-3 text-xs font-semibold leading-5 text-emerald-800">
+                  Demo signup records payment method and billing contact only. MediLink does not store raw card numbers.
+                </p>
               </>
             ) : null}
             {configured || mode === "register" ? (
@@ -184,7 +296,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             ) : null}
             <Button type="submit" disabled={loading}>
               {loading ? <Loader2 className="size-4 animate-spin" /> : null}
-              {mode === "login" && !configured ? "Open portal" : mode === "login" ? "Sign in" : "Create workspace"}
+              {mode === "login" && !configured
+                ? "Open portal"
+                : mode === "login"
+                  ? "Sign in"
+                  : "Create workspace and continue"}
             </Button>
           </form>
           {configured ? (

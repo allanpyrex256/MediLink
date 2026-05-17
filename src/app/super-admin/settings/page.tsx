@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
-import { platformTenants } from "@/lib/platform-demo";
+import type { PlatformTenant } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
+import { slugify } from "@/lib/utils";
 
 export const metadata = {
   title: "Platform Settings | MediLink",
@@ -46,42 +48,10 @@ const ownerControls = [
   },
 ];
 
-const brandingQueue = [
-  {
-    business: "Kampala Hospital",
-    domain: "kampala-hospital.medilink.ug",
-    logo: "Approved",
-    theme: "Purple",
-    storage: "418 MB",
-    status: "active",
-  },
-  {
-    business: "Mengo Clinic",
-    domain: "mengo-clinic.medilink.ug",
-    logo: "Needs review",
-    theme: "Blue",
-    storage: "186 MB",
-    status: "past_due",
-  },
-  {
-    business: "GoodLife Pharmacy",
-    domain: "goodlife-pharmacy.medilink.ug",
-    logo: "Approved",
-    theme: "Green",
-    storage: "203 MB",
-    status: "active",
-  },
-  {
-    business: "Vine Pharmacy",
-    domain: "vine-pharmacy.medilink.ug",
-    logo: "Approved",
-    theme: "Green",
-    storage: "129 MB",
-    status: "active",
-  },
-];
+export default async function SettingsPage() {
+  const { tenants } = await getPlatformOverview();
+  const brandingQueue = brandingQueueForTenants(tenants);
 
-export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-[1500px]">
       <PlatformSectionHeader
@@ -147,7 +117,10 @@ export default function SettingsPage() {
                   <td className="px-5 py-4 text-slate-700">{item.theme}</td>
                   <td className="px-5 py-4 font-semibold text-slate-950">{item.storage}</td>
                   <td className="px-5 py-4">
-                    <Badge tone={item.status === "active" ? "green" : "rose"} className="capitalize">
+                    <Badge
+                      tone={item.status === "active" ? "green" : item.status === "trialing" ? "blue" : item.status === "past_due" ? "amber" : "rose"}
+                      className="capitalize"
+                    >
                       {item.status.replace("_", " ")}
                     </Badge>
                   </td>
@@ -165,12 +138,23 @@ export default function SettingsPage() {
       </Card>
 
       <div className="mt-6 grid gap-5 md:grid-cols-3">
-        <Summary label="Tenants" value={String(platformTenants.length)} />
-        <Summary label="Logos approved" value="4" />
+        <Summary label="Tenants" value={String(tenants.length)} />
+        <Summary label="Logos approved" value={String(brandingQueue.filter((item) => item.logo === "Approved").length)} />
         <Summary label="Storage used" value="1.2 GB" />
       </div>
     </div>
   );
+}
+
+function brandingQueueForTenants(tenants: PlatformTenant[]) {
+  return tenants.slice(0, 6).map((tenant, index) => ({
+    business: tenant.business,
+    domain: `${slugify(tenant.business)}.medilink.ug`,
+    logo: tenant.status === "trialing" ? "Needs review" : "Approved",
+    theme: tenant.kind === "pharmacy" ? "Green" : tenant.kind === "hospital" ? "Purple" : "Blue",
+    storage: `${120 + index * 36} MB`,
+    status: tenant.status,
+  }));
 }
 
 function Summary({ label, value }: { label: string; value: string }) {

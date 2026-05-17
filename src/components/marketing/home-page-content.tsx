@@ -100,7 +100,7 @@ const pricing = [
     period: "/month",
     body: "For clinics moving from paper records to a simple digital workflow.",
     features: ["Patient records", "Appointments", "Basic billing", "Monthly reports"],
-    href: "/#contact",
+    href: "/register?intent=demo&plan=starter",
     featured: false,
   },
   {
@@ -110,7 +110,7 @@ const pricing = [
     period: "/month",
     body: "For clinics that need staff roles, prescriptions, payments, and stock visibility.",
     features: ["Staff access control", "Prescription tracking", "MTN and Airtel payments", "Stock alerts"],
-    href: "/#contact",
+    href: "/register?intent=demo&plan=growth",
     featured: true,
   },
   {
@@ -120,7 +120,7 @@ const pricing = [
     period: "/month",
     body: "For hospitals that need departments, admissions, laboratory, pharmacy, and reports.",
     features: ["Admissions", "Laboratory", "Pharmacy operations", "Advanced reporting"],
-    href: "/#contact",
+    href: "/register?intent=demo&plan=enterprise",
     featured: false,
   },
 ] as const;
@@ -152,7 +152,7 @@ export function HomePageContent() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="#contact"
+                href="/register?intent=demo&plan=growth"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-violet-600 px-7 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:scale-[1.02] hover:bg-violet-700"
               >
                 Request Demo
@@ -337,7 +337,7 @@ export function HomePageContent() {
             </p>
           </div>
           <Link
-            href="/demo-flow"
+            href="/register?intent=demo&plan=growth"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-7 text-sm font-bold text-[#071133] transition hover:scale-[1.02] hover:bg-slate-100"
           >
             Request Demo

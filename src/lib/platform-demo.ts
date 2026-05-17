@@ -4,7 +4,7 @@ export type PlatformTenant = {
   id: string;
   business: string;
   kind: TenantKind;
-  plan: "Starter" | "Pro" | "Premium" | "Enterprise";
+  plan: "Starter" | "Clinic" | "Hospital" | "Pro" | "Premium" | "Enterprise";
   status: TenantStatus;
   lastPayment: string;
   nextDue: string;
@@ -176,15 +176,21 @@ export const subscriptionStatus = [
 export const subscriptionPlans = [
   {
     name: "Starter",
-    price: 120000,
+    price: 50000,
     tenants: 11,
     features: "Appointments, patients, billing, basic reports",
   },
   {
-    name: "Pro",
-    price: 240000,
+    name: "Clinic",
+    price: 150000,
     tenants: 13,
     features: "Pharmacy, labs, WhatsApp reminders, analytics",
+  },
+  {
+    name: "Hospital",
+    price: 450000,
+    tenants: 5,
+    features: "Departments, admissions, laboratory, pharmacy, reports",
   },
   {
     name: "Basic Pharmacy",
@@ -201,7 +207,7 @@ export const subscriptionPlans = [
   {
     name: "Enterprise",
     price: 780000,
-    tenants: 5,
+    tenants: 2,
     features: "Multi-branch, API access, priority support",
   },
 ];

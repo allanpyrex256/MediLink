@@ -3,13 +3,15 @@ import {
   PlatformSectionHeader,
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
-import { platformTenants } from "@/lib/platform-demo";
+import { getPlatformOverview } from "@/lib/platform-live";
 
 export const metadata = {
   title: "Payments | MediLink",
 };
 
-export default function PaymentsPage() {
+export default async function PaymentsPage() {
+  const { tenants } = await getPlatformOverview();
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <PlatformSectionHeader
@@ -18,7 +20,7 @@ export default function PaymentsPage() {
         description="Follow MTN MoMo, Airtel Money, bank transfer, trial, expired, and unpaid subscription accounts."
         icon={sectionIcons.payments}
       />
-      <BillingLedger tenants={platformTenants} />
+      <BillingLedger tenants={tenants} />
     </div>
   );
 }
