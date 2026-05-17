@@ -3,12 +3,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f3f8ff;
+  --background: #eef6ff;
   --foreground: #0f172a;
   --surface: #ffffff;
-  --surface-muted: #edf6ff;
-  --border-soft: #d7e2ee;
-  --border-strong: #cbd5e1;
+  --surface-muted: #eaf4ff;
+  --border-soft: #c3d2e4;
+  --border-strong: #9fb1c7;
+  --shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.16);
+  --shadow-strong: 0 18px 42px rgba(15, 23, 42, 0.13), 0 0 0 1px rgba(148, 163, 184, 0.22);
 }
 
 @theme inline {
@@ -20,7 +22,7 @@
 
 body {
   background:
-    linear-gradient(135deg, #edf6ff 0%, #fbfdff 45%, #ecfdf5 100%);
+    linear-gradient(135deg, #e7f1ff 0%, #f8fbff 44%, #eaf8f1 100%);
   color: var(--foreground);
 }
 
@@ -50,4 +52,73 @@ input,
 select,
 textarea {
   -webkit-tap-highlight-color: transparent;
+}
+
+.border-slate-100 {
+  border-color: #d9e3ef !important;
+}
+
+.border-slate-200,
+.border-slate-200\/80 {
+  border-color: #c6d5e6 !important;
+}
+
+.border-slate-300 {
+  border-color: #aabbd0 !important;
+}
+
+.border-violet-100 {
+  border-color: #ddd2ff !important;
+}
+
+.border-violet-200 {
+  border-color: #c9b8ff !important;
+}
+
+.border-emerald-200 {
+  border-color: #a7e3c2 !important;
+}
+
+.border-amber-200 {
+  border-color: #f6d58b !important;
+}
+
+.border-rose-200 {
+  border-color: #f5b5bf !important;
+}
+
+.bg-slate-50 {
+  background-color: #eff6ff !important;
+}
+
+.bg-sky-50 {
+  background-color: #e7f4ff !important;
+}
+
+.shadow-sm {
+  box-shadow: 0 3px 9px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.12) !important;
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.shadow-lg,
+.shadow-xl {
+  box-shadow: var(--shadow-strong) !important;
+}
+
+input,
+select,
+textarea {
+  border-color: var(--border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+thead {
+  box-shadow: inset 0 -1px 0 var(--border-soft);
+}
+
+tbody tr {
+  border-bottom: 1px solid #d9e3ef;
 }

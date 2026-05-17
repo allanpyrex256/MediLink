@@ -8,7 +8,7 @@ export function Card({
   return (
     <section
       className={cn(
-        "rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/60",
+        "rounded-lg border border-slate-300 bg-white shadow-md shadow-slate-300/40",
         className,
       )}
       {...props}
@@ -23,7 +23,7 @@ export function CardHeader({
   return (
     <div
       className={cn(
-        "border-b border-slate-100 bg-slate-50/70 p-5",
+        "border-b border-slate-300 bg-sky-50/80 p-5",
         className,
       )}
       {...props}

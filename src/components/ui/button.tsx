@@ -6,13 +6,13 @@ type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-sky-600 text-white shadow-sm shadow-sky-200 hover:bg-sky-700 focus-visible:outline-sky-600",
+    "bg-sky-600 text-white shadow-md shadow-sky-300/70 hover:bg-sky-700 focus-visible:outline-sky-600",
   secondary:
-    "border border-slate-300 bg-white text-slate-800 shadow-sm shadow-slate-200/70 hover:border-violet-300 hover:bg-violet-50 focus-visible:outline-sky-600",
+    "border border-slate-400 bg-white text-slate-800 shadow-sm shadow-slate-300/70 hover:border-violet-400 hover:bg-violet-50 focus-visible:outline-sky-600",
   ghost:
-    "text-slate-700 hover:bg-sky-50 hover:text-slate-950 focus-visible:outline-sky-600",
+    "border border-transparent text-slate-700 hover:border-slate-300 hover:bg-sky-50 hover:text-slate-950 focus-visible:outline-sky-600",
   danger:
-    "bg-rose-600 text-white shadow-sm shadow-rose-200 hover:bg-rose-700 focus-visible:outline-rose-600",
+    "bg-rose-600 text-white shadow-md shadow-rose-300/70 hover:bg-rose-700 focus-visible:outline-rose-600",
 };
 
 const sizes: Record<ButtonSize, string> = {
