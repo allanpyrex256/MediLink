@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Building2,
   CheckCircle2,
-  ClipboardList,
   CreditCard,
   FileText,
   Pill,
@@ -16,34 +15,40 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+const trustBadges = [
+  { label: "Secure patient data", icon: ShieldCheck },
+  { label: "Role-based access", icon: Users },
+  { label: "Built for Uganda clinics", icon: Building2 },
+] as const;
+
 const problemPoints = [
-  "Paper records get lost between reception, doctors, and billing.",
-  "Manual billing slows down patients and makes daily revenue hard to track.",
-  "Prescription and dispensing records become messy as clinics get busier.",
+  "Paper records get lost",
+  "Manual billing is slow",
+  "Prescription tracking is messy",
 ] as const;
 
 const solutionCards = [
   {
-    title: "Patient Management",
-    body: "Keep patient profiles, visits, appointments, and care history organized in one secure system.",
+    title: "Patient Records",
+    body: "Clean files, visit history, contacts, and care notes.",
     icon: Users,
     tone: "bg-sky-100 text-sky-700",
   },
   {
-    title: "Prescription & Dispensing Tracking",
-    body: "Record prescribed medicine, what was dispensed, stock impact, and pickup status without paperwork.",
+    title: "Prescription Tracking",
+    body: "Prescriptions, dispensing, stock movement, and pickup status.",
     icon: Pill,
     tone: "bg-emerald-100 text-emerald-700",
   },
   {
-    title: "Billing & Payments",
-    body: "Track UGX invoices, cashier collections, MTN MoMo, Airtel Money, and unpaid balances clearly.",
+    title: "Billing System",
+    body: "UGX invoices, cashier collections, MTN MoMo, and Airtel Money.",
     icon: WalletCards,
     tone: "bg-violet-100 text-violet-700",
   },
   {
-    title: "Staff & Clinic Control",
-    body: "Give reception, doctors, pharmacists, and clinic owners the right access for daily operations.",
+    title: "Clinic Control",
+    body: "Simple access for reception, doctors, pharmacy, and owners.",
     icon: Building2,
     tone: "bg-amber-100 text-amber-700",
   },
@@ -51,60 +56,72 @@ const solutionCards = [
 
 const benefits = [
   {
-    title: "Faster patient service",
-    body: "Reception, consultation, pharmacy, and billing teams work from shared, organized records.",
+    title: "Faster Service",
+    body: "Move patients through reception, consultation, pharmacy, and billing with less waiting.",
     icon: Zap,
   },
   {
-    title: "Reduced errors",
-    body: "Clear patient files, prescriptions, invoices, and stock information reduce everyday mistakes.",
+    title: "Fewer Errors",
+    body: "Reduce missing files, unclear prescriptions, and manual payment mistakes.",
     icon: ShieldCheck,
   },
   {
-    title: "Better revenue tracking",
-    body: "Clinic owners can see collections, unpaid bills, and mobile money activity with less guesswork.",
+    title: "Clear Revenue",
+    body: "See collections, unpaid bills, and mobile money activity without guesswork.",
     icon: CreditCard,
   },
   {
-    title: "Easy clinic operations",
-    body: "Simple workflows help teams move away from paper without forcing a complicated enterprise system.",
+    title: "Easy Operations",
+    body: "Keep the workflow simple enough for busy local teams to use daily.",
     icon: CheckCircle2,
   },
 ] as const;
 
 const steps = [
   {
-    title: "Register your clinic",
-    body: "Set up your clinic, hospital, or pharmacy profile with local contacts and branches.",
+    title: "Register clinic",
+    body: "Set up your clinic, hospital, or pharmacy profile.",
   },
   {
-    title: "Add staff & patients",
-    body: "Invite your team and start organizing patient records, appointments, stock, and billing.",
+    title: "Add team",
+    body: "Invite staff and add patient, stock, and billing records.",
   },
   {
-    title: "Start managing digitally",
-    body: "Run daily operations with cleaner records, faster service, and better financial visibility.",
+    title: "Go digital",
+    body: "Run daily operations with cleaner records and better control.",
   },
 ] as const;
 
 const pricing = [
   {
-    name: "Starter Plan",
-    price: "Affordable monthly subscription",
-    body: "For small clinics moving from paper records to simple digital operations.",
-    features: ["Patients and appointments", "Basic billing", "Clinic reports"],
+    name: "Starter",
+    audience: "Small clinics",
+    price: "UGX 50,000",
+    period: "/month",
+    body: "For clinics moving from paper records to a simple digital workflow.",
+    features: ["Patient records", "Appointments", "Basic billing", "Monthly reports"],
+    href: "/#contact",
+    featured: false,
   },
   {
-    name: "Clinic Plan",
-    price: "Built for growing teams",
-    body: "For clinics that need stronger staff control, prescriptions, and payment tracking.",
-    features: ["Staff access control", "Prescriptions", "MTN and Airtel tracking"],
+    name: "Clinic",
+    audience: "Growing teams",
+    price: "UGX 150,000",
+    period: "/month",
+    body: "For clinics that need staff roles, prescriptions, payments, and stock visibility.",
+    features: ["Staff access control", "Prescription tracking", "MTN and Airtel payments", "Stock alerts"],
+    href: "/#contact",
+    featured: true,
   },
   {
-    name: "Hospital Plan",
-    price: "For larger facilities",
-    body: "For hospitals that need departments, admissions, pharmacy, laboratory, and management reports.",
-    features: ["Departments and admissions", "Laboratory and pharmacy", "Advanced reporting"],
+    name: "Hospital",
+    audience: "Large facilities",
+    price: "UGX 450,000",
+    period: "/month",
+    body: "For hospitals that need departments, admissions, laboratory, pharmacy, and reports.",
+    features: ["Admissions", "Laboratory", "Pharmacy operations", "Advanced reporting"],
+    href: "/#contact",
+    featured: false,
   },
 ] as const;
 
@@ -112,64 +129,84 @@ export function HomePageContent() {
   return (
     <>
       <section className="relative overflow-hidden border-b border-slate-200 bg-[#f7fbff]">
-        <div className="absolute inset-x-0 top-0 h-28 bg-white" aria-hidden="true" />
-        <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[#e8f7ef] lg:block" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] items-center justify-center lg:flex" aria-hidden="true">
-          <div className="grid grid-cols-2 gap-5">
-            <HeroSymbol icon={Stethoscope} tone="bg-white text-violet-700" />
-            <HeroSymbol icon={ClipboardList} tone="bg-white text-sky-700" />
-            <HeroSymbol icon={Pill} tone="bg-white text-emerald-700" />
-            <HeroSymbol icon={WalletCards} tone="bg-white text-amber-700" />
-          </div>
-        </div>
-        <div className="relative mx-auto flex min-h-[calc(100vh-72px)] max-w-[1500px] items-center px-5 py-14 sm:px-8">
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              "linear-gradient(#dbeafe 1px, transparent 1px), linear-gradient(90deg, #dbeafe 1px, transparent 1px), linear-gradient(135deg, #f7fbff 0%, #ffffff 46%, #ecfdf5 100%)",
+            backgroundSize: "42px 42px, 42px 42px, auto",
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative mx-auto grid min-h-[calc(100vh-72px)] max-w-[1500px] items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:py-20">
           <div className="max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-normal text-violet-700">
-              MediLink
+            <p className="inline-flex rounded-full border border-violet-200 bg-white/85 px-4 py-2 text-sm font-bold text-violet-700 shadow-sm shadow-violet-100">
+              Simple clinic management software built for African healthcare systems
             </p>
-            <h1 className="mt-4 text-5xl font-bold leading-[1.02] tracking-normal text-[#080833] sm:text-6xl lg:text-7xl">
+            <h1 className="mt-6 text-5xl font-bold leading-[1.02] tracking-normal text-[#080833] sm:text-6xl lg:text-7xl">
               Digital clinic management for Uganda.
             </h1>
             <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-slate-700">
-              A complete digital system for managing clinics, prescriptions, and patient care in Uganda.
+              A complete digital system for managing clinics, prescriptions, billing,
+              and patient care in Uganda.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="#contact"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-violet-600 px-7 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-violet-600 px-7 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:scale-[1.02] hover:bg-violet-700"
               >
                 Request Demo
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
                 href="#how-it-works"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-sm shadow-slate-200 transition hover:border-violet-300 hover:bg-violet-50"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-sm shadow-slate-200 transition hover:scale-[1.02] hover:border-violet-300 hover:bg-violet-50"
               >
                 <PlayCircle className="size-4" aria-hidden="true" />
                 Watch how it works
               </Link>
             </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {trustBadges.map((badge) => {
+                const Icon = badge.icon;
+
+                return (
+                  <div
+                    key={badge.label}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-bold text-slate-700 shadow-sm shadow-slate-100"
+                  >
+                    <Icon className="size-4 text-emerald-600" aria-hidden="true" />
+                    {badge.label}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
+          <HeroProductVisual />
         </div>
       </section>
 
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
-          <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-normal text-violet-700">The problem</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-normal text-[#080833] sm:text-4xl">
-                Busy clinics should not depend on scattered paperwork.
-              </h2>
-            </div>
-            <div className="grid gap-3">
-              {problemPoints.map((point) => (
-                <div key={point} className="flex gap-3 rounded-lg bg-slate-50 p-4">
-                  <FileText className="mt-0.5 size-5 shrink-0 text-rose-600" aria-hidden="true" />
-                  <p className="text-base font-semibold leading-7 text-slate-700">{point}</p>
-                </div>
-              ))}
-            </div>
+        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:py-20">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-normal text-violet-700">
+              The problem
+            </p>
+            <h2 className="mt-3 text-4xl font-bold tracking-normal text-[#080833]">
+              Clinics lose time when work stays on paper.
+            </h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {problemPoints.map((point) => (
+              <div
+                key={point}
+                className="rounded-lg border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg hover:shadow-slate-100"
+              >
+                <FileText className="size-7 text-rose-600" aria-hidden="true" />
+                <p className="mt-4 text-lg font-bold text-slate-900">{point}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -177,8 +214,9 @@ export function HomePageContent() {
       <SectionShell
         id="features"
         eyebrow="Solution"
-        title="One system for everyday clinic operations"
-        body="MediLink helps clinics, hospitals, and pharmacies move from disconnected paperwork to organized digital operations."
+        title="Everything needed for daily clinic work"
+        body="Short, practical tools for local healthcare teams."
+        variant="soft"
       >
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {solutionCards.map((feature) => (
@@ -190,18 +228,18 @@ export function HomePageContent() {
       <SectionShell
         id="benefits"
         eyebrow="Benefits"
-        title="Designed around outcomes clinic owners care about"
-        body="The value is not more screens. The value is faster service, cleaner records, fewer mistakes, and better control over money."
+        title="Built around business outcomes"
+        body="Less paperwork. Better service. Clearer money tracking."
       >
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {benefits.map((benefit) => (
-            <article key={benefit.title} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-100">
-              <benefit.icon className="size-7 text-violet-700" aria-hidden="true" />
-              <h3 className="mt-5 text-lg font-bold tracking-normal text-[#080833]">
-                {benefit.title}
-              </h3>
-              <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{benefit.body}</p>
-            </article>
+            <InfoCard
+              key={benefit.title}
+              title={benefit.title}
+              body={benefit.body}
+              icon={benefit.icon}
+              tone="bg-violet-100 text-violet-700"
+            />
           ))}
         </div>
       </SectionShell>
@@ -209,17 +247,21 @@ export function HomePageContent() {
       <SectionShell
         id="how-it-works"
         eyebrow="How it works"
-        title="Start simple, then grow digitally"
-        body="MediLink is set up around the way local health businesses already operate."
+        title="Three steps to start"
+        body="Start small, then grow into a full digital workflow."
+        variant="soft"
       >
         <div className="grid gap-5 lg:grid-cols-3">
           {steps.map((step, index) => (
-            <article key={step.title} className="rounded-lg border border-slate-200 bg-white p-6 shadow-md shadow-slate-100">
-              <span className="grid size-10 place-items-center rounded-full bg-violet-600 text-sm font-bold text-white">
+            <article
+              key={step.title}
+              className="rounded-lg border border-slate-200 bg-white p-6 shadow-md shadow-slate-100 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200"
+            >
+              <span className="grid size-11 place-items-center rounded-full bg-violet-600 text-sm font-bold text-white">
                 {index + 1}
               </span>
-              <h3 className="mt-5 text-xl font-bold text-[#080833]">{step.title}</h3>
-              <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{step.body}</p>
+              <h3 className="mt-6 text-2xl font-bold text-[#080833]">{step.title}</h3>
+              <p className="mt-3 text-base font-medium leading-7 text-slate-600">{step.body}</p>
             </article>
           ))}
         </div>
@@ -228,16 +270,36 @@ export function HomePageContent() {
       <SectionShell
         id="pricing"
         eyebrow="Pricing"
-        title="Affordable monthly plans for different health businesses"
-        body="Start with what your clinic needs today and upgrade as your operations grow."
+        title="Simple monthly pricing"
+        body="Clear plans make the product feel real and easy to buy."
       >
         <div className="grid gap-5 lg:grid-cols-3">
           {pricing.map((plan) => (
-            <article key={plan.name} className="rounded-lg border border-slate-200 bg-white p-6 shadow-lg shadow-slate-100">
-              <h3 className="text-xl font-bold text-[#080833]">{plan.name}</h3>
-              <p className="mt-3 text-base font-bold text-violet-700">{plan.price}</p>
-              <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{plan.body}</p>
-              <ul className="mt-5 grid gap-3">
+            <article
+              key={plan.name}
+              className={`relative rounded-lg border bg-white p-6 shadow-lg transition hover:-translate-y-1 hover:shadow-2xl ${
+                plan.featured
+                  ? "border-violet-300 shadow-violet-100"
+                  : "border-slate-200 shadow-slate-100"
+              }`}
+            >
+              {plan.featured ? (
+                <span className="absolute right-5 top-5 rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white">
+                  Most popular
+                </span>
+              ) : null}
+              <p className="text-sm font-bold uppercase tracking-normal text-slate-500">
+                {plan.audience}
+              </p>
+              <h3 className="mt-3 text-2xl font-bold text-[#080833]">{plan.name}</h3>
+              <div className="mt-5 flex items-end gap-1">
+                <p className="text-4xl font-bold tracking-normal text-[#080833]">{plan.price}</p>
+                <p className="pb-1 text-sm font-bold text-slate-500">{plan.period}</p>
+              </div>
+              <p className="mt-4 min-h-[72px] text-sm font-medium leading-6 text-slate-600">
+                {plan.body}
+              </p>
+              <ul className="mt-6 grid gap-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
@@ -245,27 +307,38 @@ export function HomePageContent() {
                   </li>
                 ))}
               </ul>
+              <Link
+                href={plan.href}
+                className={`mt-7 inline-flex h-11 w-full items-center justify-center rounded-lg text-sm font-bold transition hover:scale-[1.01] ${
+                  plan.featured
+                    ? "bg-violet-600 text-white hover:bg-violet-700"
+                    : "border border-slate-300 bg-white text-slate-900 hover:border-violet-300 hover:bg-violet-50"
+                }`}
+              >
+                Get Started
+              </Link>
             </article>
           ))}
         </div>
       </SectionShell>
 
       <section id="contact" className="scroll-mt-24 bg-[#071133] text-white">
-        <div className="mx-auto grid max-w-[1500px] gap-6 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center lg:py-20">
           <div>
             <p className="text-sm font-bold uppercase tracking-normal text-emerald-300">
               Request demo
             </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">
+            <h2 className="mt-3 text-4xl font-bold tracking-normal sm:text-5xl">
               Transform your clinic today.
             </h2>
-            <p className="mt-4 max-w-3xl text-base font-medium leading-7 text-slate-300">
-              See how MediLink can help your team manage patients, prescriptions, billing, and daily clinic work with less paperwork.
+            <p className="mt-5 max-w-3xl text-base font-medium leading-7 text-slate-300">
+              See how MediLink can help your team manage patients, prescriptions,
+              billing, and daily clinic work with less paperwork.
             </p>
           </div>
           <Link
             href="/demo-flow"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-7 text-sm font-bold text-[#071133] transition hover:bg-slate-100"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-7 text-sm font-bold text-[#071133] transition hover:scale-[1.02] hover:bg-slate-100"
           >
             Request Demo
             <ArrowRight className="size-4" aria-hidden="true" />
@@ -282,22 +355,29 @@ function SectionShell({
   title,
   body,
   children,
+  variant = "white",
 }: {
   id: string;
   eyebrow: string;
   title: string;
   body: string;
   children: React.ReactNode;
+  variant?: "white" | "soft";
 }) {
   return (
-    <section id={id} className="scroll-mt-24 border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8 lg:py-14">
-        <div className="mb-7 max-w-3xl">
+    <section
+      id={id}
+      className={`scroll-mt-24 border-b border-slate-200 ${
+        variant === "soft" ? "bg-slate-50" : "bg-white"
+      }`}
+    >
+      <div className="mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:py-20">
+        <div className="mb-10 max-w-3xl">
           <p className="text-sm font-bold uppercase tracking-normal text-violet-700">{eyebrow}</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-normal text-[#080833] sm:text-4xl">
+          <h2 className="mt-3 text-4xl font-bold tracking-normal text-[#080833] sm:text-5xl">
             {title}
           </h2>
-          <p className="mt-3 text-base font-medium leading-7 text-slate-600">{body}</p>
+          <p className="mt-4 text-base font-medium leading-7 text-slate-600">{body}</p>
         </div>
         {children}
       </div>
@@ -317,20 +397,127 @@ function InfoCard({
   tone: string;
 }) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-md shadow-slate-100">
+    <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-md shadow-slate-100 transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl hover:shadow-slate-200">
       <div className={`grid size-12 place-items-center rounded-lg ${tone}`}>
         <Icon className="size-6" aria-hidden="true" />
       </div>
-      <h3 className="mt-5 text-lg font-bold tracking-normal text-[#080833]">{title}</h3>
-      <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{body}</p>
+      <h3 className="mt-6 text-xl font-bold tracking-normal text-[#080833]">{title}</h3>
+      <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{body}</p>
     </article>
   );
 }
 
-function HeroSymbol({ icon: Icon, tone }: { icon: LucideIcon; tone: string }) {
+function HeroProductVisual() {
   return (
-    <div className={`grid size-24 place-items-center rounded-lg border border-white/80 shadow-xl shadow-emerald-900/10 ${tone}`}>
-      <Icon className="size-10" aria-hidden="true" />
+    <div className="relative mx-auto w-full max-w-2xl lg:mx-0">
+      <div className="rounded-lg border border-slate-300 bg-slate-950 p-3 shadow-2xl shadow-slate-400/40">
+        <div className="overflow-hidden rounded-lg bg-white">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="size-3 rounded-full bg-rose-400" />
+              <span className="size-3 rounded-full bg-amber-400" />
+              <span className="size-3 rounded-full bg-emerald-400" />
+            </div>
+            <p className="text-xs font-bold text-slate-500">MediLink Clinic Workspace</p>
+          </div>
+          <div className="grid gap-0 md:grid-cols-[180px_1fr]">
+            <div className="hidden border-r border-slate-200 bg-slate-50 p-4 md:block">
+              {["Patients", "Billing", "Pharmacy", "Reports"].map((item, index) => (
+                <div
+                  key={item}
+                  className={`mb-3 rounded-lg px-3 py-2 text-sm font-bold ${
+                    index === 0 ? "bg-violet-600 text-white" : "text-slate-600"
+                  }`}
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-normal text-violet-700">
+                    Today
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-[#080833]">
+                    Clinic operations
+                  </p>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                  Secure
+                </span>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <PreviewMetric label="Patients" value="42" icon={Users} tone="text-sky-700" />
+                <PreviewMetric label="Revenue" value="UGX" icon={WalletCards} tone="text-violet-700" />
+                <PreviewMetric label="Stock" value="OK" icon={Pill} tone="text-emerald-700" />
+              </div>
+
+              <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="grid size-11 place-items-center rounded-lg bg-violet-100 text-violet-700">
+                    <Stethoscope className="size-5" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-950">Reception to care</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                      Patient record, invoice, prescription, and receipt in one flow.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-2">
+                  <PreviewLine width="w-11/12" color="bg-violet-500" />
+                  <PreviewLine width="w-8/12" color="bg-sky-400" />
+                  <PreviewLine width="w-10/12" color="bg-emerald-500" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute -bottom-8 right-4 hidden w-44 rounded-lg border border-slate-300 bg-slate-950 p-2 shadow-2xl shadow-slate-400/40 sm:block">
+        <div className="rounded-lg bg-white p-4">
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-300" />
+          <p className="text-xs font-bold uppercase tracking-normal text-slate-500">
+            Mobile money
+          </p>
+          <p className="mt-2 text-2xl font-bold text-[#080833]">UGX</p>
+          <div className="mt-4 grid gap-2">
+            <PreviewLine width="w-full" color="bg-emerald-500" />
+            <PreviewLine width="w-9/12" color="bg-violet-500" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewMetric({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  tone: string;
+}) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+      <Icon className={`size-5 ${tone}`} aria-hidden="true" />
+      <p className="mt-3 text-lg font-bold text-[#080833]">{value}</p>
+      <p className="text-xs font-bold text-slate-500">{label}</p>
+    </div>
+  );
+}
+
+function PreviewLine({ width, color }: { width: string; color: string }) {
+  return (
+    <div className="h-2 rounded-full bg-white">
+      <span className={`block h-full rounded-full ${width} ${color}`} />
     </div>
   );
 }
