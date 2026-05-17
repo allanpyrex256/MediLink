@@ -1,9 +1,6 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import {
-  Activity,
-  Bed,
-  Building2,
   CalendarDays,
   ClipboardList,
   CreditCard,
@@ -459,93 +456,116 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
 }
 
 function HospitalDashboard({ data }: { data: DashboardData }) {
-  const activeVisits = data.appointments.filter((appointment) =>
-    ["pending", "confirmed"].includes(appointment.status),
-  ).length;
-  const labQueue = data.labResults.filter((result) =>
-    ["requested", "processing"].includes(result.status),
-  ).length;
-  const departments = data.branches.length || 1;
   const staffOnline = data.branches.reduce((sum, branch) => sum + branch.staff_online, 0);
+  const dailyOperations = {
+    appointments: 23,
+    airtelMoney: 420000,
+    cashierQueue: 9,
+    cash: 1140000,
+    labTests: 17,
+    mtnMomo: 840000,
+    patientsToday: 84,
+    pendingBills: 640000,
+    pharmacySales: 1100000,
+    revenueToday: 2400000,
+    staffOnDuty: Math.max(staffOnline, 24),
+    unpaidPatients: 6,
+    waitingPatients: 14,
+  };
+  const recentActivity = [
+    {
+      patient: "Sarah Nakato",
+      service: "Consultation",
+      doctor: "Dr. Sarah Namusoke",
+      payment: "Paid",
+      tone: "green" as const,
+    },
+    {
+      patient: "Brian Kato",
+      service: "Lab test",
+      doctor: "Dr. Mary Nakato",
+      payment: "Pending",
+      tone: "amber" as const,
+    },
+    {
+      patient: "Mary Nakato",
+      service: "Pharmacy refill",
+      doctor: "Dr. Peter Mwangi",
+      payment: "MTN MoMo",
+      tone: "blue" as const,
+    },
+    {
+      patient: "Okello Nankya",
+      service: "Pediatric review",
+      doctor: "Dr. Mary Nakato",
+      payment: "Cashier",
+      tone: "rose" as const,
+    },
+    {
+      patient: "Achan Byaruhanga",
+      service: "Antenatal scan",
+      doctor: "Dr. Grace Achan",
+      payment: "Airtel Money",
+      tone: "green" as const,
+    },
+  ];
 
   return (
     <DashboardFrame
-      eyebrow="Hospital dashboard"
-      title={`${data.tenant.name} operations`}
-      description="Hospital-wide patient movement, departments, labs, doctors, and revenue across active service areas."
+      eyebrow="Hospital Admin"
+      title={data.tenant.name}
+      description="Daily Operations Overview"
       tone="blue"
     >
-      <MetricGrid>
+      <DailyMetricGrid>
         <MetricCard
-          label="Active patient flow"
-          value={String(activeVisits)}
-          detail="Pending and confirmed care encounters"
-          icon={Bed}
+          label="Patients Today"
+          value={String(dailyOperations.patientsToday)}
+          detail="Seen, waiting, and admitted"
+          icon={Users}
           tone="blue"
         />
         <MetricCard
-          label="Departments"
-          value={String(departments)}
-          detail={`${staffOnline} staff online across branches`}
-          icon={Building2}
-          tone="violet"
-        />
-        <MetricCard
-          label="Lab queue"
-          value={String(labQueue)}
-          detail="Requested or processing results"
-          icon={FlaskConical}
-          tone="amber"
-        />
-        <MetricCard
-          label="Monthly revenue"
-          value={formatUgandanCurrency(monthlyBranchRevenue(data))}
-          detail="Across hospital departments"
+          label="Revenue Today"
+          value={formatDashboardMoney(dailyOperations.revenueToday)}
+          detail="Cash, MTN, Airtel"
           icon={WalletCards}
           tone="green"
         />
-      </MetricGrid>
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
-        <AppointmentTable appointments={data.appointments.slice(0, 8)} title="Hospital patient movement" />
-        <WorklistCard
-          title="Department load"
-          description="Branch, ward, or department activity for administrators."
-          icon={Activity}
-          items={data.branches.slice(0, 5).map((branch) =>
-            worklistItem(
-              branch.name,
-              `${branch.patients_today} patients today - ${branch.staff_online} staff online`,
-              branch.status === "attention" ? "amber" : "green",
-            ),
-          )}
-          href="/dashboard/branches"
-          action="Open departments"
+        <MetricCard
+          label="Pending Bills"
+          value={formatDashboardMoney(dailyOperations.pendingBills)}
+          detail="Unpaid patient balances"
+          icon={ReceiptText}
+          tone="amber"
         />
-      </div>
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-3">
-        <DoctorAvailability doctors={data.doctors} />
-        <HospitalLabCard labResults={data.labResults} />
-        <WorklistCard
-          title="Care coordination"
-          description="Reports, prescriptions, and notes waiting for clinical review."
-          icon={ClipboardList}
-          items={[
-            ...data.clinicalPrescriptions.slice(0, 2).map((prescription) =>
-              worklistItem(
-                prescription.medication,
-                `${prescription.prescribed_by} - ${prescription.status}`,
-                prescription.status === "active" ? "blue" : "slate",
-              ),
-            ),
-            ...data.visitRecords.slice(0, 2).map((visit) =>
-              worklistItem(visit.visit_type, `${visit.doctor_name} - ${visit.notes}`, "violet"),
-            ),
-          ]}
-          href="/dashboard/reports"
-          action="Open reports"
+        <MetricCard
+          label="Appointments"
+          value={String(dailyOperations.appointments)}
+          detail="Booked for today"
+          icon={CalendarDays}
+          tone="violet"
         />
+        <MetricCard
+          label="Pharmacy Sales"
+          value={formatDashboardMoney(dailyOperations.pharmacySales)}
+          detail="Dispensary collections"
+          icon={Pill}
+          tone="green"
+        />
+        <MetricCard
+          label="Lab Tests"
+          value={String(dailyOperations.labTests)}
+          detail="Requested and completed"
+          icon={FlaskConical}
+          tone="blue"
+        />
+      </DailyMetricGrid>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[0.8fr_1.35fr_0.85fr]">
+        <OperationsQuickStats data={dailyOperations} />
+        <RecentActivityTable rows={recentActivity} />
+        <RevenuePaymentsCard data={dailyOperations} />
       </div>
     </DashboardFrame>
   );
@@ -638,7 +658,7 @@ function DashboardFrame({
   tone: Tone;
   children: React.ReactNode;
 }) {
-  const today = format(new Date(), "EEE, d MMM yyyy");
+  const today = format(new Date(), "EEEE, d MMMM yyyy");
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -652,9 +672,9 @@ function DashboardFrame({
             {description}
           </p>
         </div>
-        <div className="inline-flex h-12 w-fit items-center gap-3 rounded-lg border border-slate-300 bg-white px-5 text-sm font-bold text-slate-950 shadow-md shadow-slate-200/70">
+        <div className="inline-flex h-12 w-fit items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 text-sm font-bold text-slate-950 shadow-sm shadow-slate-200/70">
           <CalendarDays className="size-4 text-violet-600" />
-          Today, {today}
+          {today}
         </div>
       </div>
       {children}
@@ -664,6 +684,10 @@ function DashboardFrame({
 
 function MetricGrid({ children }: { children: React.ReactNode }) {
   return <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{children}</div>;
+}
+
+function DailyMetricGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">{children}</div>;
 }
 
 function MetricCard({
@@ -684,7 +708,7 @@ function MetricCard({
       <CardContent className="flex h-full items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-slate-600">{label}</p>
-          <p className="mt-3 truncate text-2xl font-bold tracking-normal text-slate-950">{value}</p>
+          <p className="mt-3 break-words text-2xl font-bold tracking-normal text-slate-950">{value}</p>
           <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{detail}</p>
         </div>
         <div className={`grid size-12 shrink-0 place-items-center rounded-lg ring-1 ${metricToneStyles[tone]}`}>
@@ -692,6 +716,148 @@ function MetricCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function OperationsQuickStats({
+  data,
+}: {
+  data: {
+    cashierQueue: number;
+    staffOnDuty: number;
+    unpaidPatients: number;
+    waitingPatients: number;
+  };
+}) {
+  const stats: Array<{ label: string; value: string; detail: string; tone: Tone }> = [
+    { label: "Patients Waiting", value: String(data.waitingPatients), detail: "Reception and triage queue", tone: "amber" },
+    { label: "Cashier Queue", value: String(data.cashierQueue), detail: "Patients waiting for receipts", tone: "violet" },
+    { label: "Unpaid Patients", value: String(data.unpaidPatients), detail: "Need cashier follow-up", tone: "rose" },
+    { label: "Staff on Duty", value: String(data.staffOnDuty), detail: "Clinical and support staff", tone: "green" },
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="p-4">
+        <CardTitle>Quick Operations</CardTitle>
+        <CardDescription>What the admin team should clear first.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3 p-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="rounded-lg bg-slate-50 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-slate-950">{stat.label}</p>
+                <p className="mt-1 text-xs font-medium text-slate-500">{stat.detail}</p>
+              </div>
+              <Badge tone={badgeTone[stat.tone]}>{stat.value}</Badge>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function RecentActivityTable({
+  rows,
+}: {
+  rows: Array<{
+    patient: string;
+    service: string;
+    doctor: string;
+    payment: string;
+    tone: Tone;
+  }>;
+}) {
+  return (
+    <Card>
+      <CardHeader className="p-4">
+        <CardTitle>Recent Activity</CardTitle>
+        <CardDescription>Patients, services, doctors, and payment status from today.</CardDescription>
+      </CardHeader>
+      <CardContent className="overflow-x-auto p-0">
+        <table className="w-full min-w-[620px] text-left text-sm">
+          <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Patient</th>
+              <th className="px-4 py-3 font-semibold">Service</th>
+              <th className="px-4 py-3 font-semibold">Doctor</th>
+              <th className="px-4 py-3 font-semibold">Payment</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rows.map((row) => (
+              <tr key={`${row.patient}-${row.service}`} className="hover:bg-slate-50">
+                <td className="px-4 py-3 font-bold text-slate-950">{row.patient}</td>
+                <td className="px-4 py-3 text-slate-700">{row.service}</td>
+                <td className="px-4 py-3 text-slate-700">{row.doctor}</td>
+                <td className="px-4 py-3">
+                  <Badge tone={badgeTone[row.tone]}>{row.payment}</Badge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RevenuePaymentsCard({
+  data,
+}: {
+  data: {
+    airtelMoney: number;
+    cash: number;
+    mtnMomo: number;
+    pendingBills: number;
+    revenueToday: number;
+  };
+}) {
+  return (
+    <Card>
+      <CardHeader className="p-4">
+        <CardTitle>Revenue & Payments</CardTitle>
+        <CardDescription>Cashier desk and mobile money collections.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3 p-4">
+        <div className="rounded-lg bg-emerald-50 p-4">
+          <p className="text-xs font-bold uppercase tracking-normal text-emerald-700">Today&apos;s collections</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-900">
+            {formatDashboardMoney(data.revenueToday)}
+          </p>
+        </div>
+        <PaymentSplit label="MTN MoMo Collections" value={data.mtnMomo} tone="yellow" />
+        <PaymentSplit label="Airtel Money Collections" value={data.airtelMoney} tone="red" />
+        <PaymentSplit label="Cashier Cash" value={data.cash} tone="blue" />
+        <PaymentSplit label="Pending Bills" value={data.pendingBills} tone="amber" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function PaymentSplit({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "amber" | "blue" | "red" | "yellow";
+}) {
+  const tones = {
+    amber: "bg-amber-50 text-amber-800",
+    blue: "bg-sky-50 text-sky-800",
+    red: "bg-rose-50 text-rose-800",
+    yellow: "bg-yellow-50 text-yellow-800",
+  } as const;
+
+  return (
+    <div className={`flex items-center justify-between gap-3 rounded-lg p-3 ${tones[tone]}`}>
+      <p className="text-sm font-bold">{label}</p>
+      <p className="text-sm font-black">{formatDashboardMoney(value)}</p>
+    </div>
   );
 }
 
@@ -877,8 +1043,18 @@ function unpaidInvoiceTotal(data: DashboardData) {
     .reduce((sum, invoice) => sum + Math.max(0, Number(invoice.amount) - Number(invoice.paid_amount)), 0);
 }
 
-function monthlyBranchRevenue(data: DashboardData) {
-  return data.branches.reduce((sum, branch) => sum + Number(branch.revenue_month), 0);
+function formatDashboardMoney(amount: number) {
+  if (amount >= 1_000_000) {
+    const value = amount / 1_000_000;
+    const formatted = Number.isInteger(value) ? String(value) : value.toFixed(1);
+    return `UGX ${formatted}M`;
+  }
+
+  if (amount >= 1_000) {
+    return `UGX ${Math.round(amount / 1_000)}K`;
+  }
+
+  return formatUgandanCurrency(amount);
 }
 
 function isSameCalendarDay(value: string, date: Date) {

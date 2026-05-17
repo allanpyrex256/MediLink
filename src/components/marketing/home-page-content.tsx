@@ -68,7 +68,7 @@ const features = [
 const screenshots = [
   {
     title: "Hospital command center",
-    body: "Departments, lab queues, active patient flow, and revenue for administrators.",
+    body: "Busy departments, lab requests, daily patients, and revenue for administrators.",
     kind: "hospital",
   },
   {

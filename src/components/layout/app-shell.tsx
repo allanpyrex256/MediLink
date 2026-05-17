@@ -7,7 +7,6 @@ import { useState } from "react";
 import {
   Activity,
   Bell,
-  BriefcaseBusiness,
   Building2,
   CalendarDays,
   ChevronDown,
@@ -17,11 +16,9 @@ import {
   Home,
   LogOut,
   Menu,
-  Package,
   Pill,
   ReceiptText,
   Settings,
-  Stethoscope,
   Users,
   X,
   Zap,
@@ -42,14 +39,11 @@ const baseNavigation: Array<{
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "receptionist"] },
   { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDays, roles: ["admin", "doctor", "receptionist", "patient"] },
-  { href: "/dashboard/emr", label: "Consultations", icon: Stethoscope, roles: ["admin", "doctor"] },
-  { href: "/dashboard/pharmacy", label: "Pharmacy", icon: BriefcaseBusiness, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin", "receptionist", "pharmacist"] },
+  { href: "/dashboard/pharmacy", label: "Pharmacy", icon: Pill, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
   { href: "/dashboard/labs", label: "Laboratory", icon: FlaskConical, roles: ["admin", "doctor", "receptionist"] },
-  { href: "/dashboard/billing", label: "Billing & Finance", icon: CreditCard, roles: ["admin", "receptionist", "pharmacist"] },
-  { href: "/dashboard/inventory", label: "Inventory", icon: Package, roles: ["admin", "pharmacist"] },
-  { href: "/dashboard/prescriptions", label: "Prescriptions", icon: ClipboardList, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
+  { href: "/dashboard/branches", label: "Staff", icon: Users, roles: ["admin"] },
   { href: "/dashboard/reports", label: "Reports", icon: ClipboardList, roles: ["admin", "doctor"] },
-  { href: "/dashboard/branches", label: "Staff Management", icon: Users, roles: ["admin"] },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["admin"] },
 ];
 
@@ -101,7 +95,7 @@ export function AppShell({
         { href: "/dashboard/appointments", label: "New appointment", icon: CalendarDays },
         { href: "/dashboard/patients", label: "Register patient", icon: Users },
         { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
-        { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Package },
+        { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Pill },
       ];
 
   async function signOut() {

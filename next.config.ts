@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "*.medilink.local",
     "*.localhost",
   ],
+  devIndicators: false,
 };
 
 export default nextConfig;
