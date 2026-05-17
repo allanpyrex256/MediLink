@@ -8,6 +8,7 @@ import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 
 type PublicNavKey =
+  | "directory"
   | "features"
   | "benefits"
   | "how-it-works"
@@ -24,6 +25,7 @@ const navItems: Array<{
   label: string;
   href: string;
 }> = [
+  { key: "directory", label: "Find care", href: "/clinics" },
   { key: "features", label: "Features", href: "/#features" },
   { key: "benefits", label: "Benefits", href: "/#benefits" },
   { key: "how-it-works", label: "How it works", href: "/#how-it-works" },

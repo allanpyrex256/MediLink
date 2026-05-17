@@ -6,7 +6,7 @@ import {
   CreditCard,
   FileText,
   Pill,
-  PlayCircle,
+  Search,
   ShieldCheck,
   Stethoscope,
   Users,
@@ -159,11 +159,11 @@ export function HomePageContent() {
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
-                href="#how-it-works"
+                href="/clinics"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-sm shadow-slate-200 transition hover:scale-[1.02] hover:border-violet-300 hover:bg-violet-50"
               >
-                <PlayCircle className="size-4" aria-hidden="true" />
-                Watch how it works
+                <Search className="size-4" aria-hidden="true" />
+                Find clinics
               </Link>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
