@@ -44,8 +44,18 @@ export function initials(value: string) {
 }
 
 export function absoluteUrl(path = "") {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return new URL(path, baseUrl).toString();
+  return new URL(path, `${siteBaseUrl()}/`).toString();
+}
+
+export function siteBaseUrl() {
+  const rawUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+    process.env.VERCEL_URL ??
+    "http://localhost:3000";
+
+  const urlWithProtocol = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+  return urlWithProtocol.replace(/\/+$/, "");
 }
 
 export function assertNever(value: never): never {

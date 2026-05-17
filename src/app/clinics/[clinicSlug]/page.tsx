@@ -13,12 +13,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import {
+  type PublicTenantProfile,
   getPublicTenantProfile,
   publicTenantBookUrl,
   publicTenantPayUrl,
   publicTenantPharmacyUrl,
+  publicTenantProfileUrl,
 } from "@/lib/public-directory";
 import { brandGradient, tenantBranding } from "@/lib/tenant-branding";
+import { absoluteUrl } from "@/lib/utils";
+import type { TenantKind } from "@/lib/types";
 
 export async function generateMetadata({
   params,
@@ -27,12 +31,35 @@ export async function generateMetadata({
 }) {
   const { clinicSlug } = await params;
   const data = await getPublicTenantProfile(clinicSlug);
+  if (!data) {
+    return {
+      title: "Clinic | MediLink",
+      description: "MediLink public clinic profile.",
+    };
+  }
+
+  const brand = tenantBranding(data.tenant);
+  const kindLabel = publicKindLabel(data.tenant.tenant_kind);
+  const profileUrl = absoluteUrl(publicTenantProfileUrl(data.tenant));
+  const description = `${brand.name} is a ${kindLabel.toLowerCase()} in ${data.tenant.region}. Book appointments, send payment requests, or contact the business through MediLink.`;
 
   return {
-    title: data ? `${data.tenant.name} | MediLink` : "Clinic | MediLink",
-    description: data
-      ? `Book, pay, or send customer requests to ${data.tenant.name}.`
-      : "MediLink public clinic profile.",
+    title: `${brand.name} - ${kindLabel} in ${data.tenant.region} | MediLink`,
+    description,
+    alternates: {
+      canonical: profileUrl,
+    },
+    openGraph: {
+      title: `${brand.name} | MediLink`,
+      description,
+      url: profileUrl,
+      siteName: "MediLink",
+      type: "website",
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
   };
 }
 
@@ -49,9 +76,15 @@ export default async function PublicTenantProfilePage({
   const brand = tenantBranding(data.tenant);
   const isPharmacy = data.tenant.tenant_kind === "pharmacy";
   const whatsapp = whatsappUrl(brand.phone, `Hello ${brand.name}, I found you on MediLink.`);
+  const profileUrl = absoluteUrl(publicTenantProfileUrl(data.tenant));
+  const structuredData = publicTenantJsonLd(data, profileUrl, whatsapp);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f4f1ff_0,#ffffff_44%,#f6fbff_100%)] text-[#080833]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <header className="border-b border-slate-200 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between px-5 sm:px-8">
           <Link href="/clinics" aria-label="MediLink directory">
@@ -249,6 +282,71 @@ function EmptyState({ text }: { text: string }) {
       {text}
     </div>
   );
+}
+
+function publicKindLabel(kind: TenantKind) {
+  if (kind === "hospital") return "Hospital";
+  if (kind === "pharmacy") return "Pharmacy";
+  return "Clinic";
+}
+
+function schemaType(kind: TenantKind) {
+  if (kind === "hospital") return "Hospital";
+  if (kind === "pharmacy") return "Pharmacy";
+  return "MedicalClinic";
+}
+
+function publicTenantJsonLd(
+  data: PublicTenantProfile,
+  profileUrl: string,
+  whatsapp: string,
+) {
+  const brand = tenantBranding(data.tenant);
+  const actionTargets = [
+    data.tenant.tenant_kind === "pharmacy"
+      ? {
+          "@type": "OrderAction",
+          name: "Order medicine",
+          target: absoluteUrl(publicTenantPharmacyUrl(data.tenant)),
+        }
+      : {
+          "@type": "ReserveAction",
+          name: "Book appointment",
+          target: absoluteUrl(publicTenantBookUrl(data.tenant)),
+        },
+    {
+      "@type": "PayAction",
+      name: "Pay or request payment",
+      target: absoluteUrl(publicTenantPayUrl(data.tenant)),
+    },
+    {
+      "@type": "CommunicateAction",
+      name: "Contact on WhatsApp",
+      target: whatsapp,
+    },
+  ];
+
+  return {
+    "@context": "https://schema.org",
+    "@type": schemaType(data.tenant.tenant_kind),
+    name: brand.name,
+    legalName: brand.legalName,
+    description: `${brand.name} is listed on MediLink for appointments, payments, pharmacy requests, and customer communication.`,
+    url: profileUrl,
+    telephone: brand.phone,
+    email: brand.email,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: brand.address,
+      addressLocality: data.tenant.region,
+      addressCountry: "UG",
+    },
+    areaServed: {
+      "@type": "Country",
+      name: "Uganda",
+    },
+    potentialAction: actionTargets,
+  };
 }
 
 function whatsappUrl(phone: string, text: string) {
