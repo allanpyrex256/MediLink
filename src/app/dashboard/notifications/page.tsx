@@ -1,0 +1,91 @@
+import { BellRing, Mail, MessageCircle, Send, Smartphone } from "lucide-react";
+import { PageHeading } from "@/components/dashboard/page-heading";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardData } from "@/lib/data/repositories";
+
+const channelIcon = {
+  whatsapp: MessageCircle,
+  email: Mail,
+  sms: Smartphone,
+  in_app: BellRing,
+};
+
+export default async function NotificationsPage() {
+  const data = await getDashboardData();
+  const isPharmacy = data.tenant.tenant_kind === "pharmacy";
+
+  return (
+    <div>
+      <PageHeading
+        eyebrow="Notifications"
+        title={isPharmacy ? "Customer reminders" : "Patient reminders"}
+        description={
+          isPharmacy
+            ? "Queued and sent prescription pickup reminders through email, WhatsApp, and in-app notifications."
+            : "Queued and sent appointment reminders through email, WhatsApp, and in-app notifications."
+        }
+        actions={
+          <Button>
+            <Send className="size-4" />
+            Send reminder
+          </Button>
+        }
+      />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[ 
+          { title: "WhatsApp reminders", icon: MessageCircle, caption: "Cloud API ready" },
+          { title: "SMS reminders", icon: Smartphone, caption: "Missed-visit reduction" },
+          { title: "Email confirmations", icon: Mail, caption: "Provider contract ready" },
+          { title: "In-app alerts", icon: BellRing, caption: "Tenant inbox ready" },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.title}>
+              <CardContent className="flex items-center gap-4">
+                <div className="grid size-12 place-items-center rounded-lg bg-sky-50 text-sky-700">
+                  <Icon className="size-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-950">{item.title}</p>
+                  <p className="text-sm text-slate-500">{item.caption}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      <Card className="mt-5">
+        <CardHeader>
+          <CardTitle>Notification log</CardTitle>
+          <CardDescription>Delivery state for tenant-scoped patient messages.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          {data.notifications.map((notification) => {
+            const Icon = channelIcon[notification.channel];
+            return (
+              <div
+                key={notification.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-100 p-4"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-600">
+                    <Icon className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-950">{notification.subject}</p>
+                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">{notification.body}</p>
+                  </div>
+                </div>
+                <Badge tone={notification.status === "sent" ? "green" : notification.status === "failed" ? "rose" : "amber"} className="capitalize">
+                  {notification.status}
+                </Badge>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

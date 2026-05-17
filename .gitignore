@@ -29,9 +29,19 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+next-dev.*.log
+medilink-dev-*.log
+medilink-prod-*.log
+
+# local SaaS demo data
+.medilink-demo/
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local audit output
+lighthouse-*.json
 
 # vercel
 .vercel

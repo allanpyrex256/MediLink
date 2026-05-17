@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: [
+    "medilink.test",
+    "*.medilink.test",
+    "medilink.local",
+    "*.medilink.local",
+    "*.localhost",
+  ],
 };
 
 export default nextConfig;

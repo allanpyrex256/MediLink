@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MediLink
 
-## Getting Started
+MediLink is a production-shaped multi-tenant SaaS management platform for clinics, hospitals, and pharmacies in Uganda and East Africa.
 
-First, run the development server:
+The app is built with Next.js App Router, TypeScript, Tailwind CSS, Framer Motion, Supabase Auth/PostgreSQL/RLS, and payment adapter contracts for Flutterwave, MTN Mobile Money, Airtel Money, and Stripe.
+
+## What is included
+
+- Tenant-isolated clinic dashboard
+- Tenant-aware pharmacy portal for inventory, prescriptions, sales, and pickup monitoring
+- EMR patient files with history, diagnoses, prescriptions, lab results, and visit notes
+- Appointment booking workflow for website, WhatsApp intake, and reception desk
+- SMS, WhatsApp, email, and in-app reminder surfaces
+- Billing and finance workspace for invoices, receipts, cash, mobile money, and insurance tracking
+- Lab management for requests, result uploads, report printing, and doctor access
+- Multi-branch owner dashboard for revenue, patient flow, and staff monitoring
+- Email/password and Google Auth wiring through Supabase
+- Role model for admin, doctor, receptionist, pharmacist, and patient
+- Doctors, patients, appointments, payments, reports, notifications, settings, and super-admin screens
+- Appointment API with tenant checks, rate limiting, and double-booking prevention
+- Payment initiation API and webhook endpoints
+- WhatsApp and email notification service placeholders
+- PWA manifest
+- Supabase schema with RLS policies for strict tenant isolation
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`. Without Supabase env vars the app runs in demo mode with selectable clinic, hospital, and pharmacy portals.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Simulate real domains locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use `.localhost` subdomains so the demo feels like production without changing DNS. Start the app with:
 
-## Learn More
+```bash
+npm run dev:domains
+```
 
-To learn more about Next.js, take a look at the following resources:
+For local demo domains, create `.env.local` with:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_TENANT_ROOT_DOMAIN=localhost
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open these URLs to test the SaaS like a real hosted app:
 
-## Deploy on Vercel
+- `http://localhost:3000/demo-flow` for the platform demo launcher
+- `http://kampalaclinic.localhost:3000/book` for a clinic patient booking page
+- `http://kampalaclinic.localhost:3000/dashboard` for the clinic portal
+- `http://citycare.localhost:3000/dashboard` for the hospital operations dashboard
+- `http://mediplus.localhost:3000/dashboard/pharmacy` for the pharmacy workflow
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Built-in local demo accounts:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `admin@kampalaclinic.com` - admin, manages the entire clinic
+- `doctor@kampalaclinic.com` - doctor, views patients and consultations
+- `reception@kampalaclinic.com` - receptionist, books appointments
+- `admin@citycare.com` - admin for the hospital tenant
+- `pharmacist@mediplus.com` - pharmacist, handles medicine and inventory
+- `patient@kampalaclinic.com` - patient demo account
+
+If your browser or Windows setup does not resolve `*.localhost`, open Notepad as Administrator, edit `C:\Windows\System32\drivers\etc\hosts`, and add one line per demo domain:
+
+```text
+127.0.0.1 kampalaclinic.localhost
+127.0.0.1 citycare.localhost
+127.0.0.1 mediplus.localhost
+```
+
+## Production setup
+
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the Supabase SQL editor.
+3. Enable Supabase email/password and Google auth providers.
+4. Copy `.env.example` to `.env.local` and fill the Supabase keys.
+5. Add payment provider credentials for Flutterwave, MTN MoMo, Airtel Money, and optionally Stripe.
+6. Deploy to Vercel and copy the same env vars into the Vercel project.
+
+## Multi-tenancy model
+
+MediLink uses a shared database with `tenant_id` on all operational tables and `tenant_kind` to route clinics, hospitals, and pharmacies into the right portal. Supabase Row Level Security enforces:
+
+- tenant users can only read rows matching `public.current_tenant_id()`
+- clinic admins can manage records only inside their tenant
+- platform admins can monitor tenants and subscriptions
+- appointment double booking is blocked by a partial unique index on active doctor slots
+
+Optional subdomain tenancy is supported through `clinicname.medilink.ug`, `clinicname.localhost`, and `/api/tenant/resolve`.
+
+## Payment notes
+
+Payment adapters are intentionally env-driven:
+
+- Flutterwave uses its mobile-money API flow through configurable base URL.
+- MTN MoMo uses Collections `RequestToPay`.
+- Airtel Money uses configurable collection/status paths because access varies by Airtel developer account and market.
+- Stripe is available for global card payment expansion.
+
+In non-production environments, missing provider credentials can return demo payment references when `ALLOW_DEMO_PAYMENTS=true`.
