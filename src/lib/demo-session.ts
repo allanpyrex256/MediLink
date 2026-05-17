@@ -56,6 +56,53 @@ export const demoWorkspaceOptions: {
   },
 ];
 
+export const demoWorkspaceBranding: Record<
+  DemoWorkspaceId,
+  {
+    name: string;
+    initials: string;
+    primaryColor: string;
+    accentColor: string;
+    tagline: string;
+  }
+> = {
+  "kampala-hospital": {
+    name: "Kampala Hospital",
+    initials: "KH",
+    primaryColor: "#6d28d9",
+    accentColor: "#0ea5e9",
+    tagline: "Daily hospital operations",
+  },
+  "mengo-clinic": {
+    name: "Mengo Clinic",
+    initials: "MC",
+    primaryColor: "#0f6fdc",
+    accentColor: "#14b8a6",
+    tagline: "Outpatient clinic operations",
+  },
+  "mukono-medical-centre": {
+    name: "Mukono Medical Centre",
+    initials: "MM",
+    primaryColor: "#047857",
+    accentColor: "#0ea5e9",
+    tagline: "Medical centre management",
+  },
+  "vine-pharmacy": {
+    name: "Vine Pharmacy",
+    initials: "VP",
+    primaryColor: "#047857",
+    accentColor: "#f59e0b",
+    tagline: "Pharmacy POS and stock control",
+  },
+  "goodlife-pharmacy": {
+    name: "GoodLife Pharmacy",
+    initials: "GP",
+    primaryColor: "#0f766e",
+    accentColor: "#7c3aed",
+    tagline: "Branch pharmacy operations",
+  },
+};
+
 export const demoWorkspaceAliases: Record<string, DemoWorkspaceId> = {
   "kampala-hospital": "kampala-hospital",
   kampalahospital: "kampala-hospital",

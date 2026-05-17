@@ -1,29 +1,83 @@
-import { ShieldCheck, WalletCards, Users } from "lucide-react";
+import { Ban, CheckCircle2, Database, Globe2, ImageUp, RotateCcw, ShieldCheck } from "lucide-react";
 import {
   PlatformSectionHeader,
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Logo } from "@/components/ui/logo";
+import { platformTenants } from "@/lib/platform-demo";
 
 export const metadata = {
   title: "Platform Settings | MediLink",
 };
 
-const settings = [
+const ownerControls = [
   {
-    title: "Tenant onboarding",
-    description: "Default trial length, demo data, branch limits, and Uganda-ready account setup.",
-    icon: Users,
+    title: "Approve logos",
+    description: "Review tenant logos before they appear on receipts, reports, and public booking pages.",
+    icon: ImageUp,
   },
   {
-    title: "Billing rules",
-    description: "MTN MoMo, Airtel Money, bank transfer, invoice reminders, and renewal grace periods.",
-    icon: WalletCards,
+    title: "Suspend tenants",
+    description: "Pause access for expired accounts while keeping their tenant data intact.",
+    icon: Ban,
   },
   {
-    title: "Platform controls",
-    description: "Owner access, support routing, audit visibility, and account suspension controls.",
+    title: "Reset branding",
+    description: "Restore default MediLink-safe colors and generated initials for any tenant.",
+    icon: RotateCcw,
+  },
+  {
+    title: "Manage domains",
+    description: "Control tenant subdomains, custom domains, DNS verification, and booking URLs.",
+    icon: Globe2,
+  },
+  {
+    title: "Monitor storage",
+    description: "Track logos, cover images, reports, receipts, prescriptions, and uploaded documents.",
+    icon: Database,
+  },
+  {
+    title: "Owner access",
+    description: "Protect platform owner controls, support routing, audit visibility, and account recovery.",
     icon: ShieldCheck,
+  },
+];
+
+const brandingQueue = [
+  {
+    business: "Kampala Hospital",
+    domain: "kampala-hospital.medilink.ug",
+    logo: "Approved",
+    theme: "Purple",
+    storage: "418 MB",
+    status: "active",
+  },
+  {
+    business: "Mengo Clinic",
+    domain: "mengo-clinic.medilink.ug",
+    logo: "Needs review",
+    theme: "Blue",
+    storage: "186 MB",
+    status: "past_due",
+  },
+  {
+    business: "GoodLife Pharmacy",
+    domain: "goodlife-pharmacy.medilink.ug",
+    logo: "Approved",
+    theme: "Green",
+    storage: "203 MB",
+    status: "active",
+  },
+  {
+    business: "Vine Pharmacy",
+    domain: "vine-pharmacy.medilink.ug",
+    logo: "Approved",
+    theme: "Green",
+    storage: "129 MB",
+    status: "active",
   },
 ];
 
@@ -33,30 +87,99 @@ export default function SettingsPage() {
       <PlatformSectionHeader
         eyebrow="Platform control"
         title="Settings"
-        description="Configure how MediLink handles tenants, billing, support, and platform owner access."
+        description="Approve logos, manage domains, reset tenant branding, suspend accounts, and monitor storage usage."
         icon={sectionIcons.settings}
       />
+
       <div className="grid gap-5 lg:grid-cols-3">
-        {settings.map((setting) => {
-          const Icon = setting.icon;
+        {ownerControls.map((control) => {
+          const Icon = control.icon;
           return (
-            <Card key={setting.title}>
+            <Card key={control.title}>
               <CardHeader>
                 <div className="grid size-12 place-items-center rounded-lg bg-violet-100 text-violet-700">
                   <Icon className="size-5" />
                 </div>
-                <CardTitle className="mt-4">{setting.title}</CardTitle>
-                <CardDescription>{setting.description}</CardDescription>
+                <CardTitle className="mt-4">{control.title}</CardTitle>
+                <CardDescription>{control.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg bg-slate-50 p-4 text-sm font-semibold text-slate-600">
-                  Ready for Supabase-backed configuration when live settings are connected.
-                </div>
+                <Button variant="secondary" className="w-full">
+                  Open control
+                </Button>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Tenant branding queue</CardTitle>
+              <CardDescription>Logo approval, domain, theme, storage, and subscription status.</CardDescription>
+            </div>
+            <Logo compact />
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto p-0">
+          <table className="w-full min-w-[860px] text-left text-sm">
+            <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
+              <tr>
+                <th className="px-5 py-3 font-semibold">Business</th>
+                <th className="px-5 py-3 font-semibold">Domain</th>
+                <th className="px-5 py-3 font-semibold">Logo</th>
+                <th className="px-5 py-3 font-semibold">Theme</th>
+                <th className="px-5 py-3 font-semibold">Storage</th>
+                <th className="px-5 py-3 font-semibold">Status</th>
+                <th className="px-5 py-3 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {brandingQueue.map((item) => (
+                <tr key={item.business} className="hover:bg-slate-50/80">
+                  <td className="px-5 py-4 font-bold text-slate-950">{item.business}</td>
+                  <td className="px-5 py-4 text-slate-700">{item.domain}</td>
+                  <td className="px-5 py-4">
+                    <Badge tone={item.logo === "Approved" ? "green" : "amber"}>{item.logo}</Badge>
+                  </td>
+                  <td className="px-5 py-4 text-slate-700">{item.theme}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-950">{item.storage}</td>
+                  <td className="px-5 py-4">
+                    <Badge tone={item.status === "active" ? "green" : "rose"} className="capitalize">
+                      {item.status.replace("_", " ")}
+                    </Badge>
+                  </td>
+                  <td className="px-5 py-4">
+                    <Button variant="ghost" size="sm">
+                      <CheckCircle2 className="size-4" />
+                      Review
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      <div className="mt-6 grid gap-5 md:grid-cols-3">
+        <Summary label="Tenants" value={String(platformTenants.length)} />
+        <Summary label="Logos approved" value="4" />
+        <Summary label="Storage used" value="1.2 GB" />
+      </div>
     </div>
+  );
+}
+
+function Summary({ label, value }: { label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent>
+        <p className="text-2xl font-bold text-slate-950">{value}</p>
+        <p className="mt-1 text-sm font-semibold text-slate-500">{label}</p>
+      </CardContent>
+    </Card>
   );
 }

@@ -73,7 +73,7 @@ export const mtnMomoAdapter: PaymentAdapter = {
             partyIdType: "MSISDN",
             partyId: payerNumber,
           },
-          payerMessage: "MediLink appointment payment",
+          payerMessage: "Appointment payment",
           payeeNote: `Appointment ${input.appointmentId}`,
         }),
       },

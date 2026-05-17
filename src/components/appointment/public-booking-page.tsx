@@ -6,18 +6,26 @@ import {
 } from "@/components/appointment/public-appointment-booking";
 import { ProductPreview } from "@/components/marketing/product-preview";
 import { Logo } from "@/components/ui/logo";
+import { brandGradient, tenantBranding } from "@/lib/tenant-branding";
 import { tenantBookingUrl } from "@/lib/tenant-host";
 import type { PublicBookingData } from "@/lib/public-booking";
 
 export function PublicBookingPage({ data }: { data: PublicBookingData }) {
   const bookingUrl = tenantBookingUrl(data.tenant);
+  const brand = tenantBranding(data.tenant);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f4f1ff_0,#ffffff_44%,#f6fbff_100%)] text-[#07082f]">
       <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between px-5 sm:px-8">
-          <Link href="/" aria-label="MediLink home">
-            <Logo />
+          <Link href="/" aria-label={`${brand.name} home`}>
+            <Logo
+              label={brand.name}
+              tagline={brand.tagline}
+              imageUrl={brand.logoUrl}
+              initials={brand.initials}
+              color={brand.primaryColor}
+            />
           </Link>
           <Link
             href="/login"
@@ -30,17 +38,20 @@ export function PublicBookingPage({ data }: { data: PublicBookingData }) {
 
       <section className="mx-auto grid max-w-[1240px] gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div className="lg:sticky lg:top-24">
-          <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-4 py-1.5 text-sm font-bold text-violet-700">
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold text-white"
+            style={{ background: brandGradient(brand) }}
+          >
             <CalendarDays className="size-4" aria-hidden="true" />
-            Public MediLink booking page
+            {brand.name} booking
           </div>
           <h1 className="mt-6 text-4xl font-bold leading-tight tracking-normal text-[#080833] sm:text-5xl">
             Book with
-            <span className="block text-violet-600">{data.tenant.name}</span>
+            <span className="block" style={{ color: brand.primaryColor }}>{brand.name}</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
             No clinic website needed. Choose a service, pick a time, and send your
-            appointment request straight to the hospital dashboard.
+            appointment request straight to {brand.name}.
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -50,7 +61,7 @@ export function PublicBookingPage({ data }: { data: PublicBookingData }) {
               ["Get confirmed", MessageCircle],
             ].map(([label, Icon]) => (
               <div key={label as string} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <Icon className="size-6 text-violet-600" aria-hidden="true" />
+                <Icon className="size-6" style={{ color: brand.primaryColor }} aria-hidden="true" />
                 <p className="mt-3 text-sm font-bold text-[#080833]">{label as string}</p>
               </div>
             ))}
@@ -63,7 +74,7 @@ export function PublicBookingPage({ data }: { data: PublicBookingData }) {
               </div>
               <div>
                 <p className="text-sm font-bold text-[#080833]">Share this booking link</p>
-                <p className="mt-1 break-all text-sm font-semibold text-violet-600">
+                <p className="mt-1 break-all text-sm font-semibold" style={{ color: brand.primaryColor }}>
                   {bookingUrl}
                 </p>
                 <p className="mt-2 text-sm font-medium leading-6 text-slate-600">

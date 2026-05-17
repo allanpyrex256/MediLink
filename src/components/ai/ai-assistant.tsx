@@ -5,13 +5,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function AiAssistant() {
+export function AiAssistant({ tenantName = "your workspace" }: { tenantName?: string }) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Ask MediLink AI about today’s clinic flow, revenue, or appointment bottlenecks.",
+      text: `Ask AI about ${tenantName} flow, revenue, or appointment bottlenecks.`,
     },
   ]);
 
@@ -22,7 +22,7 @@ export function AiAssistant() {
       { role: "user", text: message },
       {
         role: "assistant",
-        text: "AI insights are ready to connect here. The tenant context, role, and clinic data contract are already in place.",
+        text: "AI insights are ready to connect here. The tenant context, role, and operational data contract are already in place.",
       },
     ]);
     setMessage("");
@@ -33,7 +33,7 @@ export function AiAssistant() {
       <Button
         className="fixed bottom-5 right-5 z-40 shadow-lg shadow-sky-200"
         onClick={() => setOpen(true)}
-        title="Ask MediLink AI"
+        title={`Ask ${tenantName} AI`}
       >
         <Bot className="size-4" />
         Ask AI
@@ -46,7 +46,7 @@ export function AiAssistant() {
                 <Bot className="size-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-950">MediLink AI</p>
+                <p className="text-sm font-semibold text-slate-950">{tenantName} AI</p>
                 <p className="text-xs text-slate-500">Tenant-aware assistant placeholder</p>
               </div>
             </div>
@@ -75,8 +75,8 @@ export function AiAssistant() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") submit();
               }}
-              placeholder="Ask about clinic operations"
-              aria-label="Ask MediLink AI"
+              placeholder="Ask about operations"
+              aria-label={`Ask ${tenantName} AI`}
             />
             <Button size="icon" onClick={submit} aria-label="Send AI message">
               <Send className="size-4" />

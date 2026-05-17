@@ -1,11 +1,27 @@
-import { CheckCircle2, ExternalLink, Settings, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  ExternalLink,
+  ImageUp,
+  Link2,
+  MapPin,
+  Paintbrush,
+  Settings,
+  Store,
+  XCircle,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Logo } from "@/components/ui/logo";
+import { Select } from "@/components/ui/select";
 import { appConfig, hasSupabaseConfig } from "@/lib/config";
 import { getDashboardData } from "@/lib/data/repositories";
+import { brandGradient, tenantBranding, tenantThemeOptions } from "@/lib/tenant-branding";
 import { tenantHostForSubdomain } from "@/lib/tenant-host";
+import { formatUgandanCurrency } from "@/lib/utils";
 
 const checks = [
   ["Supabase URL", "NEXT_PUBLIC_SUPABASE_URL", Boolean(appConfig.supabaseUrl)],
@@ -19,15 +35,18 @@ const checks = [
 
 export default async function SettingsPage() {
   const data = await getDashboardData();
-  const isPharmacy = data.tenant.tenant_kind === "pharmacy";
-  const tenantHost = tenantHostForSubdomain(data.tenant.subdomain);
+  const brand = tenantBranding(data.tenant);
+  const tenantHost = data.tenant.subdomain
+    ? `${data.tenant.subdomain}.medilink.ug`
+    : tenantHostForSubdomain(data.tenant.subdomain);
+  const branchRevenue = data.branches.reduce((sum, branch) => sum + branch.revenue_month, 0);
 
   return (
     <div>
       <PageHeading
         eyebrow="Settings"
-        title={isPharmacy ? "Pharmacy workspace" : "Clinic workspace"}
-        description="Tenant identity, deployment readiness, and integration configuration."
+        title="Organization Profile"
+        description={`${brand.name} branding, contact details, branches, colors, and custom domain setup.`}
         actions={
           <Button variant="secondary">
             <ExternalLink className="size-4" />
@@ -35,57 +54,238 @@ export default async function SettingsPage() {
           </Button>
         }
       />
-      <div className="grid gap-5 xl:grid-cols-[minmax(320px,0.7fr)_minmax(0,1.3fr)]">
-        <Card>
-          <CardHeader>
-            <div className="grid size-12 place-items-center rounded-lg bg-sky-50 text-sky-700">
-              <Settings className="size-5" />
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(320px,0.72fr)_minmax(0,1.28fr)]">
+        <Card className="overflow-hidden">
+          <div className="h-32" style={{ background: brandGradient(brand) }} />
+          <CardContent className="-mt-10 grid gap-5">
+            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <Logo
+                label={brand.name}
+                tagline={brand.tagline}
+                imageUrl={brand.logoUrl}
+                initials={brand.initials}
+                color={brand.primaryColor}
+              />
             </div>
-            <CardTitle className="mt-4">{data.tenant.name}</CardTitle>
-            <CardDescription>{data.tenant.address}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 text-sm">
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-500">Type</span>
-              <span className="capitalize font-medium text-slate-950">{data.tenant.tenant_kind}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-500">Tenant ID</span>
-              <span className="truncate font-mono text-xs text-slate-700">{data.tenant.id}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-500">Subdomain</span>
-              <span className="font-medium text-slate-950">{tenantHost}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-500">Mode</span>
-              <Badge tone={hasSupabaseConfig() ? "green" : "amber"}>
-                {hasSupabaseConfig() ? "Production data" : "Demo fallback"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Deployment checklist</CardTitle>
-            <CardDescription>Set these variables in Vercel before serving real clinics.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {checks.map(([label, variable, ready]) => (
-              <div key={variable} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 p-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">{label}</p>
-                  <p className="mt-1 font-mono text-xs text-slate-500">{variable}</p>
-                </div>
-                {ready ? (
-                  <CheckCircle2 className="size-5 text-emerald-600" />
-                ) : (
-                  <XCircle className="size-5 text-amber-500" />
-                )}
+            <div className="grid gap-3 text-sm">
+              <ProfileRow label="Business type" value={data.tenant.tenant_kind} capitalize />
+              <ProfileRow label="Phone" value={brand.phone} />
+              <ProfileRow label="Email" value={brand.email} />
+              <ProfileRow label="Address" value={brand.address} />
+              <ProfileRow label="Custom subdomain" value={tenantHost} />
+              <div className="flex justify-between gap-4">
+                <span className="text-slate-500">Mode</span>
+                <Badge tone={hasSupabaseConfig() ? "green" : "amber"}>
+                  {hasSupabaseConfig() ? "Production data" : "Demo fallback"}
+                </Badge>
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
+
+        <div className="grid gap-5">
+          <Card>
+            <CardHeader>
+              <div className="flex items-start gap-3">
+                <IconBox icon={Settings} color={brand.primaryColor} />
+                <div>
+                  <CardTitle>Organization Profile</CardTitle>
+                  <CardDescription>Name, contact information, logo, cover image, and profile image.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input label="Business name" defaultValue={brand.name} readOnly />
+                <Input label="Legal name" defaultValue={brand.legalName} readOnly />
+                <Input label="Phone number" defaultValue={brand.phone} readOnly />
+                <Input label="Email" defaultValue={brand.email} readOnly />
+              </div>
+              <Input label="Address" defaultValue={brand.address} readOnly />
+              <div className="grid gap-3 md:grid-cols-3">
+                <UploadSlot label="Logo" value={brand.logoUrl ? "Uploaded" : "Generated initials logo"} icon={ImageUp} />
+                <UploadSlot label="Cover image" value={brand.coverImageUrl ? "Uploaded" : "Brand color cover"} icon={ImageUp} />
+                <UploadSlot label="Profile image" value={brand.profileImageUrl ? "Uploaded" : "Business profile mark"} icon={Store} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-start gap-3">
+                <IconBox icon={Paintbrush} color={brand.primaryColor} />
+                <div>
+                  <CardTitle>Brand Colors</CardTitle>
+                  <CardDescription>Tenant theme used on the sidebar, login, receipts, reports, and booking page.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Input label="Primary color" defaultValue={brand.primaryColor} readOnly />
+                <Input label="Accent color" defaultValue={brand.accentColor} readOnly />
+                <Select label="Theme selection" defaultValue={brand.theme}>
+                  {tenantThemeOptions.map((theme) => (
+                    <option key={theme.value} value={theme.value}>
+                      {theme.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-4">
+                {tenantThemeOptions.map((theme) => (
+                  <div key={theme.value} className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div
+                      className="h-10 rounded-lg"
+                      style={{
+                        background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.accentColor})`,
+                      }}
+                    />
+                    <p className="mt-2 text-sm font-bold text-slate-950">{theme.label}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+        <Card>
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <IconBox icon={MapPin} color={brand.primaryColor} />
+              <div>
+                <CardTitle>Branch Information</CardTitle>
+                <CardDescription>Branches, managers, daily activity, monthly revenue, and staff coverage.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="overflow-x-auto p-0">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
+                <tr>
+                  <th className="px-5 py-3 font-semibold">Branch</th>
+                  <th className="px-5 py-3 font-semibold">Region</th>
+                  <th className="px-5 py-3 font-semibold">Manager</th>
+                  <th className="px-5 py-3 font-semibold">Today</th>
+                  <th className="px-5 py-3 font-semibold">Revenue</th>
+                  <th className="px-5 py-3 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data.branches.map((branch) => (
+                  <tr key={branch.id} className="hover:bg-slate-50/80">
+                    <td className="px-5 py-4 font-bold text-slate-950">{branch.name}</td>
+                    <td className="px-5 py-4 text-slate-700">{branch.region}</td>
+                    <td className="px-5 py-4 text-slate-700">{branch.manager}</td>
+                    <td className="px-5 py-4 text-slate-700">{branch.patients_today}</td>
+                    <td className="px-5 py-4 font-semibold text-slate-950">
+                      {formatUgandanCurrency(branch.revenue_month)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <Badge tone={branch.status === "active" ? "green" : "amber"} className="capitalize">
+                        {branch.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-5">
+          <Card>
+            <CardHeader>
+              <div className="flex items-start gap-3">
+                <IconBox icon={Link2} color={brand.primaryColor} />
+                <div>
+                  <CardTitle>Custom Subdomain</CardTitle>
+                  <CardDescription>Enterprise tenant URL and booking link identity.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <p className="break-all text-sm font-bold text-slate-950">{tenantHost}</p>
+                <p className="mt-2 text-xs font-semibold text-slate-500">Storage usage: {data.tenant.storage_usage_mb ?? 0} MB</p>
+              </div>
+              <div className="rounded-lg bg-emerald-50 p-4">
+                <p className="text-sm font-bold text-emerald-800">Branch revenue this month</p>
+                <p className="mt-2 text-2xl font-bold text-emerald-900">
+                  {formatUgandanCurrency(branchRevenue)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Deployment Checklist</CardTitle>
+              <CardDescription>Environment status for live payments, auth, storage, and messaging.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {checks.map(([label, variable, ready]) => (
+                <div key={variable} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 p-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">{label}</p>
+                    <p className="mt-1 font-mono text-xs text-slate-500">{variable}</p>
+                  </div>
+                  {ready ? (
+                    <CheckCircle2 className="size-5 text-emerald-600" />
+                  ) : (
+                    <XCircle className="size-5 text-amber-500" />
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IconBox({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
+  return (
+    <div className="grid size-12 shrink-0 place-items-center rounded-lg text-white" style={{ backgroundColor: color }}>
+      <Icon className="size-5" />
+    </div>
+  );
+}
+
+function ProfileRow({
+  label,
+  value,
+  capitalize = false,
+}: {
+  label: string;
+  value: string;
+  capitalize?: boolean;
+}) {
+  return (
+    <div className="flex justify-between gap-4">
+      <span className="text-slate-500">{label}</span>
+      <span className={capitalize ? "font-medium capitalize text-slate-950" : "text-right font-medium text-slate-950"}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function UploadSlot({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start gap-3">
+        <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-white text-slate-600">
+          <Icon className="size-4" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-slate-950">{label}</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">{value}</p>
+        </div>
       </div>
     </div>
   );

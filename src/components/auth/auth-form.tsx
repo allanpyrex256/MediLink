@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
 import { Select } from "@/components/ui/select";
-import { demoAccountOptions } from "@/lib/demo-session";
+import { demoAccountOptions, demoWorkspaceBranding } from "@/lib/demo-session";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils";
 
@@ -17,8 +17,20 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAccountEmail, setSelectedAccountEmail] = useState("admin@kampalahospital.ug");
   const next = searchParams.get("next") ?? "/dashboard";
   const configured = hasSupabaseConfig();
+  const selectedAccount = demoAccountOptions.find((account) => account.email === selectedAccountEmail);
+  const selectedBrand = selectedAccount ? demoWorkspaceBranding[selectedAccount.workspaceId] : null;
+  const isPlatformOwner = selectedAccount?.isPlatformAdmin;
+  const authLabel = isPlatformOwner || configured || !selectedBrand ? "MediLink" : selectedBrand.name;
+  const authTagline = isPlatformOwner
+    ? "Platform Control"
+    : configured || !selectedBrand
+      ? "Healthcare Management System"
+      : selectedBrand.tagline;
+  const authColor = configured || !selectedBrand ? "#7c3aed" : selectedBrand.primaryColor;
+  const authInitials = isPlatformOwner || configured || !selectedBrand ? "ML" : selectedBrand.initials;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -114,9 +126,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     <div className="grid min-h-screen place-items-center bg-slate-50 px-4 py-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <Logo />
+          <Logo
+            label={authLabel}
+            tagline={authTagline}
+            initials={authInitials}
+            color={authColor}
+          />
           <CardTitle className="mt-6">
-            {mode === "login" ? "Sign in to MediLink" : "Create your workspace"}
+            {mode === "login" ? `Sign in to ${authLabel}` : "Create your workspace"}
           </CardTitle>
           <CardDescription>
             {mode === "login"
@@ -132,7 +149,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           ) : null}
           <form className="grid gap-4" onSubmit={submit}>
             {!configured && mode === "login" ? (
-              <Select label="Demo account" name="accountEmail" defaultValue="admin@kampalahospital.ug">
+              <Select
+                label="Demo account"
+                name="accountEmail"
+                value={selectedAccountEmail}
+                onChange={(event) => setSelectedAccountEmail(event.target.value)}
+              >
                 {demoAccountOptions.map((account) => (
                   <option key={account.email} value={account.email}>
                     {account.email} - {account.description}

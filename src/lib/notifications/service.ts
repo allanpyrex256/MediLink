@@ -19,7 +19,7 @@ export async function sendAppointmentConfirmation(input: {
     input.patient.email
       ? sendEmail({
           to: input.patient.email,
-          subject: "MediLink appointment confirmation",
+          subject: `${input.tenant.name} appointment confirmation`,
           html: `<p>${message}</p>`,
         })
       : Promise.resolve({ skipped: true }),

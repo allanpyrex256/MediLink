@@ -4,11 +4,14 @@ import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Logo } from "@/components/ui/logo";
 import { getDashboardData } from "@/lib/data/repositories";
+import { tenantBranding } from "@/lib/tenant-branding";
 
 export default async function ReportsPage() {
   const data = await getDashboardData();
   const isPharmacy = data.tenant.tenant_kind === "pharmacy";
+  const brand = tenantBranding(data.tenant);
   const reportMetrics = isPharmacy
     ? [
         {
@@ -62,7 +65,7 @@ export default async function ReportsPage() {
     <div>
       <PageHeading
         eyebrow="Reports"
-        title={isPharmacy ? "Pharmacy analytics" : "Clinic analytics"}
+        title={`${brand.name} reports`}
         description={
           isPharmacy
             ? "Operational analytics for sales, prescription volume, inventory risk, and payment status."
@@ -83,6 +86,13 @@ export default async function ReportsPage() {
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
         <Card>
           <CardHeader>
+            <Logo
+              label={brand.name}
+              tagline={brand.tagline}
+              imageUrl={brand.logoUrl}
+              initials={brand.initials}
+              color={brand.primaryColor}
+            />
             <CardTitle>{isPharmacy ? "Sales performance" : "Revenue performance"}</CardTitle>
             <CardDescription>
               {isPharmacy ? "Monthly prescription order collections and demand signal." : "Monthly appointment collections and demand signal."}
@@ -95,7 +105,7 @@ export default async function ReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Report packs</CardTitle>
-            <CardDescription>Prepared exports for clinic leadership.</CardDescription>
+            <CardDescription>Prepared exports for {brand.name} leadership.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
             {(isPharmacy

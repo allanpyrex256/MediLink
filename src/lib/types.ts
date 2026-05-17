@@ -29,6 +29,7 @@ export type PaymentProvider =
 export type NotificationChannel = "email" | "whatsapp" | "sms" | "in_app";
 
 export type TenantStatus = "active" | "trialing" | "past_due" | "disabled";
+export type TenantTheme = "purple" | "blue" | "green" | "dark";
 
 export interface Tenant {
   id: string;
@@ -42,6 +43,15 @@ export interface Tenant {
   email: string;
   status: TenantStatus;
   subdomain: string | null;
+  logo_url?: string | null;
+  cover_image_url?: string | null;
+  profile_image_url?: string | null;
+  primary_color?: string | null;
+  accent_color?: string | null;
+  theme?: TenantTheme | null;
+  brand_tagline?: string | null;
+  logo_approved_at?: string | null;
+  storage_usage_mb?: number | null;
   created_at: string;
 }
 

@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       scheduled_at: parsed.data.scheduledAt,
       duration_minutes: parsed.data.durationMinutes,
       reason: parsed.data.reason,
-      notes: "Booked from the public MediLink booking page.",
+      notes: `Booked from the public ${bookingData.tenant.name} booking page.`,
       fee: doctor.consultation_fee,
       status: "pending",
       payment_status: "pending",

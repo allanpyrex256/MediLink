@@ -3,7 +3,9 @@ import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Logo } from "@/components/ui/logo";
 import { getDashboardData } from "@/lib/data/repositories";
+import { tenantBranding } from "@/lib/tenant-branding";
 import { formatUgandanCurrency } from "@/lib/utils";
 
 const statusTone = {
@@ -25,12 +27,14 @@ export default async function BillingPage() {
   const totalBilled = data.invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
   const totalPaid = data.invoices.reduce((sum, invoice) => sum + invoice.paid_amount, 0);
   const outstanding = totalBilled - totalPaid;
+  const brand = tenantBranding(data.tenant);
+  const receiptInvoice = data.invoices[0];
 
   return (
     <div>
       <PageHeading
         eyebrow="Billing and finance"
-        title="Receipts, invoices, and cash tracking"
+        title={`${brand.name} receipts and invoices`}
         description="Monitor receipts, invoices, cash, mobile money, and insurance balances in one finance view."
         actions={
           <>
@@ -74,7 +78,7 @@ export default async function BillingPage() {
         <Card>
           <CardHeader>
             <CardTitle>Invoice ledger</CardTitle>
-            <CardDescription>Billing status, payer type, receipt readiness, and balances.</CardDescription>
+            <CardDescription>{brand.name} billing status, payer type, receipt readiness, and balances.</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <table className="w-full min-w-[840px] text-left text-sm">
@@ -117,26 +121,61 @@ export default async function BillingPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Finance controls</CardTitle>
-            <CardDescription>Signals clinics use to stop revenue leakage.</CardDescription>
+            <Logo
+              label={brand.name}
+              tagline={brand.tagline}
+              imageUrl={brand.logoUrl}
+              initials={brand.initials}
+              color={brand.primaryColor}
+            />
+            <CardTitle className="mt-5">Receipt preview</CardTitle>
+            <CardDescription>{brand.phone} - {brand.email}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
-            {[
-              ["Receipts", "Print or send official receipts after payment."],
-              ["Cash tracking", "Compare front-desk cash against issued invoices."],
-              ["Mobile money", "Trace MTN, Airtel, Flutterwave, and Stripe references."],
-              ["Insurance", "Track claims that remain unpaid by insurers."],
-            ].map(([title, body]) => (
-              <div key={title} className="flex items-start gap-3 rounded-lg border border-slate-100 p-3">
+            {receiptInvoice ? (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-normal text-slate-500">Receipt</p>
+                    <p className="mt-2 font-mono text-sm font-bold text-slate-950">
+                      {receiptInvoice.invoice_number}
+                    </p>
+                  </div>
+                  <Badge tone={statusTone[receiptInvoice.status]} className="capitalize">
+                    {receiptInvoice.status}
+                  </Badge>
+                </div>
+                <div className="mt-4 grid gap-2 text-sm">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Customer</span>
+                    <span className="font-semibold text-slate-950">{receiptInvoice.customer_name}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Amount</span>
+                    <span className="font-semibold text-slate-950">
+                      {formatUgandanCurrency(receiptInvoice.amount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Paid</span>
+                    <span className="font-semibold text-slate-950">
+                      {formatUgandanCurrency(receiptInvoice.paid_amount)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            <div className="rounded-lg border border-slate-100 p-3">
+              <div className="flex items-start gap-3">
                 <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-600">
                   <WalletCards className="size-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-950">{title}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">{body}</p>
+                  <p className="text-sm font-semibold text-slate-950">Receipt branding</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{brand.address}</p>
                 </div>
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
       </div>

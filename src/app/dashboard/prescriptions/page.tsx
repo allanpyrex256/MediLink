@@ -5,7 +5,9 @@ import { PrescriptionTable } from "@/components/dashboard/prescription-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Logo } from "@/components/ui/logo";
 import { getDashboardData } from "@/lib/data/repositories";
+import { tenantBranding } from "@/lib/tenant-branding";
 import { formatUgandanCurrency } from "@/lib/utils";
 
 const statusTone = {
@@ -23,6 +25,7 @@ export default async function PrescriptionsPage() {
     redirect("/dashboard/appointments");
   }
 
+  const brand = tenantBranding(data.tenant);
   const activeOrders = data.prescriptions.filter((item) => item.status !== "collected");
   const pendingValue = activeOrders.reduce((sum, item) => sum + item.total_amount, 0);
 
@@ -30,7 +33,7 @@ export default async function PrescriptionsPage() {
     <div>
       <PageHeading
         eyebrow="Dispensing"
-        title="Prescriptions"
+        title={`${brand.name} prescriptions`}
         description="Store and monitor prescription orders from intake through dispensing, payment, and pickup."
         actions={
           <Button>
@@ -77,8 +80,15 @@ export default async function PrescriptionsPage() {
         <PrescriptionTable prescriptions={data.prescriptions} title="Dispensing ledger" />
         <Card>
           <CardHeader>
+            <Logo
+              label={brand.name}
+              tagline={brand.tagline}
+              imageUrl={brand.logoUrl}
+              initials={brand.initials}
+              color={brand.primaryColor}
+            />
             <CardTitle>Status lanes</CardTitle>
-            <CardDescription>Current prescription work by fulfillment state.</CardDescription>
+            <CardDescription>Current {brand.name} prescription work by fulfillment state.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
             {data.prescriptions.map((item) => (

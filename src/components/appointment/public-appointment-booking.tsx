@@ -326,7 +326,7 @@ export function PublicBookingSummary({
       <div className="rounded-lg border border-violet-200 bg-violet-600 p-5 text-white shadow-xl shadow-violet-200">
         <p className="text-sm font-bold">What happens after booking?</p>
         <p className="mt-2 text-sm font-medium leading-6 text-violet-50">
-          Your request appears inside the clinic&apos;s MediLink appointments dashboard as pending.
+          Your request appears inside {tenant.name}&apos;s appointments dashboard as pending.
           Staff can confirm it, check you in, and prepare your patient file.
         </p>
         <p className="mt-4 text-xs font-semibold text-violet-100">

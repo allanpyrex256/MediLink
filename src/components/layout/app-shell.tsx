@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ElementType } from "react";
+import type { CSSProperties, ElementType } from "react";
 import { useState } from "react";
 import {
   Activity,
@@ -31,6 +31,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
+import { tenantBranding } from "@/lib/tenant-branding";
 import type { AppUser, Tenant, UserRole } from "@/lib/types";
 import { cn, initials } from "@/lib/utils";
 
@@ -103,6 +104,8 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const brand = tenantBranding(tenant);
+  const shellColor = user.is_platform_admin ? "#7c3aed" : brand.primaryColor;
   const roleLabel = user.is_platform_admin
     ? "SaaS Owner"
     : user.role === "admin"
@@ -164,11 +167,20 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#eef6ff_0%,#f8fbff_48%,#ecfdf5_100%)] text-[#07082f]">
+    <div
+      className="min-h-screen bg-[linear-gradient(135deg,#eef6ff_0%,#f8fbff_48%,#ecfdf5_100%)] text-[#07082f]"
+      style={
+        {
+          "--tenant-primary": shellColor,
+          "--tenant-accent": brand.accentColor,
+        } as CSSProperties
+      }
+    >
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[300px] border-r border-slate-300 bg-white/95 shadow-xl shadow-slate-200/60 lg:flex lg:flex-col">
         <SidebarContent
           pathname={pathname}
           tenant={tenant}
+          brand={brand}
           navigation={navigation}
           onSignOut={signOut}
           platformMode={user.is_platform_admin}
@@ -192,7 +204,13 @@ export function AppShell({
               transition={{ type: "spring", damping: 28, stiffness: 260 }}
             >
               <div className="flex h-[86px] items-center justify-between border-b border-slate-300 bg-sky-50/50 px-5">
-                <Logo />
+                <Logo
+                  label={user.is_platform_admin ? "MediLink" : brand.name}
+                  tagline={user.is_platform_admin ? "Platform Control" : brand.tagline}
+                  imageUrl={user.is_platform_admin ? null : brand.logoUrl}
+                  initials={user.is_platform_admin ? "ML" : brand.initials}
+                  color={user.is_platform_admin ? "#7c3aed" : brand.primaryColor}
+                />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -205,6 +223,7 @@ export function AppShell({
                 <SidebarContent
                   pathname={pathname}
                   tenant={tenant}
+                  brand={brand}
                   navigation={navigation}
                   onNavigate={() => setMobileOpen(false)}
                   onSignOut={signOut}
@@ -235,6 +254,11 @@ export function AppShell({
                   type="button"
                   onClick={() => setQuickActionsOpen((value) => !value)}
                   className="inline-flex h-12 items-center gap-3 rounded-lg border border-violet-300 bg-violet-50/80 px-5 text-sm font-semibold text-violet-700 shadow-sm shadow-violet-100 transition hover:bg-violet-100"
+                  style={{
+                    borderColor: `${shellColor}44`,
+                    backgroundColor: `${shellColor}12`,
+                    color: shellColor,
+                  }}
                   aria-expanded={quickActionsOpen}
                 >
                   <Zap className="size-4" />
@@ -257,9 +281,9 @@ export function AppShell({
                             key={action.href}
                             href={action.href}
                             onClick={() => setQuickActionsOpen(false)}
-                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-violet-50 hover:text-violet-600"
+                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                           >
-                            <Icon className="size-4 text-violet-600" aria-hidden="true" />
+                            <Icon className="size-4" style={{ color: shellColor }} aria-hidden="true" />
                             {action.label}
                           </Link>
                         );
@@ -321,6 +345,7 @@ export function AppShell({
 function SidebarContent({
   pathname,
   tenant,
+  brand,
   navigation,
   onNavigate,
   onSignOut,
@@ -330,6 +355,7 @@ function SidebarContent({
 }: {
   pathname: string;
   tenant: Tenant;
+  brand: ReturnType<typeof tenantBranding>;
   navigation: NavigationItem[];
   onNavigate?: () => void;
   onSignOut: () => void;
@@ -341,12 +367,24 @@ function SidebarContent({
     <>
       {!compact ? (
         <div className="flex h-[86px] items-center border-b border-slate-300 bg-sky-50/50 px-7">
-          <Logo />
+          <Logo
+            label={platformMode ? "MediLink" : brand.name}
+            tagline={platformMode ? "Platform Control" : brand.tagline}
+            imageUrl={platformMode ? null : brand.logoUrl}
+            initials={platformMode ? "ML" : brand.initials}
+            color={platformMode ? "#7c3aed" : brand.primaryColor}
+          />
         </div>
       ) : null}
       <nav className="grid gap-3 px-4 py-8">
         {navigation.map((item) => (
-          <NavItem key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+          <NavItem
+            key={item.href}
+            item={item}
+            pathname={pathname}
+            brandColor={platformMode ? "#7c3aed" : brand.primaryColor}
+            onNavigate={onNavigate}
+          />
         ))}
       </nav>
       <div className="mt-auto p-4">
@@ -355,6 +393,9 @@ function SidebarContent({
             <p className="text-sm font-bold text-slate-950">
               {platformMode ? "MediLink Platform" : tenant.name}
             </p>
+            {!platformMode ? (
+              <p className="mt-1 text-xs font-semibold text-slate-500">{brand.email}</p>
+            ) : null}
             <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-emerald-600">
               <span className="size-2 rounded-full bg-emerald-500" />
               {platformMode ? "Owner view" : "Active"}
@@ -385,10 +426,12 @@ function SidebarContent({
 function NavItem({
   item,
   pathname,
+  brandColor,
   onNavigate,
 }: {
   item: NavigationItem;
   pathname: string;
+  brandColor: string;
   onNavigate?: () => void;
 }) {
   const isSectionRoot = item.href === "/dashboard" || item.href === "/super-admin";
@@ -404,9 +447,16 @@ function NavItem({
       className={cn(
         "flex h-12 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold transition",
         active
-          ? "bg-violet-600 text-white shadow-lg shadow-violet-200"
+          ? "text-white shadow-lg shadow-slate-200"
           : "border border-transparent text-slate-700 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700",
       )}
+      style={
+        active
+          ? {
+              backgroundColor: brandColor,
+            }
+          : undefined
+      }
     >
       <Icon className="size-5" />
       {item.label}

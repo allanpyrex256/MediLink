@@ -58,7 +58,7 @@ export function PaymentPanel({
           currency: "UGX",
           phone,
           email,
-          patientName: appointment.patient?.full_name ?? "MediLink Patient",
+          patientName: appointment.patient?.full_name ?? `${tenant.name} customer`,
           network: provider === "airtel_money" ? "airtel" : "mtn",
         }),
       });
