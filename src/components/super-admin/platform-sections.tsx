@@ -78,7 +78,7 @@ export function TenantDirectory({
         <CardDescription>Manage subscribed businesses and their current status.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto p-0">
-        <table className="w-full min-w-[840px] text-left text-sm">
+        <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
             <tr>
               <th className="px-5 py-3 font-semibold">Business</th>
@@ -86,8 +86,10 @@ export function TenantDirectory({
               <th className="px-5 py-3 font-semibold">Status</th>
               <th className="px-5 py-3 font-semibold">Users</th>
               <th className="px-5 py-3 font-semibold">Region</th>
+              <th className="px-5 py-3 font-semibold">Contact</th>
               <th className="px-5 py-3 font-semibold">Next Due</th>
               <th className="px-5 py-3 font-semibold">Amount</th>
+              <th className="px-5 py-3 font-semibold">Payment</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -96,6 +98,7 @@ export function TenantDirectory({
                 <td className="px-5 py-4">
                   <p className="font-bold text-slate-950">{tenant.business}</p>
                   <p className="mt-1 text-xs font-medium text-slate-500 capitalize">{tenant.kind}</p>
+                  <p className="mt-1 text-xs font-medium text-slate-400">{tenant.address}</p>
                 </td>
                 <td className="px-5 py-4 font-semibold text-slate-800">{tenant.plan}</td>
                 <td className="px-5 py-4">
@@ -105,10 +108,15 @@ export function TenantDirectory({
                 </td>
                 <td className="px-5 py-4 text-slate-700">{tenant.users}</td>
                 <td className="px-5 py-4 text-slate-700">{tenant.region}</td>
+                <td className="px-5 py-4 text-slate-700">
+                  <p>{tenant.phone}</p>
+                  <p className="mt-1 text-xs text-slate-500">{tenant.email}</p>
+                </td>
                 <td className="px-5 py-4 text-slate-700">{tenant.nextDue}</td>
                 <td className="px-5 py-4 font-bold text-slate-950">
                   {tenant.amount ? formatUgx(tenant.amount) : "Trial"}
                 </td>
+                <td className="px-5 py-4 text-slate-700">{tenant.paymentMethod}</td>
               </tr>
             ))}
           </tbody>
@@ -137,6 +145,9 @@ export function BillingLedger({ tenants }: { tenants: PlatformTenant[] }) {
                   <p className="text-sm font-bold text-slate-950">{tenant.business}</p>
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     {tenant.plan} - due {tenant.nextDue}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-400">
+                    {tenant.paymentMethod} - {tenant.phone}
                   </p>
                 </div>
                 <Badge tone={statusTone[tenant.status]} className="capitalize">
@@ -215,6 +226,9 @@ export function ActivityList({ tenants }: { tenants: PlatformTenant[] }) {
             </div>
             <p className="mt-3 text-xs font-semibold text-slate-500">
               Last payment: {tenant.lastPayment} - Next due: {tenant.nextDue}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-slate-400">
+              {tenant.paymentMethod} - {tenant.address}
             </p>
           </CardContent>
         </Card>

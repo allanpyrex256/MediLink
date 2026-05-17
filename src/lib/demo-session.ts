@@ -4,11 +4,13 @@ export const DEMO_WORKSPACE_COOKIE = "medilink_demo_workspace";
 export const DEMO_ACCOUNT_COOKIE = "medilink_demo_account";
 
 export type DemoWorkspaceId =
-  | "kampala-family-clinic"
-  | "jinja-children-hospital"
-  | "acacia-care-pharmacy";
+  | "kampala-hospital"
+  | "mengo-clinic"
+  | "mukono-medical-centre"
+  | "vine-pharmacy"
+  | "goodlife-pharmacy";
 
-export const defaultDemoWorkspaceId: DemoWorkspaceId = "kampala-family-clinic";
+export const defaultDemoWorkspaceId: DemoWorkspaceId = "kampala-hospital";
 
 export const demoWorkspaceOptions: {
   id: DemoWorkspaceId;
@@ -18,41 +20,68 @@ export const demoWorkspaceOptions: {
   description: string;
 }[] = [
   {
-    id: "kampala-family-clinic",
-    name: "Kampala Care Hospital",
+    id: "kampala-hospital",
+    name: "Kampala Hospital",
     kind: "hospital",
-    email: "admin@kampalacarehospital.ug",
-    description: "Hospital admin portal",
+    email: "admin@kampalahospital.ug",
+    description: "Hospital Administrator - Operations & Staff Control",
   },
   {
-    id: "jinja-children-hospital",
-    name: "Jinja Children Hospital",
-    kind: "hospital",
-    email: "admin@jinjachildren.ug",
-    description: "Hospital operations portal",
+    id: "mengo-clinic",
+    name: "Mengo Clinic",
+    kind: "clinic",
+    email: "manager@mengoclinic.ug",
+    description: "Clinic Manager - Branch & Patient Flow",
   },
   {
-    id: "acacia-care-pharmacy",
-    name: "Acacia Care Pharmacy",
+    id: "mukono-medical-centre",
+    name: "Mukono Medical Centre",
+    kind: "clinic",
+    email: "admin@mukonomedical.ug",
+    description: "Medical Center Admin - Departments & Billing",
+  },
+  {
+    id: "vine-pharmacy",
+    name: "Vine Pharmacy",
     kind: "pharmacy",
-    email: "manager@acaciacarepharmacy.ug",
-    description: "Pharmacy stock and dispensing portal",
+    email: "pharmacy@vinepharmacy.ug",
+    description: "Pharmacy Manager - Stock & Dispensing Control",
+  },
+  {
+    id: "goodlife-pharmacy",
+    name: "GoodLife Pharmacy",
+    kind: "pharmacy",
+    email: "manager@goodlifepharmacy.ug",
+    description: "Branch Pharmacist - Inventory & Refills",
   },
 ];
 
 export const demoWorkspaceAliases: Record<string, DemoWorkspaceId> = {
-  "kampala-family-clinic": "kampala-family-clinic",
-  "kampala-care-hospital": "kampala-family-clinic",
-  "kampala-care": "kampala-family-clinic",
-  kampalacare: "kampala-family-clinic",
-  kampalaclinic: "kampala-family-clinic",
-  kampala: "kampala-family-clinic",
-  "jinja-children-hospital": "jinja-children-hospital",
-  "jinja-children": "jinja-children-hospital",
-  citycare: "jinja-children-hospital",
-  "acacia-care-pharmacy": "acacia-care-pharmacy",
-  acaciacare: "acacia-care-pharmacy",
-  mediplus: "acacia-care-pharmacy",
+  "kampala-hospital": "kampala-hospital",
+  kampalahospital: "kampala-hospital",
+  "kampala-family-clinic": "kampala-hospital",
+  "kampala-care-hospital": "kampala-hospital",
+  "kampala-care": "kampala-hospital",
+  kampalacare: "kampala-hospital",
+  kampalaclinic: "kampala-hospital",
+  kampala: "kampala-hospital",
+  "mengo-clinic": "mengo-clinic",
+  mengoclinic: "mengo-clinic",
+  mengo: "mengo-clinic",
+  "jinja-children-hospital": "mengo-clinic",
+  "jinja-children": "mengo-clinic",
+  citycare: "mengo-clinic",
+  "mukono-medical-centre": "mukono-medical-centre",
+  "mukono-medical-center": "mukono-medical-centre",
+  mukonomedical: "mukono-medical-centre",
+  mukono: "mukono-medical-centre",
+  "vine-pharmacy": "vine-pharmacy",
+  vinepharmacy: "vine-pharmacy",
+  "acacia-care-pharmacy": "vine-pharmacy",
+  acaciacare: "vine-pharmacy",
+  "goodlife-pharmacy": "goodlife-pharmacy",
+  goodlifepharmacy: "goodlife-pharmacy",
+  mediplus: "goodlife-pharmacy",
 };
 
 export const demoTenantProfiles: Record<
@@ -64,58 +93,124 @@ export const demoTenantProfiles: Record<
     >;
   }
 > = {
-  kampalaclinic: {
-    workspaceId: "kampala-family-clinic",
+  "kampala-hospital": {
+    workspaceId: "kampala-hospital",
     tenant: {
-      name: "Kampala Care Hospital",
-      slug: "kampalaclinic",
-      legal_name: "Kampala Care Hospital Ltd",
-      email: "admin@kampalacarehospital.ug",
-      subdomain: "kampalaclinic",
+      name: "Kampala Hospital",
+      slug: "kampala-hospital",
+      legal_name: "Kampala Hospital Ltd",
+      email: "admin@kampalahospital.ug",
+      subdomain: "kampala-hospital",
       tenant_kind: "hospital",
     },
   },
-  kampalacare: {
-    workspaceId: "kampala-family-clinic",
+  kampalahospital: {
+    workspaceId: "kampala-hospital",
     tenant: {
-      name: "Kampala Care Hospital",
-      slug: "kampala-care-hospital",
-      legal_name: "Kampala Care Hospital Ltd",
-      email: "admin@kampalacarehospital.ug",
-      subdomain: "kampala-care-hospital",
+      name: "Kampala Hospital",
+      slug: "kampala-hospital",
+      legal_name: "Kampala Hospital Ltd",
+      email: "admin@kampalahospital.ug",
+      subdomain: "kampala-hospital",
       tenant_kind: "hospital",
     },
   },
   "kampala-care-hospital": {
-    workspaceId: "kampala-family-clinic",
+    workspaceId: "kampala-hospital",
     tenant: {
-      name: "Kampala Care Hospital",
-      slug: "kampala-care-hospital",
-      legal_name: "Kampala Care Hospital Ltd",
-      email: "admin@kampalacarehospital.ug",
-      subdomain: "kampala-care-hospital",
+      name: "Kampala Hospital",
+      slug: "kampala-hospital",
+      legal_name: "Kampala Hospital Ltd",
+      email: "admin@kampalahospital.ug",
+      subdomain: "kampala-hospital",
       tenant_kind: "hospital",
+    },
+  },
+  kampalaclinic: {
+    workspaceId: "kampala-hospital",
+    tenant: {
+      name: "Kampala Hospital",
+      slug: "kampala-hospital",
+      legal_name: "Kampala Hospital Ltd",
+      email: "admin@kampalahospital.ug",
+      subdomain: "kampala-hospital",
+      tenant_kind: "hospital",
+    },
+  },
+  "mengo-clinic": {
+    workspaceId: "mengo-clinic",
+    tenant: {
+      name: "Mengo Clinic",
+      slug: "mengo-clinic",
+      legal_name: "Mengo Clinic Ltd",
+      email: "manager@mengoclinic.ug",
+      subdomain: "mengo-clinic",
+      tenant_kind: "clinic",
+    },
+  },
+  mengoclinic: {
+    workspaceId: "mengo-clinic",
+    tenant: {
+      name: "Mengo Clinic",
+      slug: "mengo-clinic",
+      legal_name: "Mengo Clinic Ltd",
+      email: "manager@mengoclinic.ug",
+      subdomain: "mengo-clinic",
+      tenant_kind: "clinic",
     },
   },
   citycare: {
-    workspaceId: "jinja-children-hospital",
+    workspaceId: "mengo-clinic",
     tenant: {
-      name: "CityCare Hospital",
-      slug: "citycare",
-      legal_name: "CityCare Hospital Ltd",
-      email: "admin@citycare.com",
-      subdomain: "citycare",
-      tenant_kind: "hospital",
+      name: "Mengo Clinic",
+      slug: "mengo-clinic",
+      legal_name: "Mengo Clinic Ltd",
+      email: "manager@mengoclinic.ug",
+      subdomain: "mengo-clinic",
+      tenant_kind: "clinic",
+    },
+  },
+  "mukono-medical-centre": {
+    workspaceId: "mukono-medical-centre",
+    tenant: {
+      name: "Mukono Medical Centre",
+      slug: "mukono-medical-centre",
+      legal_name: "Mukono Medical Centre Ltd",
+      email: "admin@mukonomedical.ug",
+      subdomain: "mukono-medical-centre",
+      tenant_kind: "clinic",
+    },
+  },
+  "vine-pharmacy": {
+    workspaceId: "vine-pharmacy",
+    tenant: {
+      name: "Vine Pharmacy",
+      slug: "vine-pharmacy",
+      legal_name: "Vine Pharmacy Ltd",
+      email: "pharmacy@vinepharmacy.ug",
+      subdomain: "vine-pharmacy",
+      tenant_kind: "pharmacy",
+    },
+  },
+  "goodlife-pharmacy": {
+    workspaceId: "goodlife-pharmacy",
+    tenant: {
+      name: "GoodLife Pharmacy",
+      slug: "goodlife-pharmacy",
+      legal_name: "GoodLife Pharmacy Ltd",
+      email: "manager@goodlifepharmacy.ug",
+      subdomain: "goodlife-pharmacy",
+      tenant_kind: "pharmacy",
     },
   },
   mediplus: {
-    workspaceId: "acacia-care-pharmacy",
+    workspaceId: "goodlife-pharmacy",
     tenant: {
-      name: "MediPlus Pharmacy",
-      slug: "mediplus",
-      legal_name: "MediPlus Pharmacy Ltd",
-      email: "pharmacist@mediplus.com",
-      subdomain: "mediplus",
+      name: "GoodLife Pharmacy",
+      slug: "goodlife-pharmacy",
+      legal_name: "GoodLife Pharmacy Ltd",
+      email: "manager@goodlifepharmacy.ug",
+      subdomain: "goodlife-pharmacy",
       tenant_kind: "pharmacy",
     },
   },
@@ -131,61 +226,77 @@ export const demoAccountOptions: {
   isPlatformAdmin?: boolean;
 }[] = [
   {
-    email: "owner@medilink.test",
+    email: "owner@medilink.africa",
     password: "demo12345",
-    fullName: "MediLink Super Admin",
+    fullName: "MediLink Platform Owner",
     role: "admin",
-    workspaceId: "kampala-family-clinic",
-    description: "Super Admin - platform control",
+    workspaceId: "kampala-hospital",
+    description: "MediLink Platform Owner",
     isPlatformAdmin: true,
   },
   {
-    email: "admin@kampalacarehospital.ug",
+    email: "admin@kampalahospital.ug",
     password: "demo12345",
-    fullName: "Kampala Care Hospital Admin",
+    fullName: "Kato Byaruhanga",
     role: "admin",
-    workspaceId: "kampala-family-clinic",
-    description: "Hospital Admin - full clinic management",
+    workspaceId: "kampala-hospital",
+    description: "Hospital Administrator - Operations & Staff Control",
   },
   {
-    email: "doctor@kampalacarehospital.ug",
+    email: "manager@mengoclinic.ug",
+    password: "demo12345",
+    fullName: "Nakato Ssempijja",
+    role: "admin",
+    workspaceId: "mengo-clinic",
+    description: "Clinic Manager - Front Desk & Branch Operations",
+  },
+  {
+    email: "admin@mukonomedical.ug",
+    password: "demo12345",
+    fullName: "Achan Byaruhanga",
+    role: "admin",
+    workspaceId: "mukono-medical-centre",
+    description: "Medical Center Admin - Departments & Billing",
+  },
+  {
+    email: "pharmacy@vinepharmacy.ug",
+    password: "demo12345",
+    fullName: "Turyasingura Nankya",
+    role: "pharmacist",
+    workspaceId: "vine-pharmacy",
+    description: "Pharmacy Manager - Stock & Dispensing Control",
+  },
+  {
+    email: "manager@goodlifepharmacy.ug",
+    password: "demo12345",
+    fullName: "Okello Mwangi",
+    role: "pharmacist",
+    workspaceId: "goodlife-pharmacy",
+    description: "Branch Pharmacist - Inventory & Refills",
+  },
+  {
+    email: "dr.namusoke@kampalahospital.ug",
     password: "demo12345",
     fullName: "Dr. Sarah Namusoke",
     role: "doctor",
-    workspaceId: "kampala-family-clinic",
-    description: "Doctor - patient records",
+    workspaceId: "kampala-hospital",
+    description: "Senior Medical Officer - Patient Records",
   },
   {
-    email: "reception@kampalacarehospital.ug",
+    email: "reception@mengoclinic.ug",
     password: "demo12345",
-    fullName: "Kampala Care Front Desk",
+    fullName: "Nankya Ssempijja",
     role: "receptionist",
-    workspaceId: "kampala-family-clinic",
-    description: "Receptionist - appointments",
+    workspaceId: "mengo-clinic",
+    description: "Front Desk Reception - Appointments & Patient Intake",
   },
   {
-    email: "admin@citycare.com",
+    email: "patient@medilinkdemo.ug",
     password: "demo12345",
-    fullName: "CityCare Clinic Admin",
-    role: "admin",
-    workspaceId: "jinja-children-hospital",
-    description: "Admin - hospital operations tenant",
-  },
-  {
-    email: "pharmacist@mediplus.com",
-    password: "demo12345",
-    fullName: "MediPlus Pharmacist",
-    role: "pharmacist",
-    workspaceId: "acacia-care-pharmacy",
-    description: "Pharmacist - handles medicine and stock",
-  },
-  {
-    email: "patient@kampalacarehospital.ug",
-    password: "demo12345",
-    fullName: "John Doe",
+    fullName: "Brian Kato",
     role: "patient",
-    workspaceId: "kampala-family-clinic",
-    description: "Patient - books appointments",
+    workspaceId: "kampala-hospital",
+    description: "Patient Account - Book Appointments",
   },
 ];
 

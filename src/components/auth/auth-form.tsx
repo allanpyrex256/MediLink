@@ -132,7 +132,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           ) : null}
           <form className="grid gap-4" onSubmit={submit}>
             {!configured && mode === "login" ? (
-              <Select label="Demo account" name="accountEmail" defaultValue="admin@kampalacarehospital.ug">
+              <Select label="Demo account" name="accountEmail" defaultValue="admin@kampalahospital.ug">
                 {demoAccountOptions.map((account) => (
                   <option key={account.email} value={account.email}>
                     {account.email} - {account.description}
@@ -147,7 +147,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                   <option value="hospital">Hospital</option>
                   <option value="pharmacy">Pharmacy</option>
                 </Select>
-                <Input label="Clinic, hospital, or pharmacy name" name="tenantName" placeholder="Kampala Care Hospital" required />
+                <Input label="Clinic, hospital, or pharmacy name" name="tenantName" placeholder="Kampala Hospital" required />
                 <Input label="Owner full name" name="fullName" placeholder="Dr. Sarah Namusoke" required />
               </>
             ) : null}

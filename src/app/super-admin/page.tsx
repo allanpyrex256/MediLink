@@ -298,7 +298,7 @@ function BusinessTable({ tenants }: { tenants: PlatformTenant[] }) {
           <th className="px-5 py-3 font-semibold">Last Payment</th>
           <th className="px-5 py-3 font-semibold">Next Due</th>
           <th className="px-5 py-3 font-semibold">Amount</th>
-          <th className="px-5 py-3 font-semibold">Activity</th>
+          <th className="px-5 py-3 font-semibold">Payment</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
@@ -307,7 +307,10 @@ function BusinessTable({ tenants }: { tenants: PlatformTenant[] }) {
             <td className="px-5 py-4">
               <p className="font-bold text-slate-950">{tenant.business}</p>
               <p className="mt-1 text-xs font-medium text-slate-500 capitalize">
-                {tenant.kind} - {tenant.region}
+                {tenant.kind} - {tenant.region} - {tenant.phone}
+              </p>
+              <p className="mt-1 text-xs font-medium text-slate-400">
+                {tenant.address}
               </p>
             </td>
             <td className="px-5 py-4 font-semibold text-slate-800">{tenant.plan}</td>
@@ -322,7 +325,8 @@ function BusinessTable({ tenants }: { tenants: PlatformTenant[] }) {
               {tenant.amount ? formatUgx(tenant.amount) : "Trial"}
             </td>
             <td className="px-5 py-4">
-              <Badge tone={activityTone[tenant.activity]} className="capitalize">
+              <p className="font-semibold text-slate-800">{tenant.paymentMethod}</p>
+              <Badge tone={activityTone[tenant.activity]} className="mt-2 capitalize">
                 {tenant.activity}
               </Badge>
             </td>
@@ -357,6 +361,9 @@ function OwnerQueue({
                   <p className="text-sm font-bold text-slate-950">{tenant.business}</p>
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     {tenant.plan} - due {tenant.nextDue}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-400">
+                    {tenant.paymentMethod} - {tenant.phone}
                   </p>
                 </div>
                 <p className="text-sm font-bold text-slate-950">

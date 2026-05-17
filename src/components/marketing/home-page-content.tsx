@@ -21,7 +21,7 @@ import type { LucideIcon } from "lucide-react";
 import { ProductPreview } from "@/components/marketing/product-preview";
 
 const stats = [
-  { label: "demo tenants", value: "3" },
+  { label: "demo tenants", value: "5" },
   { label: "role portals", value: "6" },
   { label: "sample records", value: "120+" },
 ] as const;
@@ -87,67 +87,71 @@ const rolePortals = [
   {
     role: "Super Admin",
     dashboard: "Platform control",
-    body: "Tenants, subscriptions, platform status, and organization controls.",
-    href: "/demo/kampala-care-hospital?account=owner%40medilink.test&next=/super-admin",
+    body: "Open the MediLink Platform Owner view for tenants, revenue, renewals, and support.",
+    href: "/demo/kampala-hospital?account=owner%40medilink.africa&next=/super-admin",
     icon: ShieldCheck,
     tone: "bg-violet-600 text-white",
   },
   {
-    role: "Hospital Admin",
-    dashboard: "Full clinic management",
-    body: "Open Kampala Care Hospital with appointments, billing, staff, and reports.",
-    href: "/demo/kampala-care-hospital?account=admin%40kampalacarehospital.ug&next=/dashboard",
+    role: "Hospital Administrator",
+    dashboard: "Operations & Staff Control",
+    body: "Open Kampala Hospital with appointments, billing, staff, branches, and reports.",
+    href: "/demo/kampala-hospital?account=admin%40kampalahospital.ug&next=/dashboard",
     icon: Building2,
     tone: "bg-sky-600 text-white",
   },
   {
     role: "Doctor",
     dashboard: "Patient records",
-    body: "Review John Doe, Mary Akello, Brian Kato, prescriptions, and clinical notes.",
-    href: "/demo/kampala-care-hospital?role=doctor&next=/dashboard/patients",
+    body: "Review Brian Kato, Mary Nakato, Okello Nankya, prescriptions, and clinical notes.",
+    href: "/demo/kampala-hospital?account=dr.namusoke%40kampalahospital.ug&next=/dashboard/patients",
     icon: Stethoscope,
     tone: "bg-emerald-600 text-white",
   },
   {
     role: "Receptionist",
     dashboard: "Appointments",
-    body: "Manage today's queue, appointment requests, intake, and patient follow-up.",
-    href: "/demo/kampala-care-hospital?role=receptionist&next=/dashboard/appointments",
+    body: "Manage Mengo Clinic's queue, appointment requests, intake, and patient follow-up.",
+    href: "/demo/mengo-clinic?account=reception%40mengoclinic.ug&next=/dashboard/appointments",
     icon: CalendarDays,
     tone: "bg-amber-500 text-white",
   },
   {
     role: "Pharmacist",
     dashboard: "Medicine inventory",
-    body: "Open stock alerts, expiring medicine, dispensing lanes, and pharmacy invoices.",
-    href: "/demo/acacia-care-pharmacy?role=pharmacist&next=/dashboard/inventory",
+    body: "Open Vine Pharmacy stock alerts, expiring medicine, dispensing lanes, and invoices.",
+    href: "/demo/vine-pharmacy?account=pharmacy%40vinepharmacy.ug&next=/dashboard/inventory",
     icon: Pill,
     tone: "bg-orange-600 text-white",
   },
   {
     role: "Patient",
     dashboard: "Book appointments",
-    body: "Open the public booking page for Kampala Care Hospital.",
-    href: "/demo/kampala-care-hospital?role=patient&next=/kampala-care-hospital/book",
+    body: "Open the public booking page for Kampala Hospital with a patient demo account.",
+    href: "/demo/kampala-hospital?account=patient%40medilinkdemo.ug&next=/kampala-hospital/book",
     icon: Users,
     tone: "bg-slate-900 text-white",
   },
 ] as const;
 
 const demoRecords = [
-  ["Demo Hospital", "Kampala Care Hospital"],
+  ["Demo Hospital", "Kampala Hospital"],
+  ["Demo Clinic", "Mengo Clinic, Mukono Medical Centre"],
+  ["Demo Pharmacies", "Vine Pharmacy, GoodLife Pharmacy"],
   ["Demo Doctor", "Dr. Sarah Namusoke"],
-  ["Demo Patients", "John Doe, Mary Akello, Brian Kato"],
+  ["Demo Patients", "Brian Kato, Mary Nakato, Okello Nankya"],
+  ["Local Contacts", "+256 414 256 800, Plot 14A Kololo Hill Drive"],
   ["Appointments", "Blood pressure review, malaria follow-up, pediatric checkup"],
   ["Prescriptions", "Amlodipine, Artemether/Lumefantrine, Paracetamol suspension"],
-  ["Invoices", "Paid mobile money, insurance balance, overdue cash invoice"],
+  ["Payments", "MTN MoMo, Airtel Money, UGX invoices, insurance balance"],
+  ["Uganda Dates", "May 2 payment, Jun 2 renewal, EAT support tickets"],
 ] as const;
 
 const testimonials = [
   {
     quote:
       "MediLink makes a demo feel like a real hospital system. The role portals show exactly how each team member works.",
-    name: "Grace Namatovu",
+    name: "Nakato Ssempijja",
     title: "Hospital operations lead",
   },
   {
@@ -159,7 +163,7 @@ const testimonials = [
   {
     quote:
       "We can show booking, billing, prescriptions, and inventory in one story instead of separate disconnected tools.",
-    name: "Michael Ssewanyana",
+    name: "Turyasingura Nankya",
     title: "Pharmacy manager",
   },
 ] as const;
@@ -193,9 +197,9 @@ export function HomePageContent() {
               MediLink
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-              A multi-tenant clinic, hospital, pharmacy, and patient booking platform built
-              to feel real from the first demo: role portals, sample hospital data, invoices,
-              prescriptions, and dashboards for every team.
+              A Uganda-ready multi-tenant clinic, hospital, pharmacy, and patient booking
+              platform built to feel real from the first demo: role portals, UGX invoices,
+              MTN and Airtel payments, prescriptions, and dashboards for every team.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -229,7 +233,7 @@ export function HomePageContent() {
               <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-normal text-slate-500">
-                    Kampala Care Hospital
+                    Kampala Hospital
                   </p>
                   <p className="mt-1 text-sm font-bold text-[#080833]">
                     Super admin and hospital workspace
