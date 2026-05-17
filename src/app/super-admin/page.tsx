@@ -13,6 +13,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   PlatformRevenueChart,
   SubscriptionStatusChart,
@@ -87,6 +88,7 @@ export default function SuperAdminPage() {
           detail="Paying and trial tenants"
           icon={ShieldCheck}
           tone="bg-sky-100 text-sky-700"
+          href="/super-admin/subscriptions"
         />
         <MetricCard
           label="Monthly SaaS Revenue"
@@ -94,6 +96,7 @@ export default function SuperAdminPage() {
           detail="Your platform income"
           icon={Banknote}
           tone="bg-emerald-100 text-emerald-700"
+          href="/super-admin/revenue"
         />
         <MetricCard
           label="Expired Accounts"
@@ -101,6 +104,7 @@ export default function SuperAdminPage() {
           detail="Clients who have not paid"
           icon={AlertTriangle}
           tone="bg-rose-100 text-rose-700"
+          href="/super-admin/payments"
         />
         <MetricCard
           label="Trial Users"
@@ -108,6 +112,7 @@ export default function SuperAdminPage() {
           detail="Free users to convert"
           icon={Users}
           tone="bg-violet-100 text-violet-700"
+          href="/super-admin/subscriptions"
         />
         <MetricCard
           label="New Signups"
@@ -115,6 +120,7 @@ export default function SuperAdminPage() {
           detail="Growth this month"
           icon={Sparkles}
           tone="bg-amber-100 text-amber-700"
+          href="/super-admin/analytics"
         />
         <MetricCard
           label="Active Subscriptions"
@@ -122,14 +128,32 @@ export default function SuperAdminPage() {
           detail="Businesses paying now"
           icon={ReceiptText}
           tone="bg-orange-100 text-orange-700"
+          href="/super-admin/subscriptions"
         />
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <MiniMetric label="Hospitals" value={metrics.totalHospitals} body="Large institutions using MediLink" />
-        <MiniMetric label="Clinics" value={metrics.activeClinics} body="Smaller outpatient businesses" />
-        <MiniMetric label="Pharmacies" value={metrics.pharmacies} body="Pharmacy and POS tenants" />
+        <MiniMetric
+          label="Hospitals"
+          value={metrics.totalHospitals}
+          body="Large institutions using MediLink"
+          href="/super-admin/hospitals"
+        />
+        <MiniMetric
+          label="Clinics"
+          value={metrics.activeClinics}
+          body="Smaller outpatient businesses"
+          href="/super-admin/clinics"
+        />
+        <MiniMetric
+          label="Pharmacies"
+          value={metrics.pharmacies}
+          body="Pharmacy and POS tenants"
+          href="/super-admin/pharmacies"
+        />
       </div>
+
+      <OwnerQuickActions />
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
         <Card>
@@ -253,15 +277,17 @@ function MetricCard({
   detail,
   icon: Icon,
   tone,
+  href,
 }: {
   label: string;
   value: string;
   detail: string;
-  icon: typeof Building2;
+  icon: LucideIcon;
   tone: string;
+  href?: string;
 }) {
-  return (
-    <Card className="min-h-[160px]">
+  const content = (
+    <Card className={`min-h-[160px] transition ${href ? "hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-slate-200" : ""}`}>
       <CardContent>
         <div className={`grid size-11 place-items-center rounded-lg ${tone}`}>
           <Icon className="size-5" aria-hidden="true" />
@@ -271,13 +297,40 @@ function MetricCard({
           {value}
         </p>
         <p className="mt-2 text-sm font-medium leading-5 text-slate-600">{detail}</p>
+        {href ? (
+          <p className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-violet-600">
+            Open details
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
+
+  if (!href) return content;
+
+  return (
+    <Link
+      href={href}
+      className="block h-full rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+    >
+      {content}
+    </Link>
+  );
 }
 
-function MiniMetric({ label, value, body }: { label: string; value: number; body: string }) {
-  return (
+function MiniMetric({
+  label,
+  value,
+  body,
+  href,
+}: {
+  label: string;
+  value: number;
+  body: string;
+  href: string;
+}) {
+  const content = (
     <div className="flex items-center gap-4 rounded-lg border border-slate-300 bg-white p-4 shadow-sm shadow-slate-200/70">
       <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-violet-100 text-violet-700">
         <Clock className="size-5" aria-hidden="true" />
@@ -287,6 +340,43 @@ function MiniMetric({ label, value, body }: { label: string; value: number; body
         <p className="text-sm font-bold text-slate-700">{label}</p>
         <p className="mt-1 text-xs font-medium text-slate-500">{body}</p>
       </div>
+    </div>
+  );
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+    >
+      {content}
+    </Link>
+  );
+}
+
+function OwnerQuickActions() {
+  const actions: { label: string; href: string; icon: LucideIcon }[] = [
+    { label: "Add Tenant", href: "/super-admin/subscriptions", icon: Building2 },
+    { label: "Suspend Account", href: "/super-admin/settings", icon: AlertTriangle },
+    { label: "Generate Invoice", href: "/super-admin/payments", icon: ReceiptText },
+    { label: "Review Plans", href: "/super-admin/plans", icon: CreditCard },
+  ];
+
+  return (
+    <div className="mt-5 flex flex-wrap gap-3">
+      {actions.map((action) => {
+        const Icon = action.icon;
+
+        return (
+          <Link
+            key={action.label}
+            href={action.href}
+            className="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm shadow-slate-200/70 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+          >
+            <Icon className="size-4" aria-hidden="true" />
+            {action.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }

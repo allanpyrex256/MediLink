@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import {
+  ArrowRight,
   CalendarDays,
   ClipboardList,
   CreditCard,
@@ -30,6 +31,7 @@ import { formatUgandanCurrency } from "@/lib/utils";
 
 type Tone = "blue" | "green" | "amber" | "rose" | "slate" | "violet";
 type WorklistItem = { title: string; body: string; tone: Tone };
+type QuickAction = { label: string; href: string; icon: LucideIcon };
 
 const metricToneStyles: Record<Tone, string> = {
   blue: "bg-sky-100 text-sky-800 ring-sky-200",
@@ -101,6 +103,7 @@ function DoctorDashboard({ data }: { data: DashboardData }) {
           detail="Assigned records in this tenant"
           icon={Users}
           tone="green"
+          href="/dashboard/patients"
         />
         <MetricCard
           label="Appointments"
@@ -108,6 +111,7 @@ function DoctorDashboard({ data }: { data: DashboardData }) {
           detail="Upcoming and confirmed visits"
           icon={CalendarDays}
           tone="blue"
+          href="/dashboard/appointments"
         />
         <MetricCard
           label="Active prescriptions"
@@ -115,6 +119,7 @@ function DoctorDashboard({ data }: { data: DashboardData }) {
           detail="Medication plans to review"
           icon={Pill}
           tone="violet"
+          href="/dashboard/emr"
         />
         <MetricCard
           label="Lab queue"
@@ -122,6 +127,7 @@ function DoctorDashboard({ data }: { data: DashboardData }) {
           detail="Requested or processing results"
           icon={FlaskConical}
           tone="amber"
+          href="/dashboard/labs"
         />
       </MetricGrid>
 
@@ -203,6 +209,7 @@ function ReceptionistDashboard({ data }: { data: DashboardData }) {
           detail={`${pendingAppointments} pending requests`}
           icon={CalendarDays}
           tone="amber"
+          href="/dashboard/appointments"
         />
         <MetricCard
           label="Patients"
@@ -210,6 +217,7 @@ function ReceptionistDashboard({ data }: { data: DashboardData }) {
           detail="Ready for intake or lookup"
           icon={UserRoundCheck}
           tone="blue"
+          href="/dashboard/patients"
         />
         <MetricCard
           label="Unpaid invoices"
@@ -217,6 +225,7 @@ function ReceptionistDashboard({ data }: { data: DashboardData }) {
           detail={formatUgandanCurrency(unpaidInvoiceTotal(data))}
           icon={ReceiptText}
           tone="rose"
+          href="/dashboard/billing"
         />
         <MetricCard
           label="Doctors available"
@@ -224,6 +233,7 @@ function ReceptionistDashboard({ data }: { data: DashboardData }) {
           detail="Room and schedule coverage"
           icon={Stethoscope}
           tone="green"
+          href="/dashboard/doctors"
         />
       </MetricGrid>
 
@@ -299,6 +309,7 @@ function PatientDashboard({ data }: { data: DashboardData }) {
           detail="Upcoming and requested visits"
           icon={CalendarDays}
           tone="blue"
+          href="/dashboard/appointments"
         />
         <MetricCard
           label="Prescriptions"
@@ -306,6 +317,7 @@ function PatientDashboard({ data }: { data: DashboardData }) {
           detail="Medication plans on file"
           icon={Pill}
           tone="green"
+          href="/dashboard/emr"
         />
         <MetricCard
           label="Invoices"
@@ -313,6 +325,7 @@ function PatientDashboard({ data }: { data: DashboardData }) {
           detail="Paid and pending balances"
           icon={ReceiptText}
           tone="amber"
+          href="/dashboard/billing"
         />
         <MetricCard
           label="Care team"
@@ -320,6 +333,7 @@ function PatientDashboard({ data }: { data: DashboardData }) {
           detail="Doctors available for booking"
           icon={Stethoscope}
           tone="violet"
+          href="/dashboard/doctors"
         />
       </MetricGrid>
 
@@ -383,6 +397,7 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
           detail="Reception and consultation queue"
           icon={UserRoundCheck}
           tone="amber"
+          href="/dashboard/patients"
         />
         <MetricCard
           label="Appointments Today"
@@ -390,6 +405,7 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
           detail={`${data.appointments.filter((item) => item.status === "pending").length} pending requests`}
           icon={CalendarDays}
           tone="violet"
+          href="/dashboard/appointments"
         />
         <MetricCard
           label="Daily Revenue"
@@ -397,6 +413,7 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
           detail="Consultation and service collections"
           icon={WalletCards}
           tone="green"
+          href="/dashboard/billing"
         />
         <MetricCard
           label="Unpaid Bills"
@@ -404,6 +421,7 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
           detail={formatUgandanCurrency(unpaidInvoiceTotal(data))}
           icon={ReceiptText}
           tone="rose"
+          href="/dashboard/billing"
         />
         <MetricCard
           label="Drug Stock Alerts"
@@ -411,8 +429,17 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
           detail="Low, out, or expiring medicines"
           icon={Package}
           tone={drugStockAlerts.length ? "amber" : "green"}
+          href="/dashboard/pharmacy"
         />
       </BusinessMetricGrid>
+      <QuickActionBar
+        actions={[
+          { label: "Register Patient", href: "/dashboard/patients", icon: Users },
+          { label: "New Appointment", href: "/dashboard/appointments", icon: CalendarDays },
+          { label: "Create Invoice", href: "/dashboard/billing", icon: ReceiptText },
+          { label: "Stock Alerts", href: "/dashboard/pharmacy", icon: Package },
+        ]}
+      />
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[0.85fr_1.25fr_0.9fr]">
         <WorklistCard
@@ -529,6 +556,7 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Seen, waiting, and admitted"
           icon={Users}
           tone="blue"
+          href="/dashboard/patients"
         />
         <MetricCard
           label="Admissions"
@@ -536,6 +564,7 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Ward and observation patients"
           icon={ClipboardList}
           tone="violet"
+          href="/dashboard/admissions"
         />
         <MetricCard
           label="Revenue Today"
@@ -543,6 +572,7 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Cash, MTN, Airtel"
           icon={WalletCards}
           tone="green"
+          href="/dashboard/billing"
         />
         <MetricCard
           label="Pending Bills"
@@ -550,6 +580,7 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Unpaid patient balances"
           icon={ReceiptText}
           tone="amber"
+          href="/dashboard/billing"
         />
         <MetricCard
           label="Lab Requests"
@@ -557,6 +588,7 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Requested and processing"
           icon={FlaskConical}
           tone="blue"
+          href="/dashboard/labs"
         />
         <MetricCard
           label="Doctors On Duty"
@@ -564,6 +596,7 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Available clinical coverage"
           icon={Stethoscope}
           tone="green"
+          href="/dashboard/doctors"
         />
         <MetricCard
           label="Pharmacy Sales"
@@ -571,8 +604,18 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Dispensary collections"
           icon={Pill}
           tone="green"
+          href="/dashboard/pharmacy"
         />
       </DailyMetricGrid>
+      <QuickActionBar
+        actions={[
+          { label: "Register Patient", href: "/dashboard/patients", icon: Users },
+          { label: "New Appointment", href: "/dashboard/appointments", icon: CalendarDays },
+          { label: "Admit Patient", href: "/dashboard/admissions", icon: ClipboardList },
+          { label: "New Invoice", href: "/dashboard/billing", icon: ReceiptText },
+          { label: "Lab Request", href: "/dashboard/labs", icon: FlaskConical },
+        ]}
+      />
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[0.8fr_1.35fr_0.85fr]">
         <OperationsQuickStats data={dailyOperations} />
@@ -624,6 +667,7 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           detail="Counter sales and prescriptions"
           icon={WalletCards}
           tone="green"
+          href="/dashboard/payments"
         />
         <MetricCard
           label="Mobile Money"
@@ -631,6 +675,7 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           detail="MTN MoMo and Airtel Money"
           icon={CreditCard}
           tone="violet"
+          href="/dashboard/payments"
         />
         <MetricCard
           label="Low Stock Drugs"
@@ -638,6 +683,7 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           detail="Need reorder or supplier follow-up"
           icon={Package}
           tone={lowStock.length ? "rose" : "green"}
+          href="/dashboard/expiry-alerts"
         />
         <MetricCard
           label="Prescriptions Pending"
@@ -645,6 +691,7 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           detail="Not yet picked up"
           icon={ReceiptText}
           tone="blue"
+          href="/dashboard/prescriptions"
         />
         <MetricCard
           label="Expired Medicines"
@@ -652,6 +699,7 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           detail="Expired or expiring soon"
           icon={Pill}
           tone="amber"
+          href="/dashboard/expiry-alerts"
         />
         <MetricCard
           label="Profit Today"
@@ -659,8 +707,18 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           detail="Estimated gross profit"
           icon={ReceiptText}
           tone="green"
+          href="/dashboard/payments"
         />
       </BusinessMetricGrid>
+      <QuickActionBar
+        actions={[
+          { label: "New Sale", href: "/dashboard/payments", icon: ShoppingCart },
+          { label: "Add Medicine", href: "/dashboard/inventory", icon: Package },
+          { label: "Print Receipt", href: "/dashboard/payments", icon: ReceiptText },
+          { label: "Prescription Order", href: "/dashboard/prescriptions", icon: ShieldCheck },
+          { label: "Expiry Alerts", href: "/dashboard/expiry-alerts", icon: Pill },
+        ]}
+      />
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[0.85fr_1.15fr_0.9fr]">
         <WorklistCard
@@ -748,26 +806,62 @@ function MetricCard({
   detail,
   icon: Icon,
   tone,
+  href,
 }: {
   label: string;
   value: string;
   detail: string;
   icon: LucideIcon;
   tone: Tone;
+  href?: string;
 }) {
-  return (
-    <Card className="min-h-[150px]">
+  const content = (
+    <Card className={`min-h-[150px] transition ${href ? "hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-slate-200" : ""}`}>
       <CardContent className="flex h-full items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-slate-600">{label}</p>
           <p className="mt-3 break-words text-2xl font-bold tracking-normal text-slate-950">{value}</p>
           <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{detail}</p>
+          {href ? (
+            <p className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-violet-600">
+              Open details
+              <ArrowRight className="size-3.5" />
+            </p>
+          ) : null}
         </div>
         <div className={`grid size-12 shrink-0 place-items-center rounded-lg ring-1 ${metricToneStyles[tone]}`}>
           <Icon className="size-6" />
         </div>
       </CardContent>
     </Card>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link href={href} className="block h-full rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600">
+      {content}
+    </Link>
+  );
+}
+
+function QuickActionBar({ actions }: { actions: QuickAction[] }) {
+  return (
+    <div className="mt-4 flex flex-wrap gap-3">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <Link
+            key={action.label}
+            href={action.href}
+            className="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm shadow-slate-200/70 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+          >
+            <Icon className="size-4" />
+            {action.label}
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 
