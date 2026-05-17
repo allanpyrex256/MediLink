@@ -2,9 +2,9 @@ import { HomePageContent } from "@/components/marketing/home-page-content";
 import { PublicHeader } from "@/components/marketing/public-header";
 
 export const metadata = {
-  title: "MediLink | Healthcare SaaS Demo",
+  title: "MediLink | Clinic Management Software Uganda",
   description:
-    "Enterprise healthcare SaaS demo with role dashboards, hospital data, patient booking, pharmacy inventory, and deployment workflow.",
+    "A complete digital system for managing clinics, prescriptions, billing, and patient care in Uganda.",
 };
 
 export default function Home() {

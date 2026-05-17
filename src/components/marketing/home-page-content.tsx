@@ -2,260 +2,173 @@ import Link from "next/link";
 import {
   ArrowRight,
   Building2,
-  CalendarDays,
+  CheckCircle2,
   ClipboardList,
-  Cloud,
-  Database,
-  Headphones,
-  LayoutDashboard,
-  MessageCircle,
+  CreditCard,
+  FileText,
   Pill,
-  ReceiptText,
+  PlayCircle,
   ShieldCheck,
-  Sparkles,
   Stethoscope,
   Users,
   WalletCards,
+  Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { ProductPreview } from "@/components/marketing/product-preview";
 
-const stats = [
-  { label: "demo tenants", value: "5" },
-  { label: "role portals", value: "6" },
-  { label: "sample records", value: "120+" },
+const problemPoints = [
+  "Paper records get lost between reception, doctors, and billing.",
+  "Manual billing slows down patients and makes daily revenue hard to track.",
+  "Prescription and dispensing records become messy as clinics get busier.",
 ] as const;
 
-const features = [
+const solutionCards = [
   {
-    title: "Clinic and hospital management",
-    body: "Run appointments, departments, staff, patients, billing, and reports from one tenant workspace.",
-    icon: Building2,
+    title: "Patient Management",
+    body: "Keep patient profiles, visits, appointments, and care history organized in one secure system.",
+    icon: Users,
     tone: "bg-sky-100 text-sky-700",
   },
   {
-    title: "Patient records",
-    body: "Doctors can review histories, diagnoses, visit notes, lab requests, and prescriptions without paper files.",
-    icon: ClipboardList,
+    title: "Prescription & Dispensing Tracking",
+    body: "Record prescribed medicine, what was dispensed, stock impact, and pickup status without paperwork.",
+    icon: Pill,
     tone: "bg-emerald-100 text-emerald-700",
   },
   {
-    title: "Appointments and reminders",
-    body: "Reception teams can book visits, track queues, and keep patients updated by SMS or WhatsApp.",
-    icon: CalendarDays,
+    title: "Billing & Payments",
+    body: "Track UGX invoices, cashier collections, MTN MoMo, Airtel Money, and unpaid balances clearly.",
+    icon: WalletCards,
     tone: "bg-violet-100 text-violet-700",
   },
   {
-    title: "Pharmacy inventory",
-    body: "Pharmacists can manage stock levels, expiry alerts, prescription orders, and dispensing revenue.",
-    icon: Pill,
-    tone: "bg-orange-100 text-orange-700",
-  },
-  {
-    title: "Billing and invoices",
-    body: "Create invoices, track insurance balances, collect mobile money, and review revenue in real time.",
-    icon: ReceiptText,
+    title: "Staff & Clinic Control",
+    body: "Give reception, doctors, pharmacists, and clinic owners the right access for daily operations.",
+    icon: Building2,
     tone: "bg-amber-100 text-amber-700",
   },
+] as const;
+
+const benefits = [
   {
-    title: "Enterprise security",
-    body: "Role-based access, tenant isolation, Supabase auth, PostgreSQL storage, and audit-friendly workflows.",
+    title: "Faster patient service",
+    body: "Reception, consultation, pharmacy, and billing teams work from shared, organized records.",
+    icon: Zap,
+  },
+  {
+    title: "Reduced errors",
+    body: "Clear patient files, prescriptions, invoices, and stock information reduce everyday mistakes.",
     icon: ShieldCheck,
-    tone: "bg-rose-100 text-rose-700",
+  },
+  {
+    title: "Better revenue tracking",
+    body: "Clinic owners can see collections, unpaid bills, and mobile money activity with less guesswork.",
+    icon: CreditCard,
+  },
+  {
+    title: "Easy clinic operations",
+    body: "Simple workflows help teams move away from paper without forcing a complicated enterprise system.",
+    icon: CheckCircle2,
   },
 ] as const;
 
-const screenshots = [
+const steps = [
   {
-    title: "Hospital command center",
-    body: "Busy departments, lab requests, daily patients, and revenue for administrators.",
-    kind: "hospital",
+    title: "Register your clinic",
+    body: "Set up your clinic, hospital, or pharmacy profile with local contacts and branches.",
   },
   {
-    title: "Doctor patient records",
-    body: "Consultations, diagnoses, prescriptions, and visit history in one clinical view.",
-    kind: "patients",
+    title: "Add staff & patients",
+    body: "Invite your team and start organizing patient records, appointments, stock, and billing.",
   },
   {
-    title: "Pharmacy inventory",
-    body: "Stock alerts, ready pickups, fulfillment lanes, and pharmacy sales.",
-    kind: "inventory",
+    title: "Start managing digitally",
+    body: "Run daily operations with cleaner records, faster service, and better financial visibility.",
   },
 ] as const;
 
-const rolePortals = [
+const pricing = [
   {
-    role: "Super Admin",
-    dashboard: "Platform control",
-    body: "Open the MediLink Platform Owner view for tenants, revenue, renewals, and support.",
-    href: "/demo/kampala-hospital?account=owner%40medilink.africa&next=/super-admin",
-    icon: ShieldCheck,
-    tone: "bg-violet-600 text-white",
+    name: "Starter Plan",
+    price: "Affordable monthly subscription",
+    body: "For small clinics moving from paper records to simple digital operations.",
+    features: ["Patients and appointments", "Basic billing", "Clinic reports"],
   },
   {
-    role: "Hospital Administrator",
-    dashboard: "Operations & Staff Control",
-    body: "Open Kampala Hospital with appointments, billing, staff, branches, and reports.",
-    href: "/demo/kampala-hospital?account=admin%40kampalahospital.ug&next=/dashboard",
-    icon: Building2,
-    tone: "bg-sky-600 text-white",
+    name: "Clinic Plan",
+    price: "Built for growing teams",
+    body: "For clinics that need stronger staff control, prescriptions, and payment tracking.",
+    features: ["Staff access control", "Prescriptions", "MTN and Airtel tracking"],
   },
   {
-    role: "Doctor",
-    dashboard: "Patient records",
-    body: "Review Brian Kato, Mary Nakato, Okello Nankya, prescriptions, and clinical notes.",
-    href: "/demo/kampala-hospital?account=dr.namusoke%40kampalahospital.ug&next=/dashboard/patients",
-    icon: Stethoscope,
-    tone: "bg-emerald-600 text-white",
+    name: "Hospital Plan",
+    price: "For larger facilities",
+    body: "For hospitals that need departments, admissions, pharmacy, laboratory, and management reports.",
+    features: ["Departments and admissions", "Laboratory and pharmacy", "Advanced reporting"],
   },
-  {
-    role: "Receptionist",
-    dashboard: "Appointments",
-    body: "Manage Mengo Clinic's queue, appointment requests, intake, and patient follow-up.",
-    href: "/demo/mengo-clinic?account=reception%40mengoclinic.ug&next=/dashboard/appointments",
-    icon: CalendarDays,
-    tone: "bg-amber-500 text-white",
-  },
-  {
-    role: "Pharmacist",
-    dashboard: "Medicine inventory",
-    body: "Open Vine Pharmacy stock alerts, expiring medicine, dispensing lanes, and invoices.",
-    href: "/demo/vine-pharmacy?account=pharmacy%40vinepharmacy.ug&next=/dashboard/inventory",
-    icon: Pill,
-    tone: "bg-orange-600 text-white",
-  },
-  {
-    role: "Patient",
-    dashboard: "Book appointments",
-    body: "Open the public booking page for Kampala Hospital with a patient demo account.",
-    href: "/demo/kampala-hospital?account=patient%40medilinkdemo.ug&next=/kampala-hospital/book",
-    icon: Users,
-    tone: "bg-slate-900 text-white",
-  },
-] as const;
-
-const demoRecords = [
-  ["Demo Hospital", "Kampala Hospital"],
-  ["Demo Clinic", "Mengo Clinic, Mukono Medical Centre"],
-  ["Demo Pharmacies", "Vine Pharmacy, GoodLife Pharmacy"],
-  ["Demo Doctor", "Dr. Sarah Namusoke"],
-  ["Demo Patients", "Brian Kato, Mary Nakato, Okello Nankya"],
-  ["Local Contacts", "+256 414 256 800, Plot 14A Kololo Hill Drive"],
-  ["Appointments", "Blood pressure review, malaria follow-up, pediatric checkup"],
-  ["Prescriptions", "Amlodipine, Artemether/Lumefantrine, Paracetamol suspension"],
-  ["Payments", "MTN MoMo, Airtel Money, UGX invoices, insurance balance"],
-  ["Uganda Dates", "May 2 payment, Jun 2 renewal, EAT support tickets"],
-] as const;
-
-const testimonials = [
-  {
-    quote:
-      "MediLink makes a demo feel like a real hospital system. The role portals show exactly how each team member works.",
-    name: "Nakato Ssempijja",
-    title: "Hospital operations lead",
-  },
-  {
-    quote:
-      "The patient records and pharmacy screens are clear enough for a buyer to understand the workflow in minutes.",
-    name: "Dr. Sarah Namusoke",
-    title: "General physician",
-  },
-  {
-    quote:
-      "We can show booking, billing, prescriptions, and inventory in one story instead of separate disconnected tools.",
-    name: "Turyasingura Nankya",
-    title: "Pharmacy manager",
-  },
-] as const;
-
-const deployStack = [
-  { label: "Frontend", value: "Vercel", icon: Cloud },
-  { label: "Backend", value: "Railway or Render", icon: LayoutDashboard },
-  { label: "Database", value: "Supabase", icon: Database },
-] as const;
-
-const workflow = [
-  "Finish frontend UI",
-  "Connect database",
-  "Create login/auth",
-  "Add sample hospital data",
-  "Push to GitHub",
-  "Deploy to Vercel",
 ] as const;
 
 export function HomePageContent() {
   return (
     <>
-      <section className="border-b border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_42%,#f1fdf8_100%)]">
-        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 pb-8 pt-8 sm:px-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:pt-10">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-sm font-bold text-emerald-700">
-              <Sparkles className="size-4" aria-hidden="true" />
-              Enterprise healthcare SaaS demo
-            </div>
-            <h1 className="mt-5 text-5xl font-bold leading-[1.02] tracking-normal text-[#080833] sm:text-6xl lg:text-7xl">
+      <section className="relative overflow-hidden border-b border-slate-200 bg-[#f7fbff]">
+        <div className="absolute inset-x-0 top-0 h-28 bg-white" aria-hidden="true" />
+        <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[#e8f7ef] lg:block" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] items-center justify-center lg:flex" aria-hidden="true">
+          <div className="grid grid-cols-2 gap-5">
+            <HeroSymbol icon={Stethoscope} tone="bg-white text-violet-700" />
+            <HeroSymbol icon={ClipboardList} tone="bg-white text-sky-700" />
+            <HeroSymbol icon={Pill} tone="bg-white text-emerald-700" />
+            <HeroSymbol icon={WalletCards} tone="bg-white text-amber-700" />
+          </div>
+        </div>
+        <div className="relative mx-auto flex min-h-[calc(100vh-72px)] max-w-[1500px] items-center px-5 py-14 sm:px-8">
+          <div className="max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-normal text-violet-700">
               MediLink
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-              A Uganda-ready multi-tenant clinic, hospital, pharmacy, and patient booking
-              platform built to feel real from the first demo: role portals, UGX invoices,
-              MTN and Airtel payments, prescriptions, and dashboards for every team.
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <h1 className="mt-4 text-5xl font-bold leading-[1.02] tracking-normal text-[#080833] sm:text-6xl lg:text-7xl">
+              Digital clinic management for Uganda.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-slate-700">
+              A complete digital system for managing clinics, prescriptions, and patient care in Uganda.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="#login-portals"
+                href="#contact"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-violet-600 px-7 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700"
               >
-                Open login portals
+                Request Demo
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
-                href="/login"
-                className="inline-flex h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-sm shadow-slate-200 transition hover:border-violet-300 hover:bg-violet-50"
+                href="#how-it-works"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-7 text-sm font-bold text-slate-900 shadow-sm shadow-slate-200 transition hover:border-violet-300 hover:bg-violet-50"
               >
-                Login
+                <PlayCircle className="size-4" aria-hidden="true" />
+                Watch how it works
               </Link>
             </div>
-            <div className="mt-8 grid max-w-xl grid-cols-3 gap-3">
-              {stats.map((stat) => (
-                <div key={stat.label} className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-2xl font-bold text-[#080833]">{stat.value}</p>
-                  <p className="mt-1 break-words text-xs font-bold uppercase tracking-normal text-slate-500">
-                    {stat.label}
-                  </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-normal text-violet-700">The problem</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-normal text-[#080833] sm:text-4xl">
+                Busy clinics should not depend on scattered paperwork.
+              </h2>
+            </div>
+            <div className="grid gap-3">
+              {problemPoints.map((point) => (
+                <div key={point} className="flex gap-3 rounded-lg bg-slate-50 p-4">
+                  <FileText className="mt-0.5 size-5 shrink-0 text-rose-600" aria-hidden="true" />
+                  <p className="text-base font-semibold leading-7 text-slate-700">{point}</p>
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div className="grid min-w-0 gap-4">
-            <div className="overflow-hidden rounded-lg border border-slate-300 bg-white shadow-2xl shadow-slate-200">
-              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-normal text-slate-500">
-                    Kampala Hospital
-                  </p>
-                  <p className="mt-1 text-sm font-bold text-[#080833]">
-                    Super admin and hospital workspace
-                  </p>
-                </div>
-                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                  Live demo
-                </span>
-              </div>
-              <div className="grid gap-4 p-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <ProductPreview kind="dashboard" className="h-[248px] shadow-none" />
-                <div className="grid gap-3">
-                  <MiniMetric label="Patients today" value="38" icon={Users} />
-                  <MiniMetric label="Invoices paid" value="UGX 185k" icon={WalletCards} />
-                  <MiniMetric label="Stock alerts" value="4" icon={Pill} />
-                </div>
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <ProductPreview kind="calendar" compact className="h-[148px]" />
-              <ProductPreview kind="patients" compact className="h-[148px]" />
-              <ProductPreview kind="inventory" compact className="h-[148px]" />
             </div>
           </div>
         </div>
@@ -263,195 +176,100 @@ export function HomePageContent() {
 
       <SectionShell
         id="features"
-        eyebrow="Features"
-        title="Everything a serious MediLink demo needs"
-        body="The public site now leads buyers from the landing page into the operational software: hospital management, clinical records, billing, pharmacy stock, and patient booking."
+        eyebrow="Solution"
+        title="One system for everyday clinic operations"
+        body="MediLink helps clinics, hospitals, and pharmacies move from disconnected paperwork to organized digital operations."
       >
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {features.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <article key={feature.title} className="rounded-lg border border-slate-200 bg-white p-5 shadow-md shadow-slate-100">
-                <div className={`grid size-12 place-items-center rounded-lg ${feature.tone}`}>
-                  <Icon className="size-6" aria-hidden="true" />
-                </div>
-                <h3 className="mt-5 text-lg font-bold tracking-normal text-[#080833]">
-                  {feature.title}
-                </h3>
-                <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{feature.body}</p>
-              </article>
-            );
-          })}
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {solutionCards.map((feature) => (
+            <InfoCard key={feature.title} {...feature} />
+          ))}
         </div>
       </SectionShell>
 
       <SectionShell
-        id="screenshots"
-        eyebrow="Screenshots"
-        title="Role dashboards that look operational"
-        body="Use these screens during the demo story to show that MediLink is more than a landing page."
+        id="benefits"
+        eyebrow="Benefits"
+        title="Designed around outcomes clinic owners care about"
+        body="The value is not more screens. The value is faster service, cleaner records, fewer mistakes, and better control over money."
       >
-        <div className="grid gap-5 lg:grid-cols-3">
-          {screenshots.map((screenshot) => (
-            <article key={screenshot.title} className="rounded-lg border border-slate-200 bg-white p-4 shadow-lg shadow-slate-100">
-              <ProductPreview kind={screenshot.kind} className="h-[210px] shadow-none" />
-              <h3 className="mt-5 text-lg font-bold text-[#080833]">{screenshot.title}</h3>
-              <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{screenshot.body}</p>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {benefits.map((benefit) => (
+            <article key={benefit.title} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-100">
+              <benefit.icon className="size-7 text-violet-700" aria-hidden="true" />
+              <h3 className="mt-5 text-lg font-bold tracking-normal text-[#080833]">
+                {benefit.title}
+              </h3>
+              <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{benefit.body}</p>
             </article>
           ))}
         </div>
       </SectionShell>
 
       <SectionShell
-        id="login-portals"
-        eyebrow="Login Portals"
-        title="Different dashboards for every role"
-        body="Each portal opens the demo with the right tenant, role, and dashboard area so MediLink feels enterprise-level in a live walkthrough."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {rolePortals.map((portal) => {
-            const Icon = portal.icon;
-            return (
-              <article key={portal.role} className="rounded-lg border border-slate-200 bg-white p-5 shadow-md shadow-slate-100">
-                <div className={`grid size-12 place-items-center rounded-lg ${portal.tone}`}>
-                  <Icon className="size-6" aria-hidden="true" />
-                </div>
-                <div className="mt-5 flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg font-bold text-[#080833]">{portal.role}</h3>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                    {portal.dashboard}
-                  </span>
-                </div>
-                <p className="mt-2 min-h-[72px] text-sm font-medium leading-6 text-slate-600">
-                  {portal.body}
-                </p>
-                <Link
-                  href={portal.href}
-                  className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-violet-500 bg-white px-5 text-sm font-bold text-violet-700 transition hover:bg-violet-50"
-                >
-                  Open portal
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </article>
-            );
-          })}
-        </div>
-      </SectionShell>
-
-      <SectionShell
-        id="demo-data"
-        eyebrow="Best Demo Setup"
-        title="Fake clinic data that makes the SaaS feel real"
-        body="The default demo opens with recognizable hospital, doctor, patient, appointment, prescription, and invoice records."
-      >
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-100">
-          <div className="grid md:grid-cols-2 xl:grid-cols-3">
-            {demoRecords.map(([label, value]) => (
-              <div key={label} className="border-b border-slate-100 p-5 md:border-r xl:[&:nth-child(3n)]:border-r-0">
-                <p className="text-xs font-bold uppercase tracking-normal text-slate-500">{label}</p>
-                <p className="mt-2 text-base font-bold text-[#080833]">{value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </SectionShell>
-
-      <SectionShell
-        id="testimonials"
-        eyebrow="Testimonials"
-        title="Built to pass the buyer sniff test"
-        body="A good SaaS demo should feel like the customer is already inside their future workflow."
+        id="how-it-works"
+        eyebrow="How it works"
+        title="Start simple, then grow digitally"
+        body="MediLink is set up around the way local health businesses already operate."
       >
         <div className="grid gap-5 lg:grid-cols-3">
-          {testimonials.map((item) => (
-            <figure key={item.name} className="rounded-lg border border-slate-200 bg-white p-6 shadow-md shadow-slate-100">
-              <blockquote className="text-base font-semibold leading-7 text-slate-800">
-                {item.quote}
-              </blockquote>
-              <figcaption className="mt-5 border-t border-slate-100 pt-4">
-                <p className="font-bold text-[#080833]">{item.name}</p>
-                <p className="mt-1 text-sm font-medium text-slate-500">{item.title}</p>
-              </figcaption>
-            </figure>
+          {steps.map((step, index) => (
+            <article key={step.title} className="rounded-lg border border-slate-200 bg-white p-6 shadow-md shadow-slate-100">
+              <span className="grid size-10 place-items-center rounded-full bg-violet-600 text-sm font-bold text-white">
+                {index + 1}
+              </span>
+              <h3 className="mt-5 text-xl font-bold text-[#080833]">{step.title}</h3>
+              <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{step.body}</p>
+            </article>
           ))}
         </div>
       </SectionShell>
 
       <SectionShell
-        id="deploy"
-        eyebrow="Deploy MediLink"
-        title="A clean path from demo to production"
-        body="Keep the deployment story simple: Vercel for the frontend, Railway or Render for backend services, and Supabase for PostgreSQL, auth, storage, and realtime data."
+        id="pricing"
+        eyebrow="Pricing"
+        title="Affordable monthly plans for different health businesses"
+        body="Start with what your clinic needs today and upgrade as your operations grow."
       >
-        <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="grid gap-4">
-            {deployStack.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.label} className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="grid size-11 place-items-center rounded-lg bg-sky-100 text-sky-700">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-normal text-slate-500">{item.label}</p>
-                    <p className="mt-1 text-lg font-bold text-[#080833]">{item.value}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-100">
-            <h3 className="text-lg font-bold text-[#080833]">Best workflow</h3>
-            <ol className="mt-5 grid gap-3">
-              {workflow.map((step, index) => (
-                <li key={step} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-violet-600 text-sm font-bold text-white">
-                    {index + 1}
-                  </span>
-                  <span className="text-sm font-bold text-slate-800">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
+        <div className="grid gap-5 lg:grid-cols-3">
+          {pricing.map((plan) => (
+            <article key={plan.name} className="rounded-lg border border-slate-200 bg-white p-6 shadow-lg shadow-slate-100">
+              <h3 className="text-xl font-bold text-[#080833]">{plan.name}</h3>
+              <p className="mt-3 text-base font-bold text-violet-700">{plan.price}</p>
+              <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{plan.body}</p>
+              <ul className="mt-5 grid gap-3">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                    <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
         </div>
       </SectionShell>
 
-      <section id="contact" className="scroll-mt-24 border-t border-slate-200 bg-[#071133] text-white">
-        <div className="mx-auto grid max-w-[1500px] gap-6 px-5 py-10 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center">
+      <section id="contact" className="scroll-mt-24 bg-[#071133] text-white">
+        <div className="mx-auto grid max-w-[1500px] gap-6 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <p className="text-sm font-bold uppercase tracking-normal text-emerald-300">Contact</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">
-              Ready to show MediLink like a real SaaS?
-            </h2>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-              Use the demo flow for a guided walkthrough, or open a role portal directly
-              when a buyer asks to see a specific staff experience.
+            <p className="text-sm font-bold uppercase tracking-normal text-emerald-300">
+              Request demo
             </p>
-            <div className="mt-5 flex flex-wrap gap-3 text-sm font-semibold text-slate-200">
-              <span className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2">
-                <MessageCircle className="size-4 text-emerald-300" aria-hidden="true" />
-                WhatsApp-ready reminders
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2">
-                <Headphones className="size-4 text-emerald-300" aria-hidden="true" />
-                Demo support workflow
-              </span>
-            </div>
+            <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">
+              Transform your clinic today.
+            </h2>
+            <p className="mt-4 max-w-3xl text-base font-medium leading-7 text-slate-300">
+              See how MediLink can help your team manage patients, prescriptions, billing, and daily clinic work with less paperwork.
+            </p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-            <Link
-              href="/demo-flow"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-sm font-bold text-[#071133] transition hover:bg-slate-100"
-            >
-              Launch demo flow
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-white/30 px-7 text-sm font-bold text-white transition hover:bg-white/10"
-            >
-              Create workspace
-            </Link>
-          </div>
+          <Link
+            href="/demo-flow"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-7 text-sm font-bold text-[#071133] transition hover:bg-slate-100"
+          >
+            Request Demo
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
         </div>
       </section>
     </>
@@ -472,10 +290,10 @@ function SectionShell({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 bg-white">
-      <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
-        <div className="mb-6 max-w-3xl">
-          <p className="text-sm font-bold uppercase tracking-normal text-violet-600">{eyebrow}</p>
+    <section id={id} className="scroll-mt-24 border-b border-slate-200 bg-white">
+      <div className="mx-auto max-w-[1500px] px-5 py-10 sm:px-8 lg:py-14">
+        <div className="mb-7 max-w-3xl">
+          <p className="text-sm font-bold uppercase tracking-normal text-violet-700">{eyebrow}</p>
           <h2 className="mt-3 text-3xl font-bold tracking-normal text-[#080833] sm:text-4xl">
             {title}
           </h2>
@@ -487,25 +305,32 @@ function SectionShell({
   );
 }
 
-function MiniMetric({
-  label,
-  value,
+function InfoCard({
+  title,
+  body,
   icon: Icon,
+  tone,
 }: {
-  label: string;
-  value: string;
+  title: string;
+  body: string;
   icon: LucideIcon;
+  tone: string;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-normal text-slate-500">{label}</p>
-        <Icon className="size-4 text-violet-600" aria-hidden="true" />
+    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-md shadow-slate-100">
+      <div className={`grid size-12 place-items-center rounded-lg ${tone}`}>
+        <Icon className="size-6" aria-hidden="true" />
       </div>
-      <p className="mt-3 text-xl font-bold text-[#080833]">{value}</p>
-      <div className="mt-3 h-2 rounded-full bg-white">
-        <span className="block h-full w-2/3 rounded-full bg-emerald-500" />
-      </div>
+      <h3 className="mt-5 text-lg font-bold tracking-normal text-[#080833]">{title}</h3>
+      <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{body}</p>
+    </article>
+  );
+}
+
+function HeroSymbol({ icon: Icon, tone }: { icon: LucideIcon; tone: string }) {
+  return (
+    <div className={`grid size-24 place-items-center rounded-lg border border-white/80 shadow-xl shadow-emerald-900/10 ${tone}`}>
+      <Icon className="size-10" aria-hidden="true" />
     </div>
   );
 }
