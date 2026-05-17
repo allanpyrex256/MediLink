@@ -26,8 +26,8 @@ export default async function InventoryPage() {
     <div>
       <PageHeading
         eyebrow="Inventory"
-        title="Medicine stock"
-        description="Track stock on hand, reorder points, expiry risk, and sale value for this pharmacy."
+        title="Drug stock and expiry"
+        description="Track available quantities, low stock drugs, expiring medicines, supplier restocking, and sale value."
         actions={
           <Button>
             <PackagePlus className="size-4" />
@@ -56,7 +56,7 @@ export default async function InventoryPage() {
               <p className="text-2xl font-semibold text-slate-950">
                 {data.inventory.filter((item) => item.status !== "in_stock").length}
               </p>
-              <p className="text-sm text-slate-500">Needs attention</p>
+              <p className="text-sm text-slate-500">Low stock or expiry alerts</p>
             </div>
           </CardContent>
         </Card>
@@ -72,14 +72,14 @@ export default async function InventoryPage() {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
         <Card>
           <CardHeader>
-            <CardTitle>Inventory ledger</CardTitle>
-            <CardDescription>Tenant-scoped medicine catalog and stock status.</CardDescription>
+            <CardTitle>Stock list</CardTitle>
+            <CardDescription>Medicine catalog, available quantity, reorder level, expiry, and selling price.</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <table className="w-full min-w-[800px] text-left text-sm">
               <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-[0.14em] text-slate-500">
                 <tr>
-                  <th className="px-5 py-3 font-semibold">Item</th>
+                  <th className="px-5 py-3 font-semibold">Medicine</th>
                   <th className="px-5 py-3 font-semibold">Category</th>
                   <th className="px-5 py-3 font-semibold">Stock</th>
                   <th className="px-5 py-3 font-semibold">Reorder</th>
@@ -113,7 +113,7 @@ export default async function InventoryPage() {
             </table>
           </CardContent>
         </Card>
-        <InventorySnapshot items={data.inventory} title="Reorder watch" />
+        <InventorySnapshot items={data.inventory} title="Restocking watch" />
       </div>
     </div>
   );

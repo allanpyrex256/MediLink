@@ -18,6 +18,14 @@ const statusTone = {
   cancelled: "rose",
 } as const;
 
+const statusLabel = {
+  received: "Received",
+  dispensing: "Preparing",
+  ready: "Ready",
+  collected: "Picked Up",
+  cancelled: "Cancelled",
+} as const;
+
 export default async function PrescriptionsPage() {
   const data = await getDashboardData();
 
@@ -26,19 +34,21 @@ export default async function PrescriptionsPage() {
   }
 
   const brand = tenantBranding(data.tenant);
-  const activeOrders = data.prescriptions.filter((item) => item.status !== "collected");
-  const pendingValue = activeOrders.reduce((sum, item) => sum + item.total_amount, 0);
+  const pendingOrders = data.prescriptions.filter((item) =>
+    ["received", "dispensing", "ready"].includes(item.status),
+  );
+  const pendingValue = pendingOrders.reduce((sum, item) => sum + item.total_amount, 0);
 
   return (
     <div>
       <PageHeading
-        eyebrow="Dispensing"
-        title={`${brand.name} prescriptions`}
-        description="Store and monitor prescription orders from intake through dispensing, payment, and pickup."
+        eyebrow="Prescriptions"
+        title={`${brand.name} prescription orders`}
+        description="Simple record of who prescribed, what medicine was given, quantity, payment, and pickup."
         actions={
           <Button>
             <ClipboardPlus className="size-4" />
-            New prescription
+            New order
           </Button>
         }
       />
@@ -49,8 +59,8 @@ export default async function PrescriptionsPage() {
               <Timer className="size-5" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-slate-950">{activeOrders.length}</p>
-              <p className="text-sm text-slate-500">Active orders</p>
+              <p className="text-2xl font-semibold text-slate-950">{pendingOrders.length}</p>
+              <p className="text-sm text-slate-500">Prescriptions pending</p>
             </div>
           </CardContent>
         </Card>
@@ -63,13 +73,13 @@ export default async function PrescriptionsPage() {
               <p className="text-2xl font-semibold text-slate-950">
                 {data.prescriptions.filter((item) => item.status === "ready").length}
               </p>
-              <p className="text-sm text-slate-500">Ready pickups</p>
+              <p className="text-sm text-slate-500">Ready for pickup</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <p className="text-sm text-slate-500">Pending order value</p>
+            <p className="text-sm text-slate-500">Pending order amount</p>
             <p className="mt-2 text-2xl font-semibold text-slate-950">
               {formatUgandanCurrency(pendingValue)}
             </p>
@@ -77,7 +87,7 @@ export default async function PrescriptionsPage() {
         </Card>
       </div>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.75fr)]">
-        <PrescriptionTable prescriptions={data.prescriptions} title="Dispensing ledger" />
+        <PrescriptionTable prescriptions={data.prescriptions} title="Prescription Orders" />
         <Card>
           <CardHeader>
             <Logo
@@ -87,8 +97,8 @@ export default async function PrescriptionsPage() {
               initials={brand.initials}
               color={brand.primaryColor}
             />
-            <CardTitle>Status lanes</CardTitle>
-            <CardDescription>Current {brand.name} prescription work by fulfillment state.</CardDescription>
+            <CardTitle>Order Status</CardTitle>
+            <CardDescription>Simple status view for prescriptions at the counter.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
             {data.prescriptions.map((item) => (
@@ -98,8 +108,8 @@ export default async function PrescriptionsPage() {
                     <p className="text-sm font-semibold text-slate-950">{item.patient_name}</p>
                     <p className="mt-1 text-xs leading-5 text-slate-500">{item.medicine}</p>
                   </div>
-                  <Badge tone={statusTone[item.status]} className="capitalize">
-                    {item.status.replace("_", " ")}
+                  <Badge tone={statusTone[item.status]}>
+                    {statusLabel[item.status]}
                   </Badge>
                 </div>
                 <p className="mt-3 text-sm font-semibold text-slate-700">

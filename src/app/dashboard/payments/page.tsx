@@ -20,7 +20,7 @@ export default async function PaymentsPage() {
         title={isPharmacy ? "Pharmacy sales and invoices" : "Mobile money and invoices"}
         description={
           isPharmacy
-            ? "Collect prescription order payments through MTN Mobile Money, Airtel Money, Flutterwave, or Stripe."
+            ? "Track counter sales, prescription payments, MTN MoMo, Airtel Money, and receipts."
             : "Collect appointment payments through MTN Mobile Money, Airtel Money, Flutterwave, or Stripe."
         }
       />
@@ -31,7 +31,7 @@ export default async function PaymentsPage() {
             <CardHeader>
               <CardTitle>{isPharmacy ? "Sales snapshot" : "Revenue snapshot"}</CardTitle>
               <CardDescription>
-                {isPharmacy ? "Dispensing payment confirmation and invoice readiness." : "Payment confirmation and invoice readiness."}
+                {isPharmacy ? "Sales payment confirmation and receipt readiness." : "Payment confirmation and invoice readiness."}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap items-center justify-between gap-4">

@@ -187,6 +187,18 @@ export const subscriptionPlans = [
     features: "Pharmacy, labs, WhatsApp reminders, analytics",
   },
   {
+    name: "Basic Pharmacy",
+    price: 150000,
+    tenants: 8,
+    features: "Sales, receipts, inventory, low stock, expiry alerts",
+  },
+  {
+    name: "Advanced Pharmacy",
+    price: 280000,
+    tenants: 6,
+    features: "Everything in Basic plus prescription orders and pickup tracking",
+  },
+  {
     name: "Enterprise",
     price: 780000,
     tenants: 5,

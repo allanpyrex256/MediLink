@@ -32,7 +32,7 @@ export function InventorySnapshot({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>Stock levels, reorder points, expiry, and unit value.</CardDescription>
+        <CardDescription>Available quantities, reorder points, expiry dates, and unit price.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
         {visibleItems.map((item) => (
@@ -51,7 +51,7 @@ export function InventorySnapshot({
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-slate-950">{item.name}</p>
                 <p className="mt-1 truncate text-xs text-slate-600">
-                  {item.sku} - {item.stock_on_hand} on hand - reorder at {item.reorder_level}
+                  {item.sku} - {item.stock_on_hand} available - reorder at {item.reorder_level}
                 </p>
               </div>
             </div>

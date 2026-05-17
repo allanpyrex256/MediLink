@@ -168,7 +168,7 @@ export function BillingLedger({ tenants }: { tenants: PlatformTenant[] }) {
 
 export function PlanCards() {
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
       {subscriptionPlans.map((plan) => (
         <Card key={plan.name}>
           <CardHeader>

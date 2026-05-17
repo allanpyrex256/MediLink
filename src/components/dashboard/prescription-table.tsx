@@ -12,9 +12,17 @@ const statusTone = {
   cancelled: "rose",
 } as const;
 
+const statusLabel = {
+  received: "Received",
+  dispensing: "Preparing",
+  ready: "Ready",
+  collected: "Picked Up",
+  cancelled: "Cancelled",
+} as const;
+
 export function PrescriptionTable({
   prescriptions,
-  title = "Prescription queue",
+  title = "Prescription Orders",
 }: {
   prescriptions: PrescriptionOrder[];
   title?: string;
@@ -23,7 +31,7 @@ export function PrescriptionTable({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>Customer, prescriber, medicine, fulfillment status, and value.</CardDescription>
+        <CardDescription>Customer, prescriber, medicine, quantity, order status, and amount.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto p-0">
         <table className="w-full min-w-[760px] text-left text-sm">
@@ -32,9 +40,9 @@ export function PrescriptionTable({
               <th className="px-5 py-3 font-semibold">Customer</th>
               <th className="px-5 py-3 font-semibold">Medicine</th>
               <th className="px-5 py-3 font-semibold">Prescriber</th>
-              <th className="px-5 py-3 font-semibold">Due</th>
-              <th className="px-5 py-3 font-semibold">Status</th>
-              <th className="px-5 py-3 font-semibold">Value</th>
+              <th className="px-5 py-3 font-semibold">Pickup Time</th>
+              <th className="px-5 py-3 font-semibold">Order Status</th>
+              <th className="px-5 py-3 font-semibold">Amount</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -50,8 +58,8 @@ export function PrescriptionTable({
                   {format(new Date(prescription.fulfillment_due), "MMM d, HH:mm")}
                 </td>
                 <td className="px-5 py-4">
-                  <Badge tone={statusTone[prescription.status]} className="capitalize">
-                    {prescription.status.replace("_", " ")}
+                  <Badge tone={statusTone[prescription.status]}>
+                    {statusLabel[prescription.status]}
                   </Badge>
                 </td>
                 <td className="px-5 py-4 font-medium text-slate-950">

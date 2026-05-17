@@ -7,8 +7,8 @@ export function PaymentList({ payments }: { payments: Payment[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transaction history</CardTitle>
-        <CardDescription>Mobile money, Flutterwave, and Stripe-ready payment ledger.</CardDescription>
+        <CardTitle>Sales and payments</CardTitle>
+        <CardDescription>MTN MoMo, Airtel Money, cash/card references, and receipt status.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
         {payments.map((payment) => (
@@ -19,7 +19,7 @@ export function PaymentList({ payments }: { payments: Payment[] }) {
             <div>
               <p className="text-sm font-semibold text-slate-950">{payment.provider_reference}</p>
               <p className="mt-1 text-xs capitalize text-slate-600">
-                {payment.provider.replace("_", " ")} · {payment.phone}
+                {payment.provider.replace("_", " ")} - {payment.phone}
               </p>
             </div>
             <div className="flex items-center gap-3">

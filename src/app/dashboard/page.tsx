@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   ShoppingCart,
   Stethoscope,
-  Truck,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -586,103 +585,102 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
 
 function PharmacyDashboard({ data }: { data: DashboardData }) {
   const lowStock = data.inventory.filter((item) =>
-    ["low_stock", "out_of_stock", "expiring"].includes(item.status),
+    ["low_stock", "out_of_stock"].includes(item.status),
   );
-  const expiredDrugs = data.inventory.filter((item) => item.status === "expiring");
-  const activePrescriptions = data.prescriptions.filter(
-    (prescription) => !["collected", "cancelled"].includes(prescription.status),
+  const expiredMedicines = data.inventory.filter((item) => item.status === "expiring");
+  const prescriptionsPending = data.prescriptions.filter((prescription) =>
+    ["received", "dispensing", "ready"].includes(prescription.status),
   );
-  const readyPickups = data.prescriptions.filter((prescription) => prescription.status === "ready");
-  const dailySales = paidTotal(data.payments) || 1860000;
+  const salesToday = paidTotal(data.payments) || 1860000;
   const mobileMoneyPayments =
     data.payments
       .filter((payment) => payment.status === "paid" && ["mtn_momo", "airtel_money"].includes(payment.provider))
       .reduce((sum, payment) => sum + Number(payment.amount), 0) || 1260000;
-  const topSellingMedicine =
-    [...data.prescriptions].sort((a, b) => b.quantity - a.quantity)[0]?.medicine ??
-    data.inventory[0]?.name ??
-    "Paracetamol";
-  const cashierActivity = Math.max(
-    activePrescriptions.length + readyPickups.length + data.payments.filter((payment) => payment.status === "paid").length,
-    18,
-  );
+  const mtnMomo = data.payments
+    .filter((payment) => payment.status === "paid" && payment.provider === "mtn_momo")
+    .reduce((sum, payment) => sum + Number(payment.amount), 0) || 840000;
+  const airtelMoney = data.payments
+    .filter((payment) => payment.status === "paid" && payment.provider === "airtel_money")
+    .reduce((sum, payment) => sum + Number(payment.amount), 0) || 420000;
+  const profitToday = Math.round(salesToday * 0.28);
+  const prescriptionSteps = [
+    worklistItem("1. Customer brings prescription", "Record customer name, prescriber, and medicine requested.", "blue"),
+    worklistItem("2. Search medicine", "Check available quantity before selling.", lowStock.length ? "amber" : "green"),
+    worklistItem("3. Cash or MoMo payment", `MTN ${formatDashboardMoney(mtnMomo)} / Airtel ${formatDashboardMoney(airtelMoney)}`, "green"),
+    worklistItem("4. Print receipt", "Stock reduces after sale is completed.", "violet"),
+  ];
 
   return (
     <DashboardFrame
       eyebrow="Pharmacy dashboard"
       title={`${data.tenant.name} POS dashboard`}
-      description="Counter sales, prescription dispensing, stock alerts, supplier follow-up, expiry risk, and cashier activity."
+      description="Simple sales, mobile money, stock, expiry alerts, receipts, and prescription orders for Ugandan pharmacies."
       tone="green"
     >
       <BusinessMetricGrid>
         <MetricCard
-          label="Daily Sales"
-          value={formatDashboardMoney(dailySales)}
-          detail="Counter, prescription, and refill sales"
+          label="Sales Today"
+          value={formatDashboardMoney(salesToday)}
+          detail="Counter sales and prescriptions"
           icon={WalletCards}
           tone="green"
         />
         <MetricCard
-          label="Low Stock Items"
-          value={String(lowStock.length)}
-          detail="Low, out, or near reorder level"
-          icon={Package}
-          tone={lowStock.length ? "rose" : "green"}
-        />
-        <MetricCard
-          label="Expired Drugs"
-          value={String(expiredDrugs.length)}
-          detail="Expired or close to expiry"
-          icon={Pill}
-          tone="amber"
-        />
-        <MetricCard
-          label="Top Selling Medicines"
-          value={topSellingMedicine}
-          detail="Fastest moving item today"
-          icon={Truck}
-          tone="blue"
-        />
-        <MetricCard
-          label="Mobile Money Payments"
+          label="Mobile Money"
           value={formatDashboardMoney(mobileMoneyPayments)}
           detail="MTN MoMo and Airtel Money"
           icon={CreditCard}
           tone="violet"
         />
         <MetricCard
-          label="Cashier Activity"
-          value={String(cashierActivity)}
-          detail="Receipts, refills, and pickups"
+          label="Low Stock Drugs"
+          value={String(lowStock.length)}
+          detail="Need reorder or supplier follow-up"
+          icon={Package}
+          tone={lowStock.length ? "rose" : "green"}
+        />
+        <MetricCard
+          label="Prescriptions Pending"
+          value={String(prescriptionsPending.length)}
+          detail="Not yet picked up"
           icon={ReceiptText}
           tone="blue"
+        />
+        <MetricCard
+          label="Expired Medicines"
+          value={String(expiredMedicines.length)}
+          detail="Expired or expiring soon"
+          icon={Pill}
+          tone="amber"
+        />
+        <MetricCard
+          label="Profit Today"
+          value={formatDashboardMoney(profitToday)}
+          detail="Estimated gross profit"
+          icon={ReceiptText}
+          tone="green"
         />
       </BusinessMetricGrid>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[0.85fr_1.15fr_0.9fr]">
         <WorklistCard
-          title="POS cashier flow"
-          description="Quick selling, receipts, barcode checks, and customer payment confirmation."
+          title="Pharmacy sale workflow"
+          description="The everyday counter process: prescription, stock check, payment, receipt."
           icon={ShoppingCart}
-          items={[
-            worklistItem("Quick sale desk", `${cashierActivity} cashier actions today`, "green"),
-            worklistItem("Barcode checks", `${lowStock.length} items need stock attention`, lowStock.length ? "amber" : "green"),
-            worklistItem("Receipt printing", `${data.payments.filter((payment) => payment.status === "paid").length} receipts ready`, "blue"),
-            worklistItem("Mobile money", formatDashboardMoney(mobileMoneyPayments), "violet"),
-          ]}
+          items={prescriptionSteps}
           href="/dashboard/payments"
           action="Open sales"
         />
-        <PrescriptionTable prescriptions={data.prescriptions.slice(0, 8)} title="Dispensing queue" />
-        <InventorySnapshot items={data.inventory} title="Stock and expiry watchlist" />
+        <PrescriptionTable prescriptions={data.prescriptions.slice(0, 8)} title="Prescription Orders" />
+        <InventorySnapshot items={data.inventory} title="Low stock and expiry alerts" />
       </div>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-3">
-        <PharmacyFulfillmentCard prescriptions={data.prescriptions} />
+        <PharmacyPrescriptionCard prescriptions={data.prescriptions} />
         <PharmacyStockCard items={data.inventory} />
         <FinanceSnapshot
-          title="Pharmacy sales"
-          description="Collected mobile money and counter payments."
+          title="MTN and Airtel tracking"
+          description={`MTN MoMo ${formatDashboardMoney(mtnMomo)} / Airtel Money ${formatDashboardMoney(airtelMoney)}.`}
           amount={paidTotal(data.payments)}
           payments={data.payments}
         />
@@ -1033,17 +1031,17 @@ function HospitalLabCard({ labResults }: { labResults: LabResult[] }) {
   );
 }
 
-function PharmacyFulfillmentCard({ prescriptions }: { prescriptions: PrescriptionOrder[] }) {
+function PharmacyPrescriptionCard({ prescriptions }: { prescriptions: PrescriptionOrder[] }) {
   return (
     <WorklistCard
-      title="Fulfillment lanes"
-      description="Prescription orders grouped by the next dispensary action."
+      title="Prescription orders"
+      description="Simple tracking for who prescribed, what was given, quantity, and pickup."
       icon={ShieldCheck}
       items={[
         laneItem("Received", prescriptions, "received", "blue"),
-        laneItem("Dispensing", prescriptions, "dispensing", "amber"),
+        laneItem("Preparing", prescriptions, "dispensing", "amber"),
         laneItem("Ready", prescriptions, "ready", "green"),
-        laneItem("Collected", prescriptions, "collected", "slate"),
+        laneItem("Picked Up", prescriptions, "collected", "slate"),
       ]}
       href="/dashboard/prescriptions"
       action="Open prescriptions"
@@ -1058,13 +1056,13 @@ function PharmacyStockCard({ items }: { items: InventoryItem[] }) {
 
   return (
     <WorklistCard
-      title="Inventory controls"
-      description="Pharmacy stock risk by reorder and expiry status."
+      title="Stock controls"
+      description="Low stock and expiry alerts are the biggest pharmacy money saver."
       icon={Package}
       items={[
-        worklistItem("Low stock", `${low} medicines below reorder level`, low ? "amber" : "green"),
-        worklistItem("Out of stock", `${out} medicines need urgent replenishment`, out ? "rose" : "green"),
-        worklistItem("Expiring soon", `${expiring} stock lines near expiry`, expiring ? "amber" : "green"),
+        worklistItem("Low stock drugs", `${low} medicines below reorder level`, low ? "amber" : "green"),
+        worklistItem("Out of stock", `${out} medicines need urgent restocking`, out ? "rose" : "green"),
+        worklistItem("Expired medicines", `${expiring} batches expired or expiring soon`, expiring ? "amber" : "green"),
       ]}
       href="/dashboard/inventory"
       action="Open inventory"
@@ -1079,7 +1077,7 @@ function laneItem(
   tone: Tone,
 ) {
   const count = prescriptions.filter((prescription) => prescription.status === status).length;
-  return worklistItem(title, `${count} order${count === 1 ? "" : "s"} in this lane`, tone);
+  return worklistItem(title, `${count} order${count === 1 ? "" : "s"}`, tone);
 }
 
 function worklistItem(title: string, body: string, tone: Tone): WorklistItem {

@@ -17,8 +17,8 @@ export default async function PharmacyPage() {
     <div>
       <PageHeading
         eyebrow="Pharmacy"
-        title="Pharmacy management"
-        description="Drug inventory, expiry alerts, low stock alerts, prescription tracking, and sales visibility."
+        title="Pharmacy sales and stock"
+        description="Fast counter sales, receipts, mobile money tracking, stock alerts, expiry alerts, and simple prescription orders."
         actions={
           <Button>
             <PackagePlus className="size-4" />
@@ -54,20 +54,37 @@ export default async function PharmacyPage() {
         </Card>
       </div>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.8fr)]">
-        <PrescriptionTable prescriptions={data.prescriptions} title="Prescription tracking" />
+        <PrescriptionTable prescriptions={data.prescriptions} title="Prescription Orders" />
         <div className="grid gap-5">
-          <InventorySnapshot items={data.inventory} title="Stock alerts" />
+          <InventorySnapshot items={data.inventory} title="Low stock and expiry alerts" />
           <Card>
             <CardHeader>
-              <CardTitle>Module pricing</CardTitle>
-              <CardDescription>Pharmacies can subscribe to this module separately.</CardDescription>
+              <CardTitle>Pharmacy plans</CardTitle>
+              <CardDescription>Small drug shops can stay simple. Larger pharmacies can add prescription workflows.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-2xl font-semibold text-slate-950">UGX 100,000</p>
-                <p className="mt-1 text-sm text-slate-500">Per month</p>
+            <CardContent className="grid gap-3">
+              <div className="rounded-lg bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-bold text-slate-950">Basic Pharmacy</p>
+                    <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
+                      Inventory, sales, receipts, low stock, expiry alerts.
+                    </p>
+                  </div>
+                  <Badge tone="green">Simple</Badge>
+                </div>
               </div>
-              <Badge tone="blue">Standalone</Badge>
+              <div className="rounded-lg bg-emerald-50 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-bold text-emerald-950">Advanced Pharmacy</p>
+                    <p className="mt-1 text-xs font-medium leading-5 text-emerald-700">
+                      Adds prescription orders, prescriber tracking, and pickup status.
+                    </p>
+                  </div>
+                  <Badge tone="blue">Growth</Badge>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

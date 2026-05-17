@@ -28,18 +28,18 @@ export default async function ExpiryAlertsPage() {
     <div>
       <PageHeading
         eyebrow="Expiry alerts"
-        title="Expiry and stock risk"
-        description="Watch medicines that are expiring, low, or out of stock before they affect sales."
+        title="Expiry and low stock alerts"
+        description="Catch expired medicines, expiring batches, and low stock before they cause losses or missed sales."
       />
       <div className="mb-5 grid gap-4 md:grid-cols-3">
-        <Summary label="Risk Items" value={String(riskItems.length)} tone="rose" />
-        <Summary label="Expiring Soon" value={String(data.inventory.filter((item) => item.status === "expiring").length)} tone="amber" />
-        <Summary label="Stock At Risk" value={formatUgandanCurrency(riskValue)} tone="blue" />
+        <Summary label="Low Stock Drugs" value={String(data.inventory.filter((item) => item.status === "low_stock" || item.status === "out_of_stock").length)} tone="rose" />
+        <Summary label="Expired Medicines" value={String(data.inventory.filter((item) => item.status === "expiring").length)} tone="amber" />
+        <Summary label="Stock Value at Risk" value={formatUgandanCurrency(riskValue)} tone="blue" />
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Medicine alerts</CardTitle>
-          <CardDescription>Items that need reorder, supplier follow-up, discounting, or removal.</CardDescription>
+          <CardDescription>Medicines that need restocking, supplier follow-up, discounting, or removal.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <table className="w-full min-w-[820px] text-left text-sm">
@@ -103,6 +103,6 @@ function Summary({ label, value, tone }: { label: string; value: string; tone: "
 function actionForStatus(status: keyof typeof statusTone) {
   if (status === "out_of_stock") return "Place urgent order";
   if (status === "low_stock") return "Reorder this week";
-  if (status === "expiring") return "Review expiry batch";
+  if (status === "expiring") return "Check expiry batch";
   return "No action needed";
 }

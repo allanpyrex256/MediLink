@@ -14,7 +14,7 @@ export default function PlansPage() {
       <PlatformSectionHeader
         eyebrow="Pricing"
         title="Subscription Plans"
-        description="Manage Starter, Pro, and Enterprise plans for hospitals, clinics, and pharmacies."
+        description="Manage clinic, hospital, Basic Pharmacy, Advanced Pharmacy, and Enterprise plans."
         icon={sectionIcons.plans}
       />
       <PlanCards />

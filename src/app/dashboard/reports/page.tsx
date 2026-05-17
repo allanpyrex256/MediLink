@@ -21,9 +21,9 @@ export default async function ReportsPage() {
           tone: "green" as const,
         },
         {
-          label: "Stock risk",
+          label: "Stock alerts",
           value: String(data.inventory.filter((item) => item.status !== "in_stock").length),
-          change: "Items below plan",
+          change: "Low stock or expiring drugs",
           tone: "amber" as const,
         },
         {
