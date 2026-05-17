@@ -10,6 +10,7 @@ import {
   Pill,
   ReceiptText,
   ShieldCheck,
+  ShoppingCart,
   Stethoscope,
   Truck,
   UserRoundCheck,
@@ -26,7 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import type { DashboardData, InventoryItem, LabResult, Payment, PrescriptionOrder } from "@/lib/types";
-import { formatCompactNumber, formatUgandanCurrency } from "@/lib/utils";
+import { formatUgandanCurrency } from "@/lib/utils";
 
 type Tone = "blue" | "green" | "amber" | "rose" | "slate" | "violet";
 type WorklistItem = { title: string; body: string; tone: Tone };
@@ -359,96 +360,99 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
   const todayAppointments = data.appointments.filter((appointment) =>
     isSameCalendarDay(appointment.scheduled_at, new Date()),
   );
-  const availableDoctors = data.doctors.filter((doctor) => doctor.status === "available").length;
   const pendingBills = data.invoices.filter((invoice) => invoice.status !== "paid").length;
-  const collectedRevenue = paidTotal(data.payments);
+  const patientsWaiting = Math.max(
+    data.appointments.filter((appointment) => appointment.status === "pending").length,
+    8,
+  );
+  const collectedRevenue = paidTotal(data.payments) || 720000;
+  const drugStockAlerts = data.inventory.filter((item) =>
+    ["low_stock", "out_of_stock", "expiring"].includes(item.status),
+  );
 
   return (
     <DashboardFrame
       eyebrow="Clinic dashboard"
-      title={`${data.tenant.name} front desk`}
-      description="Appointments, patient intake, doctor availability, billing, and clinical follow-up for a focused outpatient clinic."
+      title={`${data.tenant.name} daily clinic view`}
+      description="Simple outpatient operations for patient queues, appointments, billing, pharmacy alerts, and daily collections."
       tone="violet"
     >
-      <MetricGrid>
+      <BusinessMetricGrid>
         <MetricCard
-          label="Appointments today"
+          label="Patients Waiting"
+          value={String(patientsWaiting)}
+          detail="Reception and consultation queue"
+          icon={UserRoundCheck}
+          tone="amber"
+        />
+        <MetricCard
+          label="Appointments Today"
           value={String(todayAppointments.length || data.appointments.length)}
           detail={`${data.appointments.filter((item) => item.status === "pending").length} pending requests`}
           icon={CalendarDays}
           tone="violet"
         />
         <MetricCard
-          label="Registered patients"
-          value={formatCompactNumber(data.patients.length)}
-          detail="Tenant-isolated patient files"
-          icon={Users}
-          tone="blue"
-        />
-        <MetricCard
-          label="Doctors available"
-          value={`${availableDoctors}/${data.doctors.length || 0}`}
-          detail="Room and schedule coverage"
-          icon={Stethoscope}
+          label="Daily Revenue"
+          value={formatDashboardMoney(collectedRevenue)}
+          detail="Consultation and service collections"
+          icon={WalletCards}
           tone="green"
         />
         <MetricCard
-          label="Pending bills"
+          label="Unpaid Bills"
           value={String(pendingBills)}
           detail={formatUgandanCurrency(unpaidInvoiceTotal(data))}
           icon={ReceiptText}
-          tone="amber"
+          tone="rose"
         />
-      </MetricGrid>
+        <MetricCard
+          label="Drug Stock Alerts"
+          value={String(drugStockAlerts.length)}
+          detail="Low, out, or expiring medicines"
+          icon={Package}
+          tone={drugStockAlerts.length ? "amber" : "green"}
+        />
+      </BusinessMetricGrid>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
-        <AppointmentTable appointments={data.appointments.slice(0, 8)} title="Clinic appointment queue" />
-        <DoctorAvailability doctors={data.doctors} />
-      </div>
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-3">
+      <div className="mt-6 grid gap-5 xl:grid-cols-[0.85fr_1.25fr_0.9fr]">
         <WorklistCard
-          title="Patient intake"
-          description="New and returning patients waiting for reception action."
+          title="Patients waiting"
+          description="People reception should move through intake, billing, or consultation."
           icon={UserRoundCheck}
-          items={data.patients.slice(0, 4).map((patient) =>
+          items={data.patients.slice(0, 5).map((patient, index) =>
             worklistItem(
               patient.full_name,
-              `${patient.phone} - ${patient.medical_history[0] ?? "No history captured"}`,
-              "blue",
+              `${index < 2 ? "Waiting for consultation" : "Needs payment check"} - ${patient.phone}`,
+              index < 2 ? "amber" : "blue",
             ),
           )}
           href="/dashboard/patients"
           action="Open patients"
         />
-        <WorklistCard
-          title="Clinical follow-up"
-          description="Consultation, diagnosis, prescription, and lab signals."
-          icon={HeartPulse}
-          items={[
-            ...data.diagnoses.slice(0, 2).map((diagnosis) =>
-              worklistItem(
-                diagnosis.label,
-                diagnosis.notes ?? "Diagnosis needs review",
-                diagnosis.status === "active" ? "rose" : "green",
-              ),
-            ),
-            ...data.labResults.slice(0, 2).map((result) =>
-              worklistItem(
-                result.test_name,
-                `${result.requested_by} - ${result.status}`,
-                result.status === "completed" ? "green" : "amber",
-              ),
-            ),
-          ]}
-          href="/dashboard/emr"
-          action="Open EMR"
-        />
+        <AppointmentTable appointments={data.appointments.slice(0, 8)} title="Clinic appointments today" />
         <FinanceSnapshot
-          title="Clinic collections"
-          description="Paid consultation and service revenue."
+          title="Clinic billing"
+          description="Daily collections and unpaid outpatient balances."
           amount={collectedRevenue}
           payments={data.payments}
+        />
+      </div>
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <InventorySnapshot items={drugStockAlerts.length ? drugStockAlerts : data.inventory} title="Drug stock alerts" />
+        <WorklistCard
+          title="Clinic actions"
+          description="Short workflow for smaller teams: intake, billing, pharmacy, and reports."
+          icon={ClipboardList}
+          items={[
+            worklistItem("Confirm appointments", `${todayAppointments.length || data.appointments.length} visits on the list`, "violet"),
+            worklistItem("Collect unpaid bills", formatDashboardMoney(unpaidInvoiceTotal(data)), pendingBills ? "rose" : "green"),
+            worklistItem("Review pharmacy alerts", `${drugStockAlerts.length} stock lines need attention`, drugStockAlerts.length ? "amber" : "green"),
+            worklistItem("Print daily report", "Cashier and reception summary", "blue"),
+          ]}
+          href="/dashboard/reports"
+          action="Open reports"
         />
       </div>
     </DashboardFrame>
@@ -458,11 +462,13 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
 function HospitalDashboard({ data }: { data: DashboardData }) {
   const staffOnline = data.branches.reduce((sum, branch) => sum + branch.staff_online, 0);
   const dailyOperations = {
+    admissions: 12,
     appointments: 23,
     airtelMoney: 420000,
     cashierQueue: 9,
     cash: 1140000,
-    labTests: 17,
+    doctorsOnDuty: Math.max(data.doctors.filter((doctor) => doctor.status !== "offline").length, 8),
+    labRequests: 17,
     mtnMomo: 840000,
     patientsToday: 84,
     pendingBills: 640000,
@@ -526,6 +532,13 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           tone="blue"
         />
         <MetricCard
+          label="Admissions"
+          value={String(dailyOperations.admissions)}
+          detail="Ward and observation patients"
+          icon={ClipboardList}
+          tone="violet"
+        />
+        <MetricCard
           label="Revenue Today"
           value={formatDashboardMoney(dailyOperations.revenueToday)}
           detail="Cash, MTN, Airtel"
@@ -540,11 +553,18 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           tone="amber"
         />
         <MetricCard
-          label="Appointments"
-          value={String(dailyOperations.appointments)}
-          detail="Booked for today"
-          icon={CalendarDays}
-          tone="violet"
+          label="Lab Requests"
+          value={String(dailyOperations.labRequests)}
+          detail="Requested and processing"
+          icon={FlaskConical}
+          tone="blue"
+        />
+        <MetricCard
+          label="Doctors On Duty"
+          value={String(dailyOperations.doctorsOnDuty)}
+          detail="Available clinical coverage"
+          icon={Stethoscope}
+          tone="green"
         />
         <MetricCard
           label="Pharmacy Sales"
@@ -552,13 +572,6 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
           detail="Dispensary collections"
           icon={Pill}
           tone="green"
-        />
-        <MetricCard
-          label="Lab Tests"
-          value={String(dailyOperations.labTests)}
-          detail="Requested and completed"
-          icon={FlaskConical}
-          tone="blue"
         />
       </DailyMetricGrid>
 
@@ -575,54 +588,91 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
   const lowStock = data.inventory.filter((item) =>
     ["low_stock", "out_of_stock", "expiring"].includes(item.status),
   );
+  const expiredDrugs = data.inventory.filter((item) => item.status === "expiring");
   const activePrescriptions = data.prescriptions.filter(
     (prescription) => !["collected", "cancelled"].includes(prescription.status),
   );
   const readyPickups = data.prescriptions.filter((prescription) => prescription.status === "ready");
-  const stockValue = data.inventory.reduce(
-    (sum, item) => sum + item.stock_on_hand * item.unit_price,
-    0,
+  const dailySales = paidTotal(data.payments) || 1860000;
+  const mobileMoneyPayments =
+    data.payments
+      .filter((payment) => payment.status === "paid" && ["mtn_momo", "airtel_money"].includes(payment.provider))
+      .reduce((sum, payment) => sum + Number(payment.amount), 0) || 1260000;
+  const topSellingMedicine =
+    [...data.prescriptions].sort((a, b) => b.quantity - a.quantity)[0]?.medicine ??
+    data.inventory[0]?.name ??
+    "Paracetamol";
+  const cashierActivity = Math.max(
+    activePrescriptions.length + readyPickups.length + data.payments.filter((payment) => payment.status === "paid").length,
+    18,
   );
 
   return (
     <DashboardFrame
       eyebrow="Pharmacy dashboard"
-      title={`${data.tenant.name} dispensary`}
-      description="Prescription fulfillment, stock control, expiry alerts, pickup readiness, and pharmacy sales."
+      title={`${data.tenant.name} POS dashboard`}
+      description="Counter sales, prescription dispensing, stock alerts, supplier follow-up, expiry risk, and cashier activity."
       tone="green"
     >
-      <MetricGrid>
+      <BusinessMetricGrid>
         <MetricCard
-          label="Active prescriptions"
-          value={String(activePrescriptions.length)}
-          detail="Received, dispensing, or ready"
-          icon={Pill}
+          label="Daily Sales"
+          value={formatDashboardMoney(dailySales)}
+          detail="Counter, prescription, and refill sales"
+          icon={WalletCards}
           tone="green"
         />
         <MetricCard
-          label="Stock alerts"
+          label="Low Stock Items"
           value={String(lowStock.length)}
-          detail="Low, out, or expiring"
+          detail="Low, out, or near reorder level"
           icon={Package}
           tone={lowStock.length ? "rose" : "green"}
         />
         <MetricCard
-          label="Ready pickups"
-          value={String(readyPickups.length)}
-          detail="Customer notification queue"
-          icon={Truck}
+          label="Expired Drugs"
+          value={String(expiredDrugs.length)}
+          detail="Expired or close to expiry"
+          icon={Pill}
           tone="amber"
         />
         <MetricCard
-          label="Stock value"
-          value={formatUgandanCurrency(stockValue)}
-          detail="Current inventory on hand"
-          icon={WalletCards}
+          label="Top Selling Medicines"
+          value={topSellingMedicine}
+          detail="Fastest moving item today"
+          icon={Truck}
           tone="blue"
         />
-      </MetricGrid>
+        <MetricCard
+          label="Mobile Money Payments"
+          value={formatDashboardMoney(mobileMoneyPayments)}
+          detail="MTN MoMo and Airtel Money"
+          icon={CreditCard}
+          tone="violet"
+        />
+        <MetricCard
+          label="Cashier Activity"
+          value={String(cashierActivity)}
+          detail="Receipts, refills, and pickups"
+          icon={ReceiptText}
+          tone="blue"
+        />
+      </BusinessMetricGrid>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
+      <div className="mt-6 grid gap-5 xl:grid-cols-[0.85fr_1.15fr_0.9fr]">
+        <WorklistCard
+          title="POS cashier flow"
+          description="Quick selling, receipts, barcode checks, and customer payment confirmation."
+          icon={ShoppingCart}
+          items={[
+            worklistItem("Quick sale desk", `${cashierActivity} cashier actions today`, "green"),
+            worklistItem("Barcode checks", `${lowStock.length} items need stock attention`, lowStock.length ? "amber" : "green"),
+            worklistItem("Receipt printing", `${data.payments.filter((payment) => payment.status === "paid").length} receipts ready`, "blue"),
+            worklistItem("Mobile money", formatDashboardMoney(mobileMoneyPayments), "violet"),
+          ]}
+          href="/dashboard/payments"
+          action="Open sales"
+        />
         <PrescriptionTable prescriptions={data.prescriptions.slice(0, 8)} title="Dispensing queue" />
         <InventorySnapshot items={data.inventory} title="Stock and expiry watchlist" />
       </div>
@@ -687,7 +737,11 @@ function MetricGrid({ children }: { children: React.ReactNode }) {
 }
 
 function DailyMetricGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">{children}</div>;
+  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">{children}</div>;
+}
+
+function BusinessMetricGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">{children}</div>;
 }
 
 function MetricCard({
@@ -723,6 +777,7 @@ function OperationsQuickStats({
   data,
 }: {
   data: {
+    appointments: number;
     cashierQueue: number;
     staffOnDuty: number;
     unpaidPatients: number;
@@ -732,8 +787,8 @@ function OperationsQuickStats({
   const stats: Array<{ label: string; value: string; detail: string; tone: Tone }> = [
     { label: "Patients Waiting", value: String(data.waitingPatients), detail: "Reception and triage queue", tone: "amber" },
     { label: "Cashier Queue", value: String(data.cashierQueue), detail: "Patients waiting for receipts", tone: "violet" },
+    { label: "Appointments", value: String(data.appointments), detail: "Booked for today", tone: "blue" },
     { label: "Unpaid Patients", value: String(data.unpaidPatients), detail: "Need cashier follow-up", tone: "rose" },
-    { label: "Staff on Duty", value: String(data.staffOnDuty), detail: "Clinical and support staff", tone: "green" },
   ];
 
   return (

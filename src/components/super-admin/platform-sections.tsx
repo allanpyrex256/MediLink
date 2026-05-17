@@ -1,10 +1,14 @@
 import {
   Activity,
+  Banknote,
   Building2,
   CreditCard,
+  LineChart,
   Pill,
   ReceiptText,
+  Settings,
   Ticket,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -273,10 +277,16 @@ export function TicketList({ tickets }: { tickets: SupportTicket[] }) {
 
 export const sectionIcons = {
   activity: Activity,
+  analytics: LineChart,
   billing: CreditCard,
+  clinics: Users,
   hospitals: Building2,
+  payments: CreditCard,
   pharmacies: Pill,
   plans: ReceiptText,
+  revenue: Banknote,
+  settings: Settings,
+  subscriptions: ReceiptText,
   support: Ticket,
 };
 

@@ -14,11 +14,15 @@ import {
   CreditCard,
   FlaskConical,
   Home,
+  LineChart,
   LogOut,
   Menu,
+  Package,
   Pill,
   ReceiptText,
   Settings,
+  ShoppingCart,
+  Truck,
   Users,
   X,
   Zap,
@@ -30,35 +34,59 @@ import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/c
 import type { AppUser, Tenant, UserRole } from "@/lib/types";
 import { cn, initials } from "@/lib/utils";
 
-const baseNavigation: Array<{
+type NavigationItem = {
   href: string;
   label: string;
   icon: ElementType;
   roles?: UserRole[];
-}> = [
+};
+
+const hospitalNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "receptionist"] },
   { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDays, roles: ["admin", "doctor", "receptionist", "patient"] },
-  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin", "receptionist", "pharmacist"] },
-  { href: "/dashboard/pharmacy", label: "Pharmacy", icon: Pill, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
+  { href: "/dashboard/admissions", label: "Admissions", icon: ClipboardList, roles: ["admin", "doctor", "receptionist"] },
   { href: "/dashboard/labs", label: "Laboratory", icon: FlaskConical, roles: ["admin", "doctor", "receptionist"] },
+  { href: "/dashboard/pharmacy", label: "Pharmacy", icon: Pill, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin", "receptionist", "pharmacist"] },
   { href: "/dashboard/branches", label: "Staff", icon: Users, roles: ["admin"] },
   { href: "/dashboard/reports", label: "Reports", icon: ClipboardList, roles: ["admin", "doctor"] },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["admin"] },
 ];
 
-const platformNavigation: Array<{
-  href: string;
-  label: string;
-  icon: ElementType;
-}> = [
-  { href: "/super-admin", label: "Business Dashboard", icon: Home },
+const clinicNavigation: NavigationItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/dashboard/patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "receptionist"] },
+  { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDays, roles: ["admin", "doctor", "receptionist", "patient"] },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin", "receptionist"] },
+  { href: "/dashboard/pharmacy", label: "Pharmacy", icon: Pill, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
+  { href: "/dashboard/reports", label: "Reports", icon: ClipboardList, roles: ["admin", "doctor"] },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["admin"] },
+];
+
+const pharmacyNavigation: NavigationItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/dashboard/payments", label: "Sales", icon: ShoppingCart, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/inventory", label: "Inventory", icon: Package, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/prescriptions", label: "Prescriptions", icon: ReceiptText, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/suppliers", label: "Suppliers", icon: Truck, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/expiry-alerts", label: "Expiry Alerts", icon: Pill, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/reports", label: "Reports", icon: ClipboardList, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["admin", "pharmacist"] },
+];
+
+const platformNavigation: NavigationItem[] = [
+  { href: "/super-admin", label: "Dashboard", icon: Home },
   { href: "/super-admin/hospitals", label: "Hospitals", icon: Building2 },
+  { href: "/super-admin/clinics", label: "Clinics", icon: Users },
   { href: "/super-admin/pharmacies", label: "Pharmacies", icon: Pill },
-  { href: "/super-admin/billing", label: "Billing", icon: CreditCard },
-  { href: "/super-admin/plans", label: "Subscription Plans", icon: ReceiptText },
-  { href: "/super-admin/activity", label: "Tenant Activity", icon: Activity },
+  { href: "/super-admin/subscriptions", label: "Subscriptions", icon: ReceiptText },
+  { href: "/super-admin/revenue", label: "Revenue", icon: LineChart },
+  { href: "/super-admin/payments", label: "Payments", icon: CreditCard },
   { href: "/super-admin/support", label: "Support Tickets", icon: Users },
+  { href: "/super-admin/plans", label: "Plans", icon: ReceiptText },
+  { href: "/super-admin/analytics", label: "Analytics", icon: Activity },
+  { href: "/super-admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppShell({
@@ -80,23 +108,49 @@ export function AppShell({
     : user.role === "admin"
       ? "Administrator"
       : user.role;
-  const roleNavigation = baseNavigation.filter(
-    (item) => !item.roles || item.roles.includes(user.role),
-  );
+  const businessNavigation =
+    tenant.tenant_kind === "hospital"
+      ? hospitalNavigation
+      : tenant.tenant_kind === "pharmacy"
+        ? pharmacyNavigation
+        : clinicNavigation;
+  const roleNavigation = businessNavigation.filter((item) => !item.roles || item.roles.includes(user.role));
   const navigation = user.is_platform_admin ? platformNavigation : roleNavigation;
   const quickActions = user.is_platform_admin
     ? [
         { href: "/super-admin/hospitals", label: "Manage hospitals", icon: Building2 },
+        { href: "/super-admin/clinics", label: "Manage clinics", icon: Users },
         { href: "/super-admin/pharmacies", label: "Manage pharmacies", icon: Pill },
-        { href: "/super-admin/billing", label: "Review billing", icon: CreditCard },
+        { href: "/super-admin/revenue", label: "Review revenue", icon: LineChart },
         { href: "/super-admin/support", label: "Open tickets", icon: Users },
       ]
-    : [
-        { href: "/dashboard/appointments", label: "New appointment", icon: CalendarDays },
-        { href: "/dashboard/patients", label: "Register patient", icon: Users },
-        { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
-        { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Pill },
-      ];
+    : tenant.tenant_kind === "pharmacy"
+      ? [
+          { href: "/dashboard/payments", label: "New sale", icon: ShoppingCart },
+          { href: "/dashboard/inventory", label: "Check stock", icon: Package },
+          { href: "/dashboard/expiry-alerts", label: "Expiry alerts", icon: Pill },
+          { href: "/dashboard/suppliers", label: "Suppliers", icon: Truck },
+        ]
+      : tenant.tenant_kind === "hospital"
+        ? [
+            { href: "/dashboard/admissions", label: "New admission", icon: ClipboardList },
+            { href: "/dashboard/labs", label: "Lab request", icon: FlaskConical },
+            { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
+            { href: "/dashboard/pharmacy", label: "Pharmacy sales", icon: Pill },
+          ]
+      : [
+          { href: "/dashboard/appointments", label: "New appointment", icon: CalendarDays },
+          { href: "/dashboard/patients", label: "Register patient", icon: Users },
+          { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
+          { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Pill },
+        ];
+  const footerLink = user.is_platform_admin
+    ? { href: "/super-admin/analytics", label: "Platform Analytics" }
+    : tenant.tenant_kind === "pharmacy"
+      ? { href: "/dashboard/inventory", label: "Stock Control" }
+      : tenant.tenant_kind === "hospital"
+        ? { href: "/dashboard/branches", label: "Staff & Branches" }
+        : { href: "/dashboard/reports", label: "Clinic Reports" };
 
   async function signOut() {
     if (hasSupabaseConfig()) {
@@ -118,6 +172,7 @@ export function AppShell({
           navigation={navigation}
           onSignOut={signOut}
           platformMode={user.is_platform_admin}
+          footerLink={footerLink}
         />
       </aside>
 
@@ -154,6 +209,7 @@ export function AppShell({
                   onNavigate={() => setMobileOpen(false)}
                   onSignOut={signOut}
                   platformMode={user.is_platform_admin}
+                  footerLink={footerLink}
                   compact
                 />
             </motion.aside>
@@ -270,14 +326,16 @@ function SidebarContent({
   onSignOut,
   compact = false,
   platformMode = false,
+  footerLink,
 }: {
   pathname: string;
   tenant: Tenant;
-  navigation: Array<{ href: string; label: string; icon: ElementType }>;
+  navigation: NavigationItem[];
   onNavigate?: () => void;
   onSignOut: () => void;
   compact?: boolean;
   platformMode?: boolean;
+  footerLink: { href: string; label: string };
 }) {
   return (
     <>
@@ -303,11 +361,11 @@ function SidebarContent({
             </p>
           </div>
           <Link
-            href={platformMode ? "/super-admin/hospitals" : "/dashboard/branches"}
+            href={footerLink.href}
             onClick={onNavigate}
             className="flex h-12 w-full items-center justify-between border-t border-violet-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-violet-50"
           >
-            {platformMode ? "All Tenants" : "All Branches"}
+            {footerLink.label}
             <ChevronDown className="size-4" />
           </Link>
           <button
@@ -329,12 +387,14 @@ function NavItem({
   pathname,
   onNavigate,
 }: {
-  item: { href: string; label: string; icon: ElementType };
+  item: NavigationItem;
   pathname: string;
   onNavigate?: () => void;
 }) {
-  const active =
-    item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
+  const isSectionRoot = item.href === "/dashboard" || item.href === "/super-admin";
+  const active = isSectionRoot
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(`${item.href}/`);
   const Icon = item.icon;
 
   return (

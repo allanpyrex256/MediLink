@@ -56,6 +56,7 @@ export const metadata = {
 
 export default function SuperAdminPage() {
   const metrics = platformMetrics();
+  const activeBusinesses = metrics.activeTenants + metrics.trialAccounts;
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -71,42 +72,28 @@ export default function SuperAdminPage() {
           </p>
         </div>
         <Link
-          href="/super-admin/billing"
+          href="/super-admin/revenue"
           className="inline-flex h-12 w-fit items-center justify-center gap-2 rounded-lg bg-violet-600 px-5 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700"
         >
-          Review billing
+          Review revenue
           <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <MetricCard
-          label="Total Hospitals"
-          value={String(metrics.totalHospitals)}
-          detail="Clinics using MediLink"
-          icon={Building2}
+          label="Active Businesses"
+          value={String(activeBusinesses)}
+          detail="Paying and trial tenants"
+          icon={ShieldCheck}
           tone="bg-sky-100 text-sky-700"
         />
         <MetricCard
-          label="Active Clinics"
-          value={String(metrics.activeClinics)}
-          detail="Paying clinical tenants"
-          icon={ShieldCheck}
-          tone="bg-emerald-100 text-emerald-700"
-        />
-        <MetricCard
-          label="Pharmacies"
-          value={String(metrics.pharmacies)}
-          detail="Subscribed pharmacies"
-          icon={Pill}
-          tone="bg-orange-100 text-orange-700"
-        />
-        <MetricCard
-          label="Monthly Revenue"
+          label="Monthly SaaS Revenue"
           value={formatUgx(metrics.monthlyRevenue)}
-          detail="Your SaaS income"
+          detail="Your platform income"
           icon={Banknote}
-          tone="bg-violet-100 text-violet-700"
+          tone="bg-emerald-100 text-emerald-700"
         />
         <MetricCard
           label="Expired Accounts"
@@ -116,18 +103,32 @@ export default function SuperAdminPage() {
           tone="bg-rose-100 text-rose-700"
         />
         <MetricCard
+          label="Trial Users"
+          value={String(metrics.trialAccounts)}
+          detail="Free users to convert"
+          icon={Users}
+          tone="bg-violet-100 text-violet-700"
+        />
+        <MetricCard
           label="New Signups"
           value={String(metrics.newSignups)}
           detail="Growth this month"
           icon={Sparkles}
           tone="bg-amber-100 text-amber-700"
         />
+        <MetricCard
+          label="Active Subscriptions"
+          value={String(metrics.activeTenants)}
+          detail="Businesses paying now"
+          icon={ReceiptText}
+          tone="bg-orange-100 text-orange-700"
+        />
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <MiniMetric label="Active Tenants" value={metrics.activeTenants} body="Paying businesses" />
-        <MiniMetric label="Pending Payments" value={metrics.pendingPayments} body="Unpaid invoices" />
-        <MiniMetric label="Trial Accounts" value={metrics.trialAccounts} body="Free users to convert" />
+        <MiniMetric label="Hospitals" value={metrics.totalHospitals} body="Large institutions using MediLink" />
+        <MiniMetric label="Clinics" value={metrics.activeClinics} body="Smaller outpatient businesses" />
+        <MiniMetric label="Pharmacies" value={metrics.pharmacies} body="Pharmacy and POS tenants" />
       </div>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
@@ -169,11 +170,14 @@ export default function SuperAdminPage() {
           <CardContent className="grid gap-3 sm:grid-cols-2">
             {[
               ["Hospitals", "Manage all hospitals", "/super-admin/hospitals", Building2],
+              ["Clinics", "Manage smaller clinics", "/super-admin/clinics", Users],
               ["Pharmacies", "Manage all pharmacies", "/super-admin/pharmacies", Pill],
-              ["Billing", "Track payments and subscriptions", "/super-admin/billing", CreditCard],
-              ["Subscription Plans", "Starter, Pro, Enterprise", "/super-admin/plans", ReceiptText],
-              ["Tenant Activity", "See active and inactive businesses", "/super-admin/activity", LineChart],
+              ["Subscriptions", "Active, trial, and expired tenants", "/super-admin/subscriptions", ReceiptText],
+              ["Revenue", "Monthly SaaS income graph", "/super-admin/revenue", Banknote],
+              ["Payments", "Track unpaid invoices", "/super-admin/payments", CreditCard],
               ["Support Tickets", "Client issues and renewals", "/super-admin/support", Users],
+              ["Plans", "Starter, Pro, Enterprise", "/super-admin/plans", ReceiptText],
+              ["Analytics", "Growth and activity trends", "/super-admin/analytics", LineChart],
             ].map(([title, body, href, Icon]) => (
               <Link
                 key={String(title)}
