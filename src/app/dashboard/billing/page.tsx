@@ -1,7 +1,7 @@
-import { ReceiptText, Smartphone, WalletCards } from "lucide-react";
+import { ReceiptText, WalletCards } from "lucide-react";
+import { AddInvoiceDialog } from "@/components/dashboard/create-record-dialog";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { getDashboardData } from "@/lib/data/repositories";
@@ -38,14 +38,8 @@ export default async function BillingPage() {
         description="Monitor receipts, invoices, cash, mobile money, and insurance balances in one finance view."
         actions={
           <>
-            <Button variant="secondary">
-              <Smartphone className="size-4" />
-              Mobile money
-            </Button>
-            <Button>
-              <ReceiptText className="size-4" />
-              New invoice
-            </Button>
+            <AddInvoiceDialog label="Mobile money" autoOpen={false} />
+            <AddInvoiceDialog />
           </>
         }
       />

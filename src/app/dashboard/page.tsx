@@ -434,9 +434,9 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
       </BusinessMetricGrid>
       <QuickActionBar
         actions={[
-          { label: "Register Patient", href: "/dashboard/patients", icon: Users },
+          { label: "Register Patient", href: "/dashboard/patients?action=add-patient", icon: Users },
           { label: "New Appointment", href: "/dashboard/appointments", icon: CalendarDays },
-          { label: "Create Invoice", href: "/dashboard/billing", icon: ReceiptText },
+          { label: "Create Invoice", href: "/dashboard/billing?action=new-invoice", icon: ReceiptText },
           { label: "Stock Alerts", href: "/dashboard/pharmacy", icon: Package },
         ]}
       />
@@ -609,10 +609,10 @@ function HospitalDashboard({ data }: { data: DashboardData }) {
       </DailyMetricGrid>
       <QuickActionBar
         actions={[
-          { label: "Register Patient", href: "/dashboard/patients", icon: Users },
+          { label: "Register Patient", href: "/dashboard/patients?action=add-patient", icon: Users },
           { label: "New Appointment", href: "/dashboard/appointments", icon: CalendarDays },
           { label: "Admit Patient", href: "/dashboard/admissions", icon: ClipboardList },
-          { label: "New Invoice", href: "/dashboard/billing", icon: ReceiptText },
+          { label: "New Invoice", href: "/dashboard/billing?action=new-invoice", icon: ReceiptText },
           { label: "Lab Request", href: "/dashboard/labs", icon: FlaskConical },
         ]}
       />
@@ -713,7 +713,7 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
       <QuickActionBar
         actions={[
           { label: "New Sale", href: "/dashboard/payments", icon: ShoppingCart },
-          { label: "Add Medicine", href: "/dashboard/inventory", icon: Package },
+          { label: "Add Medicine", href: "/dashboard/inventory?action=add-item", icon: Package },
           { label: "Print Receipt", href: "/dashboard/payments", icon: ReceiptText },
           { label: "Prescription Order", href: "/dashboard/prescriptions", icon: ShieldCheck },
           { label: "Expiry Alerts", href: "/dashboard/expiry-alerts", icon: Pill },

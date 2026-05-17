@@ -1,9 +1,9 @@
-import { PackagePlus, Pill } from "lucide-react";
+import { Pill } from "lucide-react";
+import { AddInventoryItemDialog } from "@/components/dashboard/create-record-dialog";
 import { InventorySnapshot } from "@/components/dashboard/inventory-snapshot";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { PrescriptionTable } from "@/components/dashboard/prescription-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import { formatUgandanCurrency } from "@/lib/utils";
@@ -20,10 +20,7 @@ export default async function PharmacyPage() {
         title="Pharmacy sales and stock"
         description="Fast counter sales, receipts, mobile money tracking, stock alerts, expiry alerts, and simple prescription orders."
         actions={
-          <Button>
-            <PackagePlus className="size-4" />
-            Add stock
-          </Button>
+          <AddInventoryItemDialog label="Add stock" />
         }
       />
       <div className="mb-5 grid gap-4 md:grid-cols-3">

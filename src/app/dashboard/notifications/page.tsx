@@ -1,7 +1,7 @@
 import { BellRing, Mail, MessageCircle, Send, Smartphone } from "lucide-react";
 import { PageHeading } from "@/components/dashboard/page-heading";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 
@@ -27,10 +27,13 @@ export default async function NotificationsPage() {
             : "Queued and sent appointment reminders through email, WhatsApp, and in-app notifications."
         }
         actions={
-          <Button>
+          <WorkflowActionButton
+            title="Send reminder"
+            description="Reminder sending is ready to become a WhatsApp, SMS, email, or in-app notification form connected to your providers."
+          >
             <Send className="size-4" />
             Send reminder
-          </Button>
+          </WorkflowActionButton>
         }
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

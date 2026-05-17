@@ -1,8 +1,8 @@
-import { Plus, Stethoscope } from "lucide-react";
+import { Stethoscope } from "lucide-react";
 import { redirect } from "next/navigation";
+import { AddDoctorDialog } from "@/components/dashboard/create-record-dialog";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import { formatUgandanCurrency } from "@/lib/utils";
@@ -26,12 +26,7 @@ export default async function DoctorsPage() {
         eyebrow="Clinical team"
         title="Doctors and schedules"
         description="Manage doctor profiles, specializations, rooms, consultation fees, and availability."
-        actions={
-          <Button>
-            <Plus className="size-4" />
-            Add doctor
-          </Button>
-        }
+        actions={<AddDoctorDialog />}
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {data.doctors.map((doctor) => (

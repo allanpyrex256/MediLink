@@ -1,7 +1,7 @@
 import { Building2, TrendingUp, Users } from "lucide-react";
+import { AddBranchDialog } from "@/components/dashboard/create-record-dialog";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import { formatUgandanCurrency } from "@/lib/utils";
@@ -24,12 +24,7 @@ export default async function BranchesPage() {
         eyebrow="Multi-branch dashboard"
         title="Owner overview"
         description="Monitor branches, revenue, patients, and staff from a premium owner dashboard."
-        actions={
-          <Button>
-            <Building2 className="size-4" />
-            Add branch
-          </Button>
-        }
+        actions={<AddBranchDialog />}
       />
       <div className="mb-5 grid gap-4 md:grid-cols-3">
         <Card>

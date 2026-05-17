@@ -1,8 +1,8 @@
 import { Bed, ClipboardList, CreditCard, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/dashboard/page-heading";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import { formatUgandanCurrency } from "@/lib/utils";
@@ -69,10 +69,13 @@ export default async function AdmissionsPage() {
         title="Admissions and wards"
         description="Track admitted patients, ward beds, discharge readiness, and billing follow-up."
         actions={
-          <Button>
+          <WorkflowActionButton
+            title="New admission"
+            description="Admission capture is ready to become a form for patient, ward, bed, doctor, and initial billing details."
+          >
             <Bed className="size-4" />
             New admission
-          </Button>
+          </WorkflowActionButton>
         }
       />
       <div className="mb-5 grid gap-4 md:grid-cols-4">

@@ -3,8 +3,8 @@ import {
   PlatformSectionHeader,
   sectionIcons,
 } from "@/components/super-admin/platform-sections";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import type { PlatformTenant } from "@/lib/platform-demo";
@@ -74,9 +74,13 @@ export default async function SettingsPage() {
                 <CardDescription>{control.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="secondary" className="w-full">
+                <WorkflowActionButton
+                  variant="secondary"
+                  title={control.title}
+                  description={`${control.title} is ready for an owner approval workflow tied to the selected tenant account.`}
+                >
                   Open control
-                </Button>
+                </WorkflowActionButton>
               </CardContent>
             </Card>
           );
@@ -125,10 +129,14 @@ export default async function SettingsPage() {
                     </Badge>
                   </td>
                   <td className="px-5 py-4">
-                    <Button variant="ghost" size="sm">
+                    <WorkflowActionButton
+                      variant="ghost"
+                      title={`Review ${item.business}`}
+                      description={`Review opens the tenant branding approval workflow for ${item.business}.`}
+                    >
                       <CheckCircle2 className="size-4" />
                       Review
-                    </Button>
+                    </WorkflowActionButton>
                   </td>
                 </tr>
               ))}

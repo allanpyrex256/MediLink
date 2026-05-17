@@ -1,9 +1,9 @@
 import { ClipboardPlus, PackageCheck, Timer } from "lucide-react";
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/dashboard/page-heading";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { PrescriptionTable } from "@/components/dashboard/prescription-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { getDashboardData } from "@/lib/data/repositories";
@@ -46,10 +46,13 @@ export default async function PrescriptionsPage() {
         title={`${brand.name} prescription orders`}
         description="Simple record of who prescribed, what medicine was given, quantity, payment, and pickup."
         actions={
-          <Button>
+          <WorkflowActionButton
+            title="New prescription order"
+            description="Prescription order capture is ready to become a form for customer, prescriber, medicine, quantity, price, and pickup status."
+          >
             <ClipboardPlus className="size-4" />
             New order
-          </Button>
+          </WorkflowActionButton>
         }
       />
       <div className="mb-5 grid gap-4 md:grid-cols-3">

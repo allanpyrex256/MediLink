@@ -1,8 +1,8 @@
 import { PackageCheck, Truck } from "lucide-react";
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/dashboard/page-heading";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import { formatUgandanCurrency } from "@/lib/utils";
@@ -64,10 +64,13 @@ export default async function SuppliersPage() {
         title="Supplier and purchase orders"
         description="Track medicine suppliers, delivery dates, open balances, and reorder follow-up."
         actions={
-          <Button>
+          <WorkflowActionButton
+            title="New supplier order"
+            description="Supplier purchase order capture is ready to become a form for supplier, medicine list, expected delivery, and payable balance."
+          >
             <Truck className="size-4" />
             New order
-          </Button>
+          </WorkflowActionButton>
         }
       />
       <div className="mb-5 grid gap-4 md:grid-cols-3">

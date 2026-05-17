@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Plus, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,8 @@ type PatientForm = typeof initialForm;
 
 export function AddPatientDialog() {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const [open, setOpen] = useState(() => searchParams.get("action") === "add-patient");
   const [form, setForm] = useState<PatientForm>(initialForm);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");

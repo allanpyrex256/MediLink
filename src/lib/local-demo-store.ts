@@ -1,14 +1,22 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { DemoWorkspaceId } from "@/lib/demo-session";
-import type { Appointment, DashboardData, Doctor, Patient, Tenant } from "@/lib/types";
+import type { Appointment, Branch, DashboardData, Doctor, InventoryItem, Invoice, Patient, Tenant } from "@/lib/types";
 
 type StoredAppointment = Appointment;
+type StoredBranch = Branch;
+type StoredDoctor = Doctor;
+type StoredInventoryItem = InventoryItem;
+type StoredInvoice = Invoice;
 type StoredPatient = Patient;
 
 interface WorkspaceState {
   patients: StoredPatient[];
   appointments: StoredAppointment[];
+  branches: StoredBranch[];
+  doctors: StoredDoctor[];
+  inventory: StoredInventoryItem[];
+  invoices: StoredInvoice[];
 }
 
 interface DemoState {
@@ -23,7 +31,21 @@ function emptyState(): DemoState {
 }
 
 function emptyWorkspace(): WorkspaceState {
-  return { patients: [], appointments: [] };
+  return {
+    patients: [],
+    appointments: [],
+    branches: [],
+    doctors: [],
+    inventory: [],
+    invoices: [],
+  };
+}
+
+function normalizeWorkspace(workspace: Partial<WorkspaceState> | undefined): WorkspaceState {
+  return {
+    ...emptyWorkspace(),
+    ...(workspace ?? {}),
+  };
 }
 
 async function readDemoState(): Promise<DemoState> {
@@ -43,7 +65,7 @@ async function writeDemoState(state: DemoState) {
 
 export async function getLocalDemoWorkspaceState(workspaceId: DemoWorkspaceId) {
   const state = await readDemoState();
-  return state.workspaces[workspaceId] ?? emptyWorkspace();
+  return normalizeWorkspace(state.workspaces[workspaceId]);
 }
 
 export async function saveLocalDemoAppointment({
@@ -54,7 +76,7 @@ export async function saveLocalDemoAppointment({
   appointment: Appointment;
 }) {
   const state = await readDemoState();
-  const workspace = state.workspaces[workspaceId] ?? emptyWorkspace();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
 
   workspace.appointments = [
     ...workspace.appointments.filter((item) => item.id !== appointment.id),
@@ -74,7 +96,7 @@ export async function saveLocalDemoPatient({
   patient: Patient;
 }) {
   const state = await readDemoState();
-  const workspace = state.workspaces[workspaceId] ?? emptyWorkspace();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
   const existingPatient = workspace.patients.find((item) => item.phone === patient.phone);
   const storedPatient = existingPatient ? { ...patient, id: existingPatient.id } : patient;
 
@@ -85,6 +107,86 @@ export async function saveLocalDemoPatient({
   await writeDemoState(state);
 
   return storedPatient;
+}
+
+export async function saveLocalDemoBranch({
+  workspaceId,
+  branch,
+}: {
+  workspaceId: DemoWorkspaceId;
+  branch: Branch;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.branches = [
+    ...workspace.branches.filter((item) => item.id !== branch.id && item.name !== branch.name),
+    branch,
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return branch;
+}
+
+export async function saveLocalDemoDoctor({
+  workspaceId,
+  doctor,
+}: {
+  workspaceId: DemoWorkspaceId;
+  doctor: Doctor;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.doctors = [
+    ...workspace.doctors.filter((item) => item.id !== doctor.id && item.license_number !== doctor.license_number),
+    doctor,
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return doctor;
+}
+
+export async function saveLocalDemoInventoryItem({
+  workspaceId,
+  item,
+}: {
+  workspaceId: DemoWorkspaceId;
+  item: InventoryItem;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.inventory = [
+    ...workspace.inventory.filter((stored) => stored.id !== item.id && stored.sku !== item.sku),
+    item,
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return item;
+}
+
+export async function saveLocalDemoInvoice({
+  workspaceId,
+  invoice,
+}: {
+  workspaceId: DemoWorkspaceId;
+  invoice: Invoice;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.invoices = [
+    invoice,
+    ...workspace.invoices.filter((item) => item.id !== invoice.id && item.invoice_number !== invoice.invoice_number),
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return invoice;
 }
 
 export async function saveLocalDemoPublicBooking({
@@ -113,7 +215,7 @@ export async function saveLocalDemoPublicBooking({
   reason: string;
 }) {
   const state = await readDemoState();
-  const workspace = state.workspaces[workspaceId] ?? emptyWorkspace();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
   const now = new Date().toISOString();
   const existingPatient = workspace.patients.find((patient) => patient.phone === phone);
   const patient: Patient =
@@ -169,14 +271,22 @@ export async function hydrateLocalDemoDashboardData(
 ): Promise<DashboardData> {
   const workspace = await getLocalDemoWorkspaceState(workspaceId);
   const patients = mergeById(data.patients, workspace.patients);
+  const doctors = mergeById(data.doctors, workspace.doctors);
   const appointments = mergeById(data.appointments, workspace.appointments)
-    .map((appointment) => attachRelations(appointment, data.doctors, patients))
+    .map((appointment) => attachRelations(appointment, doctors, patients))
     .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+  const branches = mergeById(data.branches, workspace.branches);
+  const inventory = mergeById(data.inventory, workspace.inventory);
+  const invoices = mergeById(data.invoices, workspace.invoices);
 
   return {
     ...data,
     patients,
     appointments,
+    branches,
+    doctors,
+    inventory,
+    invoices,
     metrics: data.metrics.map((metric) =>
       metric.label.toLowerCase().includes("appointment")
         ? {

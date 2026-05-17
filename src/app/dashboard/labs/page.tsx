@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Download, FlaskConical, Upload } from "lucide-react";
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/dashboard/page-heading";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,14 +33,21 @@ export default async function LabsPage() {
         description="Track lab requests, upload results, print reports, and give doctors access to completed findings."
         actions={
           <>
-            <Button variant="secondary">
+            <WorkflowActionButton
+              variant="secondary"
+              title="Upload lab result"
+              description="Result upload is ready to become a file and summary form tied to the selected lab request."
+            >
               <Upload className="size-4" />
               Upload result
-            </Button>
-            <Button>
+            </WorkflowActionButton>
+            <WorkflowActionButton
+              title="New lab request"
+              description="Lab request capture is ready to become a form for patient, doctor, test type, priority, and billing."
+            >
               <FlaskConical className="size-4" />
               New request
-            </Button>
+            </WorkflowActionButton>
           </>
         }
       />

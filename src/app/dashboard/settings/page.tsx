@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeading } from "@/components/dashboard/page-heading";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
@@ -48,10 +48,14 @@ export default async function SettingsPage() {
         title="Organization Profile"
         description={`${brand.name} branding, contact details, branches, colors, and custom domain setup.`}
         actions={
-          <Button variant="secondary">
+          <WorkflowActionButton
+            variant="secondary"
+            title="Open Supabase"
+            description="Supabase project links should open from your owner/admin environment once the production project URL is configured."
+          >
             <ExternalLink className="size-4" />
             Open Supabase
-          </Button>
+          </WorkflowActionButton>
         }
       />
 

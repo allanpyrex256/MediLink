@@ -2,8 +2,8 @@ import { format } from "date-fns";
 import { FilePlus2, Pill, Stethoscope } from "lucide-react";
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/dashboard/page-heading";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 
@@ -32,10 +32,13 @@ export default async function EmrPage() {
         title="Patient records"
         description="Digital patient files covering history, diagnoses, prescriptions, lab results, and visit notes."
         actions={
-          <Button>
+          <WorkflowActionButton
+            title="New patient record"
+            description="EMR record creation is ready to become a form for diagnosis, notes, prescriptions, and lab requests."
+          >
             <FilePlus2 className="size-4" />
             New record
-          </Button>
+          </WorkflowActionButton>
         }
       />
       <div className="grid gap-4 md:grid-cols-3">

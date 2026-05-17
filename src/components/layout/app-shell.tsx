@@ -130,7 +130,7 @@ export function AppShell({
     : tenant.tenant_kind === "pharmacy"
       ? [
           { href: "/dashboard/payments", label: "New sale", icon: ShoppingCart },
-          { href: "/dashboard/inventory", label: "Check stock", icon: Package },
+          { href: "/dashboard/inventory?action=add-item", label: "Add medicine", icon: Package },
           { href: "/dashboard/expiry-alerts", label: "Expiry alerts", icon: Pill },
           { href: "/dashboard/suppliers", label: "Suppliers", icon: Truck },
         ]
@@ -138,13 +138,13 @@ export function AppShell({
         ? [
             { href: "/dashboard/admissions", label: "New admission", icon: ClipboardList },
             { href: "/dashboard/labs", label: "Lab request", icon: FlaskConical },
-            { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
+            { href: "/dashboard/billing?action=new-invoice", label: "Create invoice", icon: CreditCard },
             { href: "/dashboard/pharmacy", label: "Pharmacy sales", icon: Pill },
           ]
       : [
           { href: "/dashboard/appointments", label: "New appointment", icon: CalendarDays },
-          { href: "/dashboard/patients", label: "Register patient", icon: Users },
-          { href: "/dashboard/billing", label: "Create invoice", icon: CreditCard },
+          { href: "/dashboard/patients?action=add-patient", label: "Register patient", icon: Users },
+          { href: "/dashboard/billing?action=new-invoice", label: "Create invoice", icon: CreditCard },
           { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Pill },
         ];
   const footerLink = user.is_platform_admin

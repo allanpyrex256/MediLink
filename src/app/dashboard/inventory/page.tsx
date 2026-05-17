@@ -1,8 +1,8 @@
 import { AlertTriangle, PackagePlus } from "lucide-react";
+import { AddInventoryItemDialog } from "@/components/dashboard/create-record-dialog";
 import { InventorySnapshot } from "@/components/dashboard/inventory-snapshot";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import { formatUgandanCurrency } from "@/lib/utils";
@@ -29,10 +29,7 @@ export default async function InventoryPage() {
         title="Drug stock and expiry"
         description="Track available quantities, low stock drugs, expiring medicines, supplier restocking, and sale value."
         actions={
-          <Button>
-            <PackagePlus className="size-4" />
-            Add item
-          </Button>
+          <AddInventoryItemDialog />
         }
       />
       <div className="mb-5 grid gap-4 md:grid-cols-3">

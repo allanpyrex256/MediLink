@@ -2,7 +2,7 @@ import { BarChart3, Download, FileText, TrendingUp } from "lucide-react";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { Button } from "@/components/ui/button";
+import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { getDashboardData } from "@/lib/data/repositories";
@@ -72,10 +72,13 @@ export default async function ReportsPage() {
             : "Operational analytics for revenue, care volume, patient retention, and payment risk."
         }
         actions={
-          <Button>
+          <WorkflowActionButton
+            title="Download report"
+            description="PDF export is ready to connect to a generated report file with the current revenue, billing, and operations data."
+          >
             <Download className="size-4" />
             Download PDF
-          </Button>
+          </WorkflowActionButton>
         }
       />
       <div className="grid gap-4 md:grid-cols-3">
@@ -114,9 +117,13 @@ export default async function ReportsPage() {
             ).map((item) => (
               <div key={item} className="flex items-center justify-between rounded-lg border border-slate-100 p-3">
                 <span className="text-sm font-medium text-slate-700">{item}</span>
-                <Button variant="ghost" size="sm">
+                <WorkflowActionButton
+                  variant="ghost"
+                  title={item}
+                  description={`${item} opens a prepared report workflow. The next step is to generate the detailed table/export from Supabase data.`}
+                >
                   Open
-                </Button>
+                </WorkflowActionButton>
               </div>
             ))}
           </CardContent>
