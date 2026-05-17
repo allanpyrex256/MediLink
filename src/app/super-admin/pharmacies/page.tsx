@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 export default async function PharmaciesPage() {
-  const { tenants } = await getPlatformOverview();
+  const { tenants, usingLiveData } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -20,7 +20,7 @@ export default async function PharmaciesPage() {
         description="Manage subscribed pharmacy businesses, stock-module plans, renewal status, and account activity."
         icon={sectionIcons.pharmacies}
       />
-      <TenantDirectory tenants={tenants} kind="pharmacy" />
+      <TenantDirectory tenants={tenants} kind="pharmacy" allowDelete={usingLiveData} />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   SubscriptionStatusChart,
   TenantGrowthChart,
 } from "@/components/super-admin/platform-charts";
+import { DeleteTenantAccountButton } from "@/components/super-admin/delete-tenant-account-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supportTickets } from "@/lib/platform-demo";
@@ -56,6 +57,7 @@ export default async function SuperAdminPage() {
     revenueGrowth,
     subscriptionStatus,
     tenantGrowth,
+    usingLiveData,
   } = await getPlatformOverview();
   const activeBusinesses = metrics.activeTenants + metrics.trialAccounts;
 
@@ -225,7 +227,7 @@ export default async function SuperAdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
-          <BusinessTable tenants={platformTenants} />
+          <BusinessTable tenants={platformTenants} allowDelete={usingLiveData} />
         </CardContent>
       </Card>
 
@@ -381,9 +383,15 @@ function OwnerQuickActions() {
   );
 }
 
-function BusinessTable({ tenants }: { tenants: PlatformTenant[] }) {
+function BusinessTable({
+  tenants,
+  allowDelete,
+}: {
+  tenants: PlatformTenant[];
+  allowDelete: boolean;
+}) {
   return (
-    <table className="w-full min-w-[860px] text-left text-sm">
+    <table className="w-full min-w-[980px] text-left text-sm">
       <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
         <tr>
           <th className="px-5 py-3 font-semibold">Business</th>
@@ -393,6 +401,7 @@ function BusinessTable({ tenants }: { tenants: PlatformTenant[] }) {
           <th className="px-5 py-3 font-semibold">Next Due</th>
           <th className="px-5 py-3 font-semibold">Amount</th>
           <th className="px-5 py-3 font-semibold">Payment</th>
+          <th className="px-5 py-3 font-semibold">Action</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
@@ -423,6 +432,13 @@ function BusinessTable({ tenants }: { tenants: PlatformTenant[] }) {
               <Badge tone={activityTone[tenant.activity]} className="mt-2 capitalize">
                 {tenant.activity}
               </Badge>
+            </td>
+            <td className="px-5 py-4">
+              <DeleteTenantAccountButton
+                tenantId={tenant.id}
+                business={tenant.business}
+                disabled={!allowDelete}
+              />
             </td>
           </tr>
         ))}

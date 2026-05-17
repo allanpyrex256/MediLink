@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 export default async function ClinicsPage() {
-  const { tenants } = await getPlatformOverview();
+  const { tenants, usingLiveData } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -20,7 +20,7 @@ export default async function ClinicsPage() {
         description="Manage smaller outpatient clinics, renewal dates, subscription status, and account activity."
         icon={sectionIcons.clinics}
       />
-      <TenantDirectory tenants={tenants} kind="clinic" />
+      <TenantDirectory tenants={tenants} kind="clinic" allowDelete={usingLiveData} />
     </div>
   );
 }

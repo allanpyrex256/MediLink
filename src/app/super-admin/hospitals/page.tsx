@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 export default async function HospitalsPage() {
-  const { tenants } = await getPlatformOverview();
+  const { tenants, usingLiveData } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -20,7 +20,7 @@ export default async function HospitalsPage() {
         description="Manage all hospitals using MediLink, including subscription plan, payment status, user count, and renewal dates."
         icon={sectionIcons.hospitals}
       />
-      <TenantDirectory tenants={tenants} kind="hospital" />
+      <TenantDirectory tenants={tenants} kind="hospital" allowDelete={usingLiveData} />
     </div>
   );
 }

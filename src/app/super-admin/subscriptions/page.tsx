@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default async function SubscriptionsPage() {
-  const { tenants } = await getPlatformOverview();
+  const { tenants, usingLiveData } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -23,7 +23,7 @@ export default async function SubscriptionsPage() {
       />
       <PlanCards />
       <div className="mt-6">
-        <TenantDirectory tenants={tenants} />
+        <TenantDirectory tenants={tenants} allowDelete={usingLiveData} />
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 export default async function BillingPage() {
-  const { tenants } = await getPlatformOverview();
+  const { tenants, usingLiveData } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -20,7 +20,7 @@ export default async function BillingPage() {
         description="Track payments, expired subscriptions, trial accounts, unpaid invoices, and upcoming renewals."
         icon={sectionIcons.billing}
       />
-      <BillingLedger tenants={tenants} />
+      <BillingLedger tenants={tenants} allowDelete={usingLiveData} />
     </div>
   );
 }

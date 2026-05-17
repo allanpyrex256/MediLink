@@ -14,7 +14,7 @@ export const metadata = {
 };
 
 export default async function RevenuePage() {
-  const { metrics, tenants, revenueGrowth } = await getPlatformOverview();
+  const { metrics, tenants, revenueGrowth, usingLiveData } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -38,7 +38,7 @@ export default async function RevenuePage() {
           <PlatformRevenueChart data={revenueGrowth} />
         </CardContent>
       </Card>
-      <BillingLedger tenants={tenants} />
+      <BillingLedger tenants={tenants} allowDelete={usingLiveData} />
     </div>
   );
 }

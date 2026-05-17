@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 export default async function PaymentsPage() {
-  const { tenants } = await getPlatformOverview();
+  const { tenants, usingLiveData } = await getPlatformOverview();
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -20,7 +20,7 @@ export default async function PaymentsPage() {
         description="Follow MTN MoMo, Airtel Money, bank transfer, trial, expired, and unpaid subscription accounts."
         icon={sectionIcons.payments}
       />
-      <BillingLedger tenants={tenants} />
+      <BillingLedger tenants={tenants} allowDelete={usingLiveData} />
     </div>
   );
 }
