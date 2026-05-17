@@ -1,8 +1,8 @@
-import { Plus, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
+import { AddPatientDialog } from "@/components/dashboard/add-patient-dialog";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 
@@ -19,12 +19,7 @@ export default async function PatientsPage() {
         eyebrow="Patient registry"
         title="Patient profiles"
         description="Medical history, contacts, allergies, and appointment context remain isolated to this clinic tenant."
-        actions={
-          <Button>
-            <Plus className="size-4" />
-            Add patient
-          </Button>
-        }
+        actions={<AddPatientDialog />}
       />
       <div className="grid gap-4 lg:grid-cols-3">
         {data.patients.map((patient) => (
