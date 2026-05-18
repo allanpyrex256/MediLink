@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
 import { demoAccountOptions, demoWorkspaceBranding } from "@/lib/demo-session";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
@@ -304,7 +305,7 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
             {configured || mode === "register" ? (
               <>
                 <Input label="Email" name="email" type="email" placeholder="owner@clinic.ug" required />
-                <Input label="Password" name="password" type="password" minLength={8} required />
+                <PasswordInput label="Password" name="password" minLength={8} required />
               </>
             ) : null}
             {error ? (

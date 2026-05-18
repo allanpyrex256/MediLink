@@ -7,6 +7,7 @@ import { CheckCircle2, KeyRound, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
 type Step = "request" | "verify" | "password";
@@ -192,19 +193,17 @@ export function PasswordResetForm() {
                 onChange={(event) => setOtp(event.target.value)}
                 required
               />
-              <Input
+              <PasswordInput
                 label="New password"
                 name="password"
-                type="password"
                 minLength={8}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
               />
-              <Input
+              <PasswordInput
                 label="Confirm new password"
                 name="confirmPassword"
-                type="password"
                 minLength={8}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
@@ -222,19 +221,17 @@ export function PasswordResetForm() {
 
           {isPasswordStep ? (
             <form className="grid gap-4" onSubmit={updatePassword}>
-              <Input
+              <PasswordInput
                 label="New password"
                 name="password"
-                type="password"
                 minLength={8}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
               />
-              <Input
+              <PasswordInput
                 label="Confirm new password"
                 name="confirmPassword"
-                type="password"
                 minLength={8}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
