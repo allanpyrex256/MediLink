@@ -7,7 +7,7 @@ import {
 } from "@/components/super-admin/platform-sections";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPlatformOverview } from "@/lib/platform-live";
-import { formatUgx } from "@/lib/utils";
+import { formatUsd } from "@/lib/utils";
 
 export const metadata = {
   title: "Revenue | MediLink",
@@ -25,7 +25,7 @@ export default async function RevenuePage() {
         icon={sectionIcons.revenue}
       />
       <div className="mb-6 grid gap-4 md:grid-cols-3">
-        <Summary label="Monthly SaaS Revenue" value={formatUgx(metrics.monthlyRevenue)} icon={Banknote} />
+        <Summary label="Monthly SaaS Revenue" value={formatUsd(metrics.monthlyRevenue)} icon={Banknote} />
         <Summary label="Pending Payments" value={String(metrics.pendingPayments)} icon={ReceiptText} />
         <Summary label="Active Subscriptions" value={String(metrics.activeTenants)} icon={CreditCard} />
       </div>

@@ -13,7 +13,7 @@ const providers: { value: PaymentProvider; label: string }[] = [
   { value: "flutterwave", label: "Flutterwave Mobile Money" },
   { value: "mtn_momo", label: "MTN Mobile Money" },
   { value: "airtel_money", label: "Airtel Money" },
-  { value: "stripe", label: "Stripe" },
+  { value: "stripe", label: "Mastercard / Visa card" },
 ];
 
 export function PaymentPanel({
@@ -59,7 +59,7 @@ export function PaymentPanel({
           phone,
           email,
           patientName: appointment.patient?.full_name ?? `${tenant.name} customer`,
-          network: provider === "airtel_money" ? "airtel" : "mtn",
+          network: provider === "airtel_money" ? "airtel" : provider === "mtn_momo" ? "mtn" : undefined,
         }),
       });
 

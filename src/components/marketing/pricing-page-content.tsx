@@ -8,6 +8,7 @@ import {
   Building2,
   Check,
   Cloud,
+  CreditCard,
   Database,
   Headphones,
   Pill,
@@ -231,6 +232,20 @@ export function PricingPageContent() {
             ? "Annual billing is selected. Prices show the monthly equivalent."
             : "Monthly billing is selected. Switch to annual to save 20%."}
         </motion.p>
+      </div>
+
+      <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-3">
+        {["USD pricing", "Mastercard accepted", "MTN MoMo", "Airtel Money", "Bank transfer"].map((item, index) => (
+          <span
+            key={item}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm"
+          >
+            {index === 1 ? (
+              <CreditCard className="size-4 text-violet-600" aria-hidden="true" />
+            ) : null}
+            {item}
+          </span>
+        ))}
       </div>
 
       <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-5">

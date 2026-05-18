@@ -74,7 +74,7 @@ const features = [
   },
   {
     title: "Billing and Payments",
-    body: "UGX invoices, cashier collections, MTN MoMo, and Airtel Money.",
+    body: "USD subscriptions, cashier collections, Mastercard, MTN MoMo, and Airtel Money.",
     icon: WalletCards,
     tone: "bg-amber-100 text-amber-800",
   },
@@ -103,7 +103,7 @@ const pricing = [
   {
     name: "Starter",
     audience: "Small clinics",
-    price: "UGX 50,000",
+    price: "$25",
     period: "/month",
     body: "For clinics moving from paper records to a simple digital workflow.",
     features: ["Patient records", "Appointments", "Basic billing", "Monthly reports"],
@@ -112,17 +112,17 @@ const pricing = [
   {
     name: "Clinic",
     audience: "Growing teams",
-    price: "UGX 150,000",
+    price: "$50",
     period: "/month",
     body: "For teams that need staff roles, prescriptions, payments, and stock visibility.",
-    features: ["Staff access control", "Prescription tracking", "MTN and Airtel payments", "Stock alerts"],
+    features: ["Staff access control", "Prescription tracking", "Mastercard, MTN and Airtel payments", "Stock alerts"],
     href: "/register?intent=demo&plan=growth",
     featured: true,
   },
   {
     name: "Dentistry",
     audience: "Dental practices",
-    price: "UGX 180,000",
+    price: "$60",
     period: "/month",
     body: "For dentists who need chair scheduling, treatment notes, and payments.",
     features: ["Dental appointments", "Treatment notes", "Patient records", "Billing reminders"],
@@ -131,7 +131,7 @@ const pricing = [
   {
     name: "Hospital",
     audience: "Large facilities",
-    price: "UGX 450,000",
+    price: "$100",
     period: "/month",
     body: "For hospitals that need departments, admissions, laboratory, pharmacy, and reports.",
     features: ["Admissions", "Laboratory", "Pharmacy operations", "Advanced reporting"],
@@ -299,7 +299,7 @@ export function HomePageContent() {
         id="pricing"
         eyebrow="Pricing"
         title="Simple monthly plans"
-        body="Clear pricing makes it easy to start small and expand as the business grows."
+        body="Clear USD pricing makes it easy to start small, pay by Mastercard or local options, and expand as the business grows."
       >
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {pricing.map((plan) => (

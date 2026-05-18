@@ -16,7 +16,7 @@ import {
   YAxis,
 } from "recharts";
 import type { revenueGrowth, subscriptionStatus, tenantGrowth } from "@/lib/platform-demo";
-import { formatUgx } from "@/lib/utils";
+import { formatUsd } from "@/lib/utils";
 
 type RevenuePoint = (typeof revenueGrowth)[number];
 type TenantGrowthPoint = (typeof tenantGrowth)[number];
@@ -50,7 +50,7 @@ export function PlatformRevenueChart({ data }: { data: RevenuePoint[] }) {
             contentStyle={tooltipStyle}
             formatter={(value, name) =>
               name === "revenue"
-                ? [formatUgx(Number(value)), "Revenue"]
+                ? [formatUsd(Number(value)), "Revenue"]
                 : [value, "Tenants"]
             }
           />

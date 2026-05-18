@@ -10,30 +10,31 @@ import { Logo } from "@/components/ui/logo";
 import { Select } from "@/components/ui/select";
 import { demoAccountOptions, demoWorkspaceBranding } from "@/lib/demo-session";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
-import { formatUgx, slugify } from "@/lib/utils";
+import { formatUsd, slugify } from "@/lib/utils";
 
 const signupPlans = [
   {
     value: "starter",
     label: "Starter",
     description: "Small clinics, dental practices, and pharmacies",
-    amount: 50_000,
+    amount: 25,
   },
   {
     value: "growth",
     label: "Clinic",
     description: "Growing clinics, dental practices, and pharmacies",
-    amount: 150_000,
+    amount: 50,
   },
   {
     value: "enterprise",
     label: "Hospital",
     description: "Hospitals and larger facilities",
-    amount: 450_000,
+    amount: 100,
   },
 ] as const;
 
 const paymentMethods = [
+  { value: "stripe", label: "Mastercard" },
   { value: "mtn_momo", label: "MTN MoMo" },
   { value: "airtel_money", label: "Airtel Money" },
   { value: "bank_transfer", label: "Bank transfer" },
@@ -53,7 +54,7 @@ function normalizePaymentMethod(value: FormDataEntryValue | string | null): Sign
   const normalized = String(value ?? "").toLowerCase();
   return paymentMethods.some((method) => method.value === normalized)
     ? (normalized as SignupPaymentMethod)
-    : "mtn_momo";
+    : "stripe";
 }
 
 function planDetails(value: SignupPlan) {
@@ -271,7 +272,7 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
                   >
                     {signupPlans.map((plan) => (
                       <option key={plan.value} value={plan.value}>
-                        {plan.label} - {formatUgx(plan.amount)} / month
+                        {plan.label} - {formatUsd(plan.amount)} / month
                       </option>
                     ))}
                   </Select>
@@ -279,14 +280,14 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
                     {selectedPlanDetails.description}. Your 30-day demo starts now, and billing details appear in the MediLink owner dashboard for follow-up.
                   </p>
                 </div>
-                <Select label="Preferred payment method" name="paymentMethod" defaultValue="mtn_momo" required>
+                <Select label="Preferred payment method" name="paymentMethod" defaultValue="stripe" required>
                   {paymentMethods.map((method) => (
                     <option key={method.value} value={method.value}>
                       {method.label}
                     </option>
                   ))}
                 </Select>
-                <Input label="Billing phone / MoMo number" name="billingPhone" placeholder="+256 7XX XXX XXX" required />
+                <Input label="Billing contact phone" name="billingPhone" placeholder="+256 7XX XXX XXX" required />
                 <Input label="Region or town" name="region" placeholder="Kampala" required />
                 <Input label="Business address" name="address" placeholder="Plot 14, Kampala Road" required />
                 <p className="rounded-lg bg-emerald-50 p-3 text-xs font-semibold leading-5 text-emerald-800">

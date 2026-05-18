@@ -309,7 +309,7 @@ create table public.prescription_orders (
   plan text not null check (plan in ('starter', 'growth', 'enterprise')),
   status public.subscription_status not null default 'trialing',
   amount numeric(12, 2) not null default 0,
-  currency text not null default 'UGX',
+  currency text not null default 'USD',
   current_period_start timestamptz not null default now(),
   current_period_end timestamptz not null default (now() + interval '30 days'),
   provider text,
@@ -492,7 +492,7 @@ begin
   tenant_kind := coalesce((new.raw_user_meta_data->>'tenant_kind')::public.tenant_kind, 'clinic');
   user_role := coalesce((new.raw_user_meta_data->>'role')::public.user_role, 'admin');
   subscription_plan := coalesce(new.raw_user_meta_data->>'subscription_plan', 'starter');
-  payment_method := coalesce(new.raw_user_meta_data->>'payment_method', 'mtn_momo');
+  payment_method := coalesce(new.raw_user_meta_data->>'payment_method', 'stripe');
   billing_phone := coalesce(new.raw_user_meta_data->>'billing_phone', new.raw_user_meta_data->>'phone', '+256');
 
   if subscription_plan not in ('starter', 'growth', 'enterprise') then
@@ -500,10 +500,10 @@ begin
   end if;
 
   subscription_amount := case subscription_plan
-    when 'starter' then 50000
-    when 'growth' then 150000
-    when 'enterprise' then 450000
-    else 50000
+    when 'starter' then 25
+    when 'growth' then 50
+    when 'enterprise' then 100
+    else 25
   end;
 
   insert into public.tenants (tenant_kind, name, slug, legal_name, region, address, phone, email, status, subdomain, created_by)
@@ -549,7 +549,7 @@ begin
   on conflict (tenant_id, name) do nothing;
 
   insert into public.subscriptions (tenant_id, plan, status, amount, currency, provider)
-  values (created_tenant_id, subscription_plan, 'trialing', subscription_amount, 'UGX', payment_method)
+  values (created_tenant_id, subscription_plan, 'trialing', subscription_amount, 'USD', payment_method)
   on conflict do nothing;
 
   return new;

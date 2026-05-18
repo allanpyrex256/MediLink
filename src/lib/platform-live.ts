@@ -232,6 +232,7 @@ function paymentMethodLabel(
   if (provider === "mtn_momo") return "MTN MoMo";
   if (provider === "airtel_money") return "Airtel Money";
   if (provider === "bank_transfer") return "Bank Transfer";
+  if (provider === "stripe") return "Mastercard";
   if (status === "trialing") return "Trial";
   return "Bank Transfer";
 }
