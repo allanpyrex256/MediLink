@@ -83,6 +83,7 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
   const selectedPlanDetails = planDetails(selectedPlan);
   const selectedAccount = demoAccountOptions.find((account) => account.email === selectedAccountEmail);
   const selectedBrand = selectedAccount ? demoWorkspaceBranding[selectedAccount.workspaceId] : null;
+  const resetComplete = mode === "login" && searchParams.get("reset") === "success";
   const isPlatformOwner = selectedAccount?.isPlatformAdmin;
   const authLabel = isPlatformOwner || configured || !selectedBrand ? "MediLink" : selectedBrand.name;
   const authTagline = isPlatformOwner
@@ -238,6 +239,11 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
               Supabase is not configured, so local demo login is enabled. Choose a role-based demo account below.
             </div>
           ) : null}
+          {resetComplete ? (
+            <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-800">
+              Password reset complete. Sign in with the new password.
+            </div>
+          ) : null}
           <form className="grid gap-4" onSubmit={submit}>
             {!configured && mode === "login" ? (
               <Select
@@ -335,6 +341,13 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
               {mode === "login" ? "Create an account" : "Sign in"}
             </a>
           </p>
+          {mode === "login" ? (
+            <p className="mt-3 text-center text-sm">
+              <a className="font-semibold text-sky-700 hover:text-sky-800" href="/reset-password">
+                Forgot password?
+              </a>
+            </p>
+          ) : null}
         </CardContent>
       </Card>
     </div>
