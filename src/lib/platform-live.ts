@@ -118,7 +118,7 @@ function buildPlatformOverview({
       id: tenant.id,
       business: tenant.name,
       kind: tenant.tenant_kind,
-      plan: planLabel(subscription?.plan),
+      plan: planLabel(subscription?.plan, tenant.tenant_kind),
       status,
       lastPayment: subscription?.status === "active" ? formatShortDate(subscription.current_period_start) : "Trial",
       nextDue: formatShortDate(subscription?.current_period_end),
@@ -154,6 +154,7 @@ function buildMetrics(tenants: PlatformTenant[], tenantRows: TenantRow[]): Platf
   return {
     activeClinics: tenants.filter((tenant) => tenant.kind === "clinic").length,
     activeTenants: tenants.filter((tenant) => tenant.status === "active").length,
+    dentistry: tenants.filter((tenant) => tenant.kind === "dentistry").length,
     expiredAccounts: tenants.filter((tenant) => tenant.status === "past_due" || tenant.status === "disabled").length,
     monthlyRevenue,
     newSignups: tenantRows.filter((tenant) => isSameMonth(tenant.created_at, now)).length,
@@ -189,6 +190,7 @@ function buildTenantGrowth(tenants: TenantRow[]): TenantGrowthPoint[] {
       month,
       hospitals: rows.filter((tenant) => tenant.tenant_kind === "hospital").length,
       clinics: rows.filter((tenant) => tenant.tenant_kind === "clinic").length,
+      dentistry: rows.filter((tenant) => tenant.tenant_kind === "dentistry").length,
       pharmacies: rows.filter((tenant) => tenant.tenant_kind === "pharmacy").length,
     };
   });
@@ -216,7 +218,8 @@ function resolveTenantStatus(
   return "trialing";
 }
 
-function planLabel(plan?: SubscriptionRow["plan"]): PlatformTenant["plan"] {
+function planLabel(plan?: SubscriptionRow["plan"], kind?: TenantKind): PlatformTenant["plan"] {
+  if (kind === "dentistry") return "Dental";
   if (plan === "enterprise") return "Hospital";
   if (plan === "growth") return "Clinic";
   return "Starter";

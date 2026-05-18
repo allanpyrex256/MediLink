@@ -82,6 +82,7 @@ export function TenantGrowthChart({ data }: { data: TenantGrowthPoint[] }) {
           <Tooltip contentStyle={tooltipStyle} />
           <Bar dataKey="hospitals" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
           <Bar dataKey="clinics" fill="#10b981" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="dentistry" fill="#14b8a6" radius={[6, 6, 0, 0]} />
           <Bar dataKey="pharmacies" fill="#f97316" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
@@ -172,7 +173,7 @@ function StaticRevenueChart({ data }: { data: RevenuePoint[] }) {
 }
 
 function StaticTenantGrowthChart({ data }: { data: TenantGrowthPoint[] }) {
-  const max = Math.max(...data.flatMap((item) => [item.hospitals, item.clinics, item.pharmacies]));
+  const max = Math.max(...data.flatMap((item) => [item.hospitals, item.clinics, item.dentistry, item.pharmacies]));
 
   return (
     <div className="grid h-72 grid-cols-6 items-end gap-3 rounded-lg bg-slate-50 p-4">
@@ -181,6 +182,7 @@ function StaticTenantGrowthChart({ data }: { data: TenantGrowthPoint[] }) {
           <div className="flex h-[210px] items-end justify-center gap-1.5">
             <span className="w-3 rounded-t bg-sky-500" style={{ height: `${(item.hospitals / max) * 100}%` }} />
             <span className="w-3 rounded-t bg-emerald-500" style={{ height: `${(item.clinics / max) * 100}%` }} />
+            <span className="w-3 rounded-t bg-teal-500" style={{ height: `${(item.dentistry / max) * 100}%` }} />
             <span className="w-3 rounded-t bg-orange-500" style={{ height: `${(item.pharmacies / max) * 100}%` }} />
           </div>
           <p className="text-center text-xs font-semibold text-slate-500">{item.month}</p>

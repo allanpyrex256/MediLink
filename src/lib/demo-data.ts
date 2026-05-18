@@ -94,6 +94,30 @@ export const demoMukonoTenant: Tenant = {
   created_at: new Date("2025-12-04T08:00:00.000Z").toISOString(),
 };
 
+export const demoDentalTenant: Tenant = {
+  id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+  tenant_kind: "dentistry",
+  name: "Pearl Dental Care",
+  slug: "pearl-dental",
+  legal_name: "Pearl Dental Care Ltd",
+  region: "Kampala, Uganda",
+  address: "Plot 18, Acacia Avenue, Kololo",
+  phone: "+256 701 445 880",
+  email: "admin@pearldental.ug",
+  status: "active",
+  subdomain: "pearl-dental",
+  primary_color: "#0891b2",
+  accent_color: "#14b8a6",
+  theme: "blue",
+  brand_tagline: "Dental appointments and treatment planning",
+  logo_url: null,
+  cover_image_url: null,
+  profile_image_url: null,
+  logo_approved_at: new Date("2026-05-10T08:00:00.000Z").toISOString(),
+  storage_usage_mb: 164,
+  created_at: new Date("2026-02-18T08:00:00.000Z").toISOString(),
+};
+
 export const demoPharmacyTenant: Tenant = {
   id: "55555555-5555-4555-8555-555555555555",
   tenant_kind: "pharmacy",
@@ -173,6 +197,18 @@ export const demoMukonoUser: AppUser = {
   full_name: "Achan Byaruhanga",
   role: "admin",
   phone: "+256 758 640 220",
+  avatar_url: null,
+  is_platform_admin: false,
+  last_seen_at: new Date().toISOString(),
+};
+
+export const demoDentalUser: AppUser = {
+  id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+  tenant_id: demoDentalTenant.id,
+  email: "admin@pearldental.ug",
+  full_name: "Dr. Miriam Kato",
+  role: "admin",
+  phone: "+256 701 445 880",
   avatar_url: null,
   is_platform_admin: false,
   last_seen_at: new Date().toISOString(),
@@ -877,6 +913,7 @@ export const demoPlatformTenants: Tenant[] = [
   demoTenant,
   demoMengoTenant,
   demoMukonoTenant,
+  demoDentalTenant,
   demoPharmacyTenant,
   demoGoodLifeTenant,
 ];
@@ -897,7 +934,7 @@ function subscriptionStatusForTenant(status: Tenant["status"]): Subscription["st
   return status === "disabled" ? "cancelled" : status;
 }
 
-type ClinicWorkspace = "kampala" | "mengo" | "mukono";
+type ClinicWorkspace = "kampala" | "mengo" | "mukono" | "dental";
 type PharmacyWorkspace = "vine" | "goodlife";
 
 const clinicVariants = {
@@ -928,6 +965,20 @@ const clinicVariants = {
     branchManagers: ["Achan Byaruhanga", "Dr. Kato Namusoke", "Nakato Achan"],
     metricPatients: "2,104",
     prefix: "MUK-",
+  },
+  dental: {
+    doctorNames: ["Dr. Miriam Kato", "Dr. Isaac Nsubuga", "Dr. Lydia Achan", "Dr. Peter Okello"],
+    specializations: ["Dental Checkup", "Tooth Extraction", "Teeth Cleaning", "Orthodontic Review"],
+    rooms: ["Chair 1", "Chair 2", "Hygiene Room", "Ortho Suite"],
+    patientNames: ["Sarah Nansubuga", "Brian Kato", "Nadia Namusoke"],
+    histories: [["Tooth sensitivity"], ["Wisdom tooth pain"], ["Routine scaling follow-up"]],
+    appointmentReasons: ["Dental checkup", "Tooth extraction review", "Teeth cleaning"],
+    labTests: ["Dental X-ray", "Bitewing radiograph", "Oral screening"],
+    branchNames: ["Pearl Dental Reception", "Treatment Chairs", "Sterilization Desk"],
+    branchRegions: ["Kololo", "Kololo", "Kampala"],
+    branchManagers: ["Nadia Namusoke", "Dr. Miriam Kato", "Dr. Isaac Nsubuga"],
+    metricPatients: "912",
+    prefix: "DENT-",
   },
 } as const;
 
@@ -1281,6 +1332,10 @@ export function buildDemoDashboardData(
 
   if (workspaceId === "mukono-medical-centre") {
     return buildClinicDashboardData(demoMukonoTenant, demoMukonoUser, "mukono");
+  }
+
+  if (workspaceId === "pearl-dental") {
+    return buildClinicDashboardData(demoDentalTenant, demoDentalUser, "dental");
   }
 
   return buildClinicDashboardData(demoTenant, demoUser, "kampala");

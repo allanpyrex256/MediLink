@@ -11,6 +11,7 @@ import {
   ReceiptText,
   ShieldCheck,
   Sparkles,
+  Stethoscope,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -70,7 +71,7 @@ export default async function SuperAdminPage() {
             MediLink SaaS business dashboard
           </h1>
           <p className="mt-2 max-w-3xl text-base font-medium leading-7 text-slate-600">
-            Track hospitals, pharmacies, paying tenants, subscriptions, monthly revenue,
+            Track hospitals, dental practices, pharmacies, paying tenants, subscriptions, monthly revenue,
             unpaid invoices, trial accounts, and growth analytics.
           </p>
         </div>
@@ -134,7 +135,7 @@ export default async function SuperAdminPage() {
         />
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
+      <div className="mt-5 grid gap-4 md:grid-cols-4">
         <MiniMetric
           label="Hospitals"
           value={metrics.totalHospitals}
@@ -146,6 +147,12 @@ export default async function SuperAdminPage() {
           value={metrics.activeClinics}
           body="Smaller outpatient businesses"
           href="/super-admin/clinics"
+        />
+        <MiniMetric
+          label="Dentistry"
+          value={metrics.dentistry}
+          body="Dental practices using MediLink"
+          href="/super-admin/dentistry"
         />
         <MiniMetric
           label="Pharmacies"
@@ -182,7 +189,7 @@ export default async function SuperAdminPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tenant growth</CardTitle>
-            <CardDescription>Hospitals, clinics, and pharmacies joining MediLink.</CardDescription>
+            <CardDescription>Hospitals, clinics, dental practices, and pharmacies joining MediLink.</CardDescription>
           </CardHeader>
           <CardContent>
             <TenantGrowthChart data={tenantGrowth} />
@@ -197,6 +204,7 @@ export default async function SuperAdminPage() {
             {[
               ["Hospitals", "Manage all hospitals", "/super-admin/hospitals", Building2],
               ["Clinics", "Manage smaller clinics", "/super-admin/clinics", Users],
+              ["Dentistry", "Manage dental practices", "/super-admin/dentistry", Stethoscope],
               ["Pharmacies", "Manage all pharmacies", "/super-admin/pharmacies", Pill],
               ["Subscriptions", "Active, trial, and expired tenants", "/super-admin/subscriptions", ReceiptText],
               ["Revenue", "Monthly SaaS income graph", "/super-admin/revenue", Banknote],

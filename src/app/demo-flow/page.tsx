@@ -63,6 +63,22 @@ const flowCards = [
     tone: "blue",
   },
   {
+    title: "Dentist login",
+    description: "Open Pearl Dental Care as a dentist for appointments, patient records, and treatment notes.",
+    href: "/demo/pearl-dental?account=dentist%40pearldental.ug&next=/dashboard",
+    action: "Open dentist account",
+    icon: Stethoscope,
+    tone: "blue",
+  },
+  {
+    title: "Dental booking page",
+    description: "What a dental patient opens to request a checkup, cleaning, or procedure review.",
+    href: "/pearl-dental/book",
+    action: "Book dental visit",
+    icon: CalendarDays,
+    tone: "green",
+  },
+  {
     title: "Pharmacy portal",
     description: "Open a pharmacy tenant to show inventory, expiry alerts, and prescriptions.",
     href: "/demo/vine-pharmacy?account=pharmacy%40vinepharmacy.ug&next=/dashboard/pharmacy",

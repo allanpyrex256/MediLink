@@ -3,8 +3,8 @@
 
 create extension if not exists "pgcrypto";
 
-create type public.tenant_kind as enum ('clinic', 'hospital', 'pharmacy');
-create type public.user_role as enum ('admin', 'doctor', 'receptionist', 'pharmacist', 'patient');
+create type public.tenant_kind as enum ('clinic', 'hospital', 'pharmacy', 'dentistry');
+create type public.user_role as enum ('admin', 'doctor', 'dentist', 'receptionist', 'pharmacist', 'patient');
 create type public.tenant_status as enum ('active', 'trialing', 'past_due', 'disabled');
 create type public.appointment_status as enum ('pending', 'confirmed', 'completed', 'cancelled');
 create type public.payment_status as enum ('pending', 'processing', 'paid', 'failed', 'refunded');
@@ -66,6 +66,23 @@ create table public.users (
   avatar_url text,
   is_platform_admin boolean not null default false,
   last_seen_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (tenant_id, email)
+);
+
+create table public.staff_invitations (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  email text not null,
+  full_name text not null,
+  role public.user_role not null check (role <> 'patient'),
+  phone text,
+  status text not null default 'pending' check (status in ('pending', 'sent', 'accepted', 'expired')),
+  invited_by uuid references public.users(id) on delete set null,
+  sent_at timestamptz,
+  accepted_at timestamptz,
+  expires_at timestamptz not null default (now() + interval '7 days'),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (tenant_id, email)
@@ -257,9 +274,9 @@ create table public.prescription_orders (
   updated_at timestamptz not null default now()
 );
 
-create table public.notifications (
-  id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  create table public.notifications (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null references public.tenants(id) on delete cascade,
   user_id uuid references public.users(id) on delete set null,
   patient_id uuid references public.patients(id) on delete set null,
   appointment_id uuid references public.appointments(id) on delete set null,
@@ -270,10 +287,23 @@ create table public.notifications (
   status public.notification_status not null default 'queued',
   provider_message_id text,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+    updated_at timestamptz not null default now()
+  );
 
-create table public.subscriptions (
+  create table public.document_templates (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null references public.tenants(id) on delete cascade,
+    name text not null,
+    file_name text not null,
+    content_type text not null,
+    size_bytes bigint not null default 0 check (size_bytes >= 0),
+    storage_path text not null,
+    created_by uuid references public.users(id) on delete set null,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  );
+  
+  create table public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
   plan text not null check (plan in ('starter', 'growth', 'enterprise')),
@@ -300,6 +330,7 @@ create table public.audit_logs (
 );
 
 create index on public.users (tenant_id, role);
+create index on public.staff_invitations (tenant_id, status, created_at);
 create index on public.branches (tenant_id, status);
 create index on public.doctors (tenant_id, specialization);
 create index on public.patients (tenant_id, phone);
@@ -311,8 +342,9 @@ create index on public.appointments (tenant_id, scheduled_at);
 create index on public.payments (tenant_id, status, created_at);
 create index on public.invoices (tenant_id, status, created_at);
 create index on public.inventory_items (tenant_id, status);
-create index on public.prescription_orders (tenant_id, status, created_at);
-create index on public.notifications (tenant_id, status, created_at);
+  create index on public.prescription_orders (tenant_id, status, created_at);
+  create index on public.notifications (tenant_id, status, created_at);
+  create index on public.document_templates (tenant_id, created_at);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -329,6 +361,8 @@ for each row execute function public.set_updated_at();
 create trigger branches_set_updated_at before update on public.branches
 for each row execute function public.set_updated_at();
 create trigger users_set_updated_at before update on public.users
+for each row execute function public.set_updated_at();
+create trigger staff_invitations_set_updated_at before update on public.staff_invitations
 for each row execute function public.set_updated_at();
 create trigger doctors_set_updated_at before update on public.doctors
 for each row execute function public.set_updated_at();
@@ -354,9 +388,11 @@ create trigger inventory_items_set_updated_at before update on public.inventory_
 for each row execute function public.set_updated_at();
 create trigger prescription_orders_set_updated_at before update on public.prescription_orders
 for each row execute function public.set_updated_at();
-create trigger notifications_set_updated_at before update on public.notifications
-for each row execute function public.set_updated_at();
-create trigger subscriptions_set_updated_at before update on public.subscriptions
+  create trigger notifications_set_updated_at before update on public.notifications
+  for each row execute function public.set_updated_at();
+  create trigger document_templates_set_updated_at before update on public.document_templates
+  for each row execute function public.set_updated_at();
+  create trigger subscriptions_set_updated_at before update on public.subscriptions
 for each row execute function public.set_updated_at();
 
 create or replace function public.current_tenant_id()
@@ -397,6 +433,8 @@ set search_path = public
 as $$
 declare
   created_tenant_id uuid;
+  staff_invitation public.staff_invitations%rowtype;
+  staff_invitation_id uuid;
   tenant_name text;
   tenant_slug text;
   tenant_kind public.tenant_kind;
@@ -406,6 +444,49 @@ declare
   payment_method text;
   billing_phone text;
 begin
+  staff_invitation_id := nullif(new.raw_user_meta_data->>'staff_invitation_id', '')::uuid;
+
+  if staff_invitation_id is not null then
+    select *
+    into staff_invitation
+    from public.staff_invitations
+    where id = staff_invitation_id
+      and lower(email) = lower(new.email)
+      and status in ('pending', 'sent')
+      and expires_at > now();
+
+    if staff_invitation.id is null then
+      raise exception 'Invalid or expired MediLink staff invitation';
+    end if;
+
+    insert into public.users (id, tenant_id, email, full_name, role, phone, avatar_url)
+    values (
+      new.id,
+      staff_invitation.tenant_id,
+      new.email,
+      coalesce(new.raw_user_meta_data->>'full_name', staff_invitation.full_name, new.email),
+      staff_invitation.role,
+      coalesce(new.raw_user_meta_data->>'phone', staff_invitation.phone),
+      new.raw_user_meta_data->>'avatar_url'
+    )
+    on conflict (id) do update
+    set tenant_id = excluded.tenant_id,
+        email = excluded.email,
+        full_name = excluded.full_name,
+        role = excluded.role,
+        phone = excluded.phone,
+        avatar_url = excluded.avatar_url,
+        updated_at = now();
+
+    update public.staff_invitations
+    set status = 'sent',
+        sent_at = coalesce(sent_at, now()),
+        updated_at = now()
+    where id = staff_invitation.id;
+
+    return new;
+  end if;
+
   tenant_name := coalesce(new.raw_user_meta_data->>'tenant_name', 'New MediLink Clinic');
   tenant_slug := coalesce(new.raw_user_meta_data->>'tenant_slug', lower(regexp_replace(tenant_name, '[^a-zA-Z0-9]+', '-', 'g')));
   tenant_kind := coalesce((new.raw_user_meta_data->>'tenant_kind')::public.tenant_kind, 'clinic');
@@ -461,6 +542,7 @@ begin
   values
     (created_tenant_id, 'admin', 'Clinic owner and administrator', '{"manage_all": true}'::jsonb),
     (created_tenant_id, 'doctor', 'Clinical provider', '{"manage_own_schedule": true, "view_patients": true}'::jsonb),
+    (created_tenant_id, 'dentist', 'Dental provider', '{"manage_own_schedule": true, "view_patients": true, "manage_treatment_notes": true}'::jsonb),
     (created_tenant_id, 'receptionist', 'Front desk operations', '{"manage_appointments": true, "manage_patients": true}'::jsonb),
     (created_tenant_id, 'pharmacist', 'Dispensary and inventory operations', '{"manage_inventory": true, "manage_prescriptions": true}'::jsonb),
     (created_tenant_id, 'patient', 'Patient portal access', '{"view_own_records": true}'::jsonb)
@@ -483,6 +565,7 @@ alter table public.tenants enable row level security;
 alter table public.roles enable row level security;
 alter table public.branches enable row level security;
 alter table public.users enable row level security;
+alter table public.staff_invitations enable row level security;
 alter table public.doctors enable row level security;
 alter table public.patients enable row level security;
 alter table public.diagnoses enable row level security;
@@ -494,9 +577,10 @@ alter table public.appointments enable row level security;
 alter table public.payments enable row level security;
 alter table public.invoices enable row level security;
 alter table public.inventory_items enable row level security;
-alter table public.prescription_orders enable row level security;
-alter table public.notifications enable row level security;
-alter table public.subscriptions enable row level security;
+  alter table public.prescription_orders enable row level security;
+  alter table public.notifications enable row level security;
+  alter table public.document_templates enable row level security;
+  alter table public.subscriptions enable row level security;
 alter table public.audit_logs enable row level security;
 
 create policy "platform admins can read all tenants"
@@ -528,12 +612,25 @@ with check ((tenant_id = public.current_tenant_id() and public.current_user_role
 
 create policy "tenant users can read tenant users"
 on public.users for select
-using (tenant_id = public.current_tenant_id() or id = auth.uid() or public.is_platform_admin());
+using (
+  id = auth.uid()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin')
+  or public.is_platform_admin()
+);
 
 create policy "admins can manage tenant users"
 on public.users for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or id = auth.uid() or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or id = auth.uid() or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or public.is_platform_admin());
+
+create policy "tenant admins read staff invitations"
+on public.staff_invitations for select
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or public.is_platform_admin());
+
+create policy "tenant admins manage staff invitations"
+on public.staff_invitations for all
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or public.is_platform_admin());
 
 create policy "tenant members can read doctors"
 on public.doctors for select
@@ -546,48 +643,84 @@ with check ((tenant_id = public.current_tenant_id() and public.current_user_role
 
 create policy "tenant members can read patients"
 on public.patients for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist'))
+  or user_id = auth.uid()
+);
 
 create policy "staff manage patients"
 on public.patients for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist')) or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist')) or public.is_platform_admin());
 
 create policy "tenant members can read diagnoses"
 on public.diagnoses for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = diagnoses.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "clinical staff manage diagnoses"
 on public.diagnoses for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor')) or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist')) or public.is_platform_admin());
 
 create policy "tenant members can read clinical prescriptions"
 on public.clinical_prescriptions for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = clinical_prescriptions.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "clinical staff manage clinical prescriptions"
 on public.clinical_prescriptions for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor')) or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist')) or public.is_platform_admin());
 
 create policy "tenant members can read lab results"
 on public.lab_results for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = lab_results.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "clinical staff manage lab results"
 on public.lab_results for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist')) or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist')) or public.is_platform_admin());
 
 create policy "tenant members can read visit records"
 on public.visit_records for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = visit_records.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "clinical staff manage visit records"
 on public.visit_records for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor')) or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist')) or public.is_platform_admin());
 
 create policy "tenant members can read schedules"
 on public.schedules for select
@@ -595,21 +728,53 @@ using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
 
 create policy "staff manage schedules"
 on public.schedules for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist')) or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist')) or public.is_platform_admin());
 
 create policy "tenant members can read appointments"
 on public.appointments for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = appointments.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "staff create and update appointments"
 on public.appointments for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist', 'patient')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist', 'patient')) or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = appointments.patient_id
+      and patients.user_id = auth.uid()
+  )
+)
+with check (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = appointments.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "tenant members can read payments"
 on public.payments for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = payments.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "staff manage payments"
 on public.payments for all
@@ -618,7 +783,15 @@ with check ((tenant_id = public.current_tenant_id() and public.current_user_role
 
 create policy "tenant members can read invoices"
 on public.invoices for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
+  or exists (
+    select 1 from public.patients
+    where patients.id = invoices.patient_id
+      and patients.user_id = auth.uid()
+  )
+);
 
 create policy "staff manage invoices"
 on public.invoices for all
@@ -627,7 +800,10 @@ with check ((tenant_id = public.current_tenant_id() and public.current_user_role
 
 create policy "tenant members can read inventory"
 on public.inventory_items for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'pharmacist'))
+);
 
 create policy "pharmacy staff manage inventory"
 on public.inventory_items for all
@@ -640,12 +816,34 @@ using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
 
 create policy "pharmacy staff manage prescription orders"
 on public.prescription_orders for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist', 'pharmacist')) or public.is_platform_admin())
-with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'receptionist', 'pharmacist')) or public.is_platform_admin());
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist', 'pharmacist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist', 'pharmacist')) or public.is_platform_admin());
 
-create policy "tenant members can read notifications"
-on public.notifications for select
-using (tenant_id = public.current_tenant_id() or public.is_platform_admin());
+  create policy "tenant members can read notifications"
+  on public.notifications for select
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist'))
+  or user_id = auth.uid()
+  );
+
+  create policy "clinic staff can read document templates"
+  on public.document_templates for select
+  using (
+    public.is_platform_admin()
+    or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'doctor', 'dentist', 'receptionist'))
+  );
+
+  create policy "admins and reception manage document templates"
+  on public.document_templates for all
+  using (
+    public.is_platform_admin()
+    or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist'))
+  )
+  with check (
+    public.is_platform_admin()
+    or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist'))
+  );
 
 create policy "staff manage notifications"
 on public.notifications for all

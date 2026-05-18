@@ -13,13 +13,14 @@ import { tenantBranding } from "@/lib/tenant-branding";
 import type { TenantKind } from "@/lib/types";
 
 export const metadata = {
-  title: "Find Clinics & Pharmacies | MediLink",
-  description: "Search MediLink clinics, hospitals, and pharmacies to book appointments, order medicines, or request payments.",
+  title: "Find Clinics, Dentists & Pharmacies | MediLink",
+  description: "Search MediLink clinics, dental practices, hospitals, and pharmacies to book appointments, order medicines, or request payments.",
 };
 
 const kindLabels: Record<TenantKind | "all", string> = {
   all: "All",
   clinic: "Clinics",
+  dentistry: "Dentistry",
   hospital: "Hospitals",
   pharmacy: "Pharmacies",
 };
@@ -73,7 +74,7 @@ export default async function PublicDirectoryPage({
                 Find care, book visits, order medicine, and pay locally.
               </h1>
               <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-slate-600">
-                Patients use this public side of MediLink while clinics, hospitals, and pharmacies manage requests inside their private dashboards.
+                Patients use this public side of MediLink while clinics, dental practices, hospitals, and pharmacies manage requests inside their private dashboards.
               </p>
             </div>
             <form className="grid gap-3 rounded-lg bg-slate-50 p-4 md:grid-cols-[1fr_180px_auto]" action="/clinics">
@@ -120,7 +121,7 @@ export default async function PublicDirectoryPage({
                     <div>
                       <p className="text-lg font-bold text-slate-950">{brand.name}</p>
                       <p className="mt-1 text-sm font-semibold capitalize text-slate-500">
-                        {listing.tenant.tenant_kind}
+                        {kindLabel(listing.tenant.tenant_kind)}
                       </p>
                     </div>
                   </div>
@@ -169,6 +170,11 @@ export default async function PublicDirectoryPage({
 }
 
 function normalizeKind(value: string | undefined): TenantKind | "all" {
-  if (value === "clinic" || value === "hospital" || value === "pharmacy") return value;
+  if (value === "clinic" || value === "hospital" || value === "pharmacy" || value === "dentistry") return value;
   return "all";
+}
+
+function kindLabel(kind: TenantKind) {
+  if (kind === "dentistry") return "Dentistry";
+  return kind;
 }

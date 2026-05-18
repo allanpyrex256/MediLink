@@ -73,6 +73,7 @@ export async function deleteTenantAccount(formData: FormData) {
   revalidatePath("/super-admin");
   revalidatePath("/super-admin/hospitals");
   revalidatePath("/super-admin/clinics");
+  revalidatePath("/super-admin/dentistry");
   revalidatePath("/super-admin/pharmacies");
   revalidatePath("/super-admin/subscriptions");
   revalidatePath("/super-admin/billing");

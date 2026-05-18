@@ -14,6 +14,20 @@ export const appointmentCreateSchema = z.object({
 
 export type AppointmentCreateInput = z.infer<typeof appointmentCreateSchema>;
 
+export const appointmentDecisionSchema = z.object({
+  action: z.enum(["approve", "reschedule"]),
+  scheduledAt: z.string().datetime().optional(),
+  note: z
+    .string()
+    .trim()
+    .max(240)
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => value || undefined),
+});
+
+export type AppointmentDecisionInput = z.infer<typeof appointmentDecisionSchema>;
+
 export const publicAppointmentCreateSchema = z.object({
   tenantSlug: z
     .string()

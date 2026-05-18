@@ -9,7 +9,7 @@ import {
 import { cookieDomainForHost, isLocalDevelopmentHost } from "@/lib/tenant-host";
 import type { UserRole } from "@/lib/types";
 
-const demoRoles: UserRole[] = ["admin", "doctor", "receptionist", "pharmacist", "patient"];
+const demoRoles: UserRole[] = ["admin", "doctor", "dentist", "receptionist", "pharmacist", "patient"];
 
 function safeNextPath(value: string | null) {
   if (!value) return "/dashboard";

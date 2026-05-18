@@ -14,7 +14,7 @@ import {
 import { rateLimit } from "@/lib/security/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const staffRoles = ["admin", "doctor", "receptionist"] as const;
+const staffRoles = ["admin", "doctor", "dentist", "receptionist"] as const;
 
 export async function GET(request: NextRequest) {
   if (!hasSupabaseConfig()) {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!canManagePatients(profile.role)) {
-    return NextResponse.json({ error: "Only clinic staff can add patients." }, { status: 403 });
+    return NextResponse.json({ error: "Only authorized care staff can add patients." }, { status: 403 });
   }
 
   const insert = buildPatientInsert(parsed.data, profile.tenant_id);

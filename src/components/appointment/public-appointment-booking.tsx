@@ -38,6 +38,7 @@ export function PublicAppointmentBooking({
   const [status, setStatus] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [confirmationReference, setConfirmationReference] = useState("");
   const [loading, setLoading] = useState(false);
+  const isDentistry = tenant.tenant_kind === "dentistry";
 
   const services = Array.from(new Set(doctors.map((doctor) => doctor.specialization)));
   const selectedDoctor =
@@ -227,9 +228,9 @@ export function PublicAppointmentBooking({
             <option value="female">Female</option>
             <option value="male">Male</option>
           </Select>
-          <Input
-            label="Date of birth optional"
-            type="date"
+        <Input
+          label="Date of birth optional"
+          type="date"
             value={dateOfBirth}
             onChange={(event) => setDateOfBirth(event.target.value)}
           />
@@ -237,7 +238,7 @@ export function PublicAppointmentBooking({
 
         <Textarea
           label="Reason for visit"
-          placeholder="Tell the clinic what you need help with"
+          placeholder={isDentistry ? "Tell the dental practice what you need help with" : "Tell the clinic what you need help with"}
           value={reason}
           onChange={(event) => setReason(event.target.value)}
         />
@@ -327,7 +328,7 @@ export function PublicBookingSummary({
         <p className="text-sm font-bold">What happens after booking?</p>
         <p className="mt-2 text-sm font-medium leading-6 text-violet-50">
           Your request appears inside {tenant.name}&apos;s appointments dashboard as pending.
-          Staff can confirm it, check you in, and prepare your patient file.
+          Staff can confirm it, check you in, and prepare your {tenant.tenant_kind === "dentistry" ? "dental record" : "patient file"}.
         </p>
         <p className="mt-4 text-xs font-semibold text-violet-100">
           Today is {format(new Date(), "EEEE, d MMMM yyyy")}

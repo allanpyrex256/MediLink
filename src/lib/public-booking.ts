@@ -52,7 +52,7 @@ export async function getPublicBookingData(slug: string): Promise<PublicBookingD
   const { data: tenants, error: tenantError } = await supabase
     .from("tenants")
     .select("*")
-    .in("tenant_kind", ["clinic", "hospital"])
+    .in("tenant_kind", ["clinic", "hospital", "dentistry"])
     .or(`slug.eq.${normalized},subdomain.eq.${normalized}`)
     .limit(1);
 

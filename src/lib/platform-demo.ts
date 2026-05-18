@@ -4,7 +4,7 @@ export type PlatformTenant = {
   id: string;
   business: string;
   kind: TenantKind;
-  plan: "Starter" | "Clinic" | "Hospital" | "Pro" | "Premium" | "Enterprise";
+  plan: "Starter" | "Clinic" | "Dental" | "Hospital" | "Pro" | "Premium" | "Enterprise";
   status: TenantStatus;
   lastPayment: string;
   nextDue: string;
@@ -81,6 +81,23 @@ export const platformTenants: PlatformTenant[] = [
   },
   {
     id: "tenant-4",
+    business: "Pearl Dental Care",
+    kind: "dentistry",
+    plan: "Dental",
+    status: "active",
+    lastPayment: "May 11",
+    nextDue: "Jun 11",
+    amount: 180000,
+    region: "Kampala",
+    users: 8,
+    activity: "active",
+    email: "admin@pearldental.ug",
+    phone: "+256 701 445 880",
+    address: "Plot 18, Acacia Avenue, Kololo",
+    paymentMethod: "MTN MoMo",
+  },
+  {
+    id: "tenant-5",
     business: "Vine Pharmacy",
     kind: "pharmacy",
     plan: "Pro",
@@ -97,7 +114,7 @@ export const platformTenants: PlatformTenant[] = [
     paymentMethod: "MTN MoMo",
   },
   {
-    id: "tenant-5",
+    id: "tenant-6",
     business: "GoodLife Pharmacy",
     kind: "pharmacy",
     plan: "Premium",
@@ -114,7 +131,7 @@ export const platformTenants: PlatformTenant[] = [
     paymentMethod: "Airtel Money",
   },
   {
-    id: "tenant-6",
+    id: "tenant-7",
     business: "Rubaga Women Clinic",
     kind: "clinic",
     plan: "Starter",
@@ -131,7 +148,7 @@ export const platformTenants: PlatformTenant[] = [
     paymentMethod: "Trial",
   },
   {
-    id: "tenant-7",
+    id: "tenant-8",
     business: "Nakasero Community Pharmacy",
     kind: "pharmacy",
     plan: "Starter",
@@ -159,12 +176,12 @@ export const revenueGrowth = [
 ];
 
 export const tenantGrowth = [
-  { month: "Jan", hospitals: 12, clinics: 9, pharmacies: 4 },
-  { month: "Feb", hospitals: 14, clinics: 11, pharmacies: 5 },
-  { month: "Mar", hospitals: 17, clinics: 13, pharmacies: 6 },
-  { month: "Apr", hospitals: 20, clinics: 15, pharmacies: 8 },
-  { month: "May", hospitals: 24, clinics: 18, pharmacies: 9 },
-  { month: "Jun", hospitals: 28, clinics: 21, pharmacies: 12 },
+  { month: "Jan", hospitals: 12, clinics: 9, dentistry: 2, pharmacies: 4 },
+  { month: "Feb", hospitals: 14, clinics: 11, dentistry: 3, pharmacies: 5 },
+  { month: "Mar", hospitals: 17, clinics: 13, dentistry: 4, pharmacies: 6 },
+  { month: "Apr", hospitals: 20, clinics: 15, dentistry: 5, pharmacies: 8 },
+  { month: "May", hospitals: 24, clinics: 18, dentistry: 7, pharmacies: 9 },
+  { month: "Jun", hospitals: 28, clinics: 21, dentistry: 9, pharmacies: 12 },
 ];
 
 export const subscriptionStatus = [
@@ -191,6 +208,12 @@ export const subscriptionPlans = [
     price: 450000,
     tenants: 5,
     features: "Departments, admissions, laboratory, pharmacy, reports",
+  },
+  {
+    name: "Dental Practice",
+    price: 180000,
+    tenants: 9,
+    features: "Dental bookings, treatment notes, billing, reminders, and reports",
   },
   {
     name: "Basic Pharmacy",
@@ -242,6 +265,7 @@ export const supportTickets: SupportTicket[] = [
 export function platformMetrics() {
   const totalHospitals = 24;
   const activeClinics = 18;
+  const dentistry = 9;
   const pharmacies = 9;
   const monthlyRevenue = 12_400_000;
   const expiredAccounts = 3;
@@ -253,6 +277,7 @@ export function platformMetrics() {
   return {
     activeClinics,
     activeTenants,
+    dentistry,
     expiredAccounts,
     monthlyRevenue,
     newSignups,

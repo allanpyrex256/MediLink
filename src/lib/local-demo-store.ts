@@ -1,14 +1,33 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { DemoWorkspaceId } from "@/lib/demo-session";
-import type { Appointment, Branch, DashboardData, Doctor, InventoryItem, Invoice, Patient, Tenant } from "@/lib/types";
+import type {
+  Appointment,
+  AppUser,
+  Branch,
+  DashboardData,
+  Doctor,
+  InventoryItem,
+  Invoice,
+  Notification,
+  Patient,
+  StaffInvitation,
+  Tenant,
+  TenantDocumentTemplate,
+} from "@/lib/types";
 
 type StoredAppointment = Appointment;
 type StoredBranch = Branch;
 type StoredDoctor = Doctor;
 type StoredInventoryItem = InventoryItem;
 type StoredInvoice = Invoice;
+type StoredNotification = Notification;
 type StoredPatient = Patient;
+type StoredStaffInvitation = StaffInvitation;
+type StoredStaffUser = AppUser;
+type StoredDocumentTemplate = TenantDocumentTemplate & {
+  content_base64: string;
+};
 
 interface WorkspaceState {
   patients: StoredPatient[];
@@ -17,6 +36,10 @@ interface WorkspaceState {
   doctors: StoredDoctor[];
   inventory: StoredInventoryItem[];
   invoices: StoredInvoice[];
+  notifications: StoredNotification[];
+  staffInvitations: StoredStaffInvitation[];
+  staffUsers: StoredStaffUser[];
+  documentTemplates: StoredDocumentTemplate[];
 }
 
 interface DemoState {
@@ -38,6 +61,10 @@ function emptyWorkspace(): WorkspaceState {
     doctors: [],
     inventory: [],
     invoices: [],
+    notifications: [],
+    staffInvitations: [],
+    staffUsers: [],
+    documentTemplates: [],
   };
 }
 
@@ -189,6 +216,104 @@ export async function saveLocalDemoInvoice({
   return invoice;
 }
 
+export async function saveLocalDemoNotification({
+  workspaceId,
+  notification,
+}: {
+  workspaceId: DemoWorkspaceId;
+  notification: Notification;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.notifications = [
+    notification,
+    ...workspace.notifications.filter((item) => item.id !== notification.id),
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return notification;
+}
+
+export async function getLocalDemoStaffDirectory(workspaceId: DemoWorkspaceId) {
+  const workspace = await getLocalDemoWorkspaceState(workspaceId);
+
+  return {
+    invitations: workspace.staffInvitations,
+    users: workspace.staffUsers,
+  };
+}
+
+export async function getLocalDemoDocumentTemplates(workspaceId: DemoWorkspaceId) {
+  const workspace = await getLocalDemoWorkspaceState(workspaceId);
+
+  return workspace.documentTemplates.map(stripTemplateContent);
+}
+
+export async function getLocalDemoDocumentTemplate({
+  workspaceId,
+  templateId,
+}: {
+  workspaceId: DemoWorkspaceId;
+  templateId: string;
+}) {
+  const workspace = await getLocalDemoWorkspaceState(workspaceId);
+
+  return workspace.documentTemplates.find((template) => template.id === templateId) ?? null;
+}
+
+export async function saveLocalDemoDocumentTemplate({
+  workspaceId,
+  template,
+}: {
+  workspaceId: DemoWorkspaceId;
+  template: StoredDocumentTemplate;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.documentTemplates = [
+    template,
+    ...workspace.documentTemplates.filter((item) => item.id !== template.id),
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return stripTemplateContent(template);
+}
+
+export async function saveLocalDemoStaffMember({
+  workspaceId,
+  invitation,
+  user,
+}: {
+  workspaceId: DemoWorkspaceId;
+  invitation: StaffInvitation;
+  user: AppUser;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+  const normalizedEmail = user.email.toLowerCase();
+
+  workspace.staffInvitations = [
+    invitation,
+    ...workspace.staffInvitations.filter(
+      (item) => item.id !== invitation.id && item.email.toLowerCase() !== normalizedEmail,
+    ),
+  ];
+  workspace.staffUsers = [
+    user,
+    ...workspace.staffUsers.filter(
+      (item) => item.id !== user.id && item.email.toLowerCase() !== normalizedEmail,
+    ),
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return { invitation, user };
+}
+
 export async function saveLocalDemoPublicBooking({
   workspaceId,
   tenant,
@@ -278,6 +403,9 @@ export async function hydrateLocalDemoDashboardData(
   const branches = mergeById(data.branches, workspace.branches);
   const inventory = mergeById(data.inventory, workspace.inventory);
   const invoices = mergeById(data.invoices, workspace.invoices);
+  const notifications = mergeById(data.notifications, workspace.notifications).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
 
   return {
     ...data,
@@ -287,6 +415,7 @@ export async function hydrateLocalDemoDashboardData(
     doctors,
     inventory,
     invoices,
+    notifications,
     metrics: data.metrics.map((metric) =>
       metric.label.toLowerCase().includes("appointment")
         ? {
@@ -317,5 +446,20 @@ function attachRelations(appointment: Appointment, doctors: Doctor[], patients: 
     ...appointment,
     doctor: appointment.doctor ?? doctors.find((doctor) => doctor.id === appointment.doctor_id),
     patient: appointment.patient ?? patients.find((patient) => patient.id === appointment.patient_id),
+  };
+}
+
+function stripTemplateContent(template: StoredDocumentTemplate): TenantDocumentTemplate {
+  return {
+    id: template.id,
+    tenant_id: template.tenant_id,
+    name: template.name,
+    file_name: template.file_name,
+    content_type: template.content_type,
+    size_bytes: template.size_bytes,
+    storage_path: template.storage_path,
+    created_by: template.created_by,
+    created_at: template.created_at,
+    updated_at: template.updated_at,
   };
 }

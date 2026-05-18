@@ -16,13 +16,13 @@ const signupPlans = [
   {
     value: "starter",
     label: "Starter",
-    description: "Small clinics and pharmacies",
+    description: "Small clinics, dental practices, and pharmacies",
     amount: 50_000,
   },
   {
     value: "growth",
     label: "Clinic",
-    description: "Growing clinics and pharmacies",
+    description: "Growing clinics, dental practices, and pharmacies",
     amount: 150_000,
   },
   {
@@ -93,7 +93,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     if (!configured) {
       if (mode === "register") {
-        setError("Connect Supabase to create a live clinic or pharmacy workspace.");
+        setError("Connect Supabase to create a live healthcare workspace.");
         return;
       }
 
@@ -219,8 +219,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           </CardTitle>
           <CardDescription>
             {mode === "login"
-              ? "Access an isolated clinic, hospital, or pharmacy portal with role-based permissions."
-              : "Provision a clinic, hospital, or pharmacy tenant, choose a demo plan, and add billing contact details."}
+              ? "Access an isolated clinic, hospital, dentistry, or pharmacy portal with role-based permissions."
+              : "Provision a clinic, hospital, dentistry, or pharmacy tenant, choose a demo plan, and add billing contact details."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -248,10 +248,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               <>
                 <Select label="Workspace type" name="tenantKind" defaultValue="clinic">
                   <option value="clinic">Clinic</option>
+                  <option value="dentistry">Dentistry</option>
                   <option value="hospital">Hospital</option>
                   <option value="pharmacy">Pharmacy</option>
                 </Select>
-                <Input label="Clinic, hospital, or pharmacy name" name="tenantName" placeholder="Kampala Hospital" required />
+                <Input label="Clinic, dental practice, hospital, or pharmacy name" name="tenantName" placeholder="Pearl Dental Care" required />
                 <Input label="Owner full name" name="fullName" placeholder="Dr. Sarah Namusoke" required />
                 <div className="rounded-lg border border-violet-200 bg-violet-50 p-3">
                   <Select
@@ -317,7 +318,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             </>
           ) : null}
           <p className="mt-5 text-center text-sm text-slate-500">
-            {mode === "login" ? "New clinic?" : "Already registered?"}{" "}
+            {mode === "login" ? "New business?" : "Already registered?"}{" "}
             <a
               className="font-semibold text-sky-700 hover:text-sky-800"
               href={mode === "login" ? "/register" : "/login"}

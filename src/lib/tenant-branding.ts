@@ -56,6 +56,12 @@ const defaultsByKind: Record<TenantKind, BrandDefaults> = {
     tagline: "Pharmacy POS and inventory system",
     theme: "green",
   },
+  dentistry: {
+    primaryColor: "#0891b2",
+    accentColor: "#14b8a6",
+    tagline: "Dental practice management system",
+    theme: "blue",
+  },
 };
 
 const demoBrandOverrides: Record<string, Partial<TenantBrand>> = {
@@ -83,6 +89,11 @@ const demoBrandOverrides: Record<string, Partial<TenantBrand>> = {
     primaryColor: "#0f766e",
     accentColor: "#7c3aed",
     tagline: "Branch pharmacy operations",
+  },
+  "pearl-dental": {
+    primaryColor: "#0891b2",
+    accentColor: "#14b8a6",
+    tagline: "Dental appointments and treatment planning",
   },
 };
 

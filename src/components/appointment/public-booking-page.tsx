@@ -13,6 +13,7 @@ import type { PublicBookingData } from "@/lib/public-booking";
 export function PublicBookingPage({ data }: { data: PublicBookingData }) {
   const bookingUrl = tenantBookingUrl(data.tenant);
   const brand = tenantBranding(data.tenant);
+  const isDentistry = data.tenant.tenant_kind === "dentistry";
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f4f1ff_0,#ffffff_44%,#f6fbff_100%)] text-[#07082f]">
@@ -50,7 +51,7 @@ export function PublicBookingPage({ data }: { data: PublicBookingData }) {
             <span className="block" style={{ color: brand.primaryColor }}>{brand.name}</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
-            No clinic website needed. Choose a service, pick a time, and send your
+            No {isDentistry ? "dental website" : "clinic website"} needed. Choose a service, pick a time, and send your
             appointment request straight to {brand.name}.
           </p>
 

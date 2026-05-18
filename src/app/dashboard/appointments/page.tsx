@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AppointmentBooking } from "@/components/appointment/appointment-booking";
-import { AppointmentTable } from "@/components/dashboard/appointment-table";
+import { CalendarCheck, CalendarClock, Send } from "lucide-react";
+import { AppointmentRequestQueue } from "@/components/dashboard/appointment-request-queue";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
@@ -19,36 +19,69 @@ export default async function AppointmentsPage() {
     <div>
       <PageHeading
         eyebrow="Scheduling"
-        title="Appointments"
-        description="Book through the website, WhatsApp, or reception, then send SMS and WhatsApp reminders to reduce missed visits."
+        title="Appointment requests"
+        description="Review requested visits, approve the time, or reschedule before the patient receives a notification."
+        actions={
+          <Link
+            href={bookingUrl}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm shadow-slate-100 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800"
+          >
+            Open public booking page
+          </Link>
+        }
       />
-      <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {[
-          ["Website booking", "Patients can request visits from the online portal."],
-          ["Public booking page", `Share ${bookingUrl} when the clinic has no website.`],
-          ["WhatsApp intake", "Front desk can turn WhatsApp requests into appointments."],
-          ["Reception desk", "Walk-ins are captured in the same schedule ledger."],
-        ].map(([title, body]) => (
-          <Card key={title}>
-            <CardContent>
-              <p className="font-semibold text-slate-950">{title}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-500">{body}</p>
-              {title === "Public booking page" ? (
-                <Link
-                  href={bookingUrl}
-                  className="mt-3 inline-flex text-sm font-bold text-violet-600"
-                >
-                  Open booking page
-                </Link>
-              ) : null}
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mb-5 grid gap-4 md:grid-cols-3">
+        <RequestStat
+          label="Waiting approval"
+          value={String(data.appointments.filter((item) => item.status === "pending").length)}
+          detail="Needs staff decision"
+          icon={CalendarClock}
+        />
+        <RequestStat
+          label="Approved visits"
+          value={String(data.appointments.filter((item) => item.status === "confirmed").length)}
+          detail="Patient notification queued"
+          icon={CalendarCheck}
+        />
+        <RequestStat
+          label="Patient updates"
+          value={String(data.notifications.filter((item) => item.appointment_id).length)}
+          detail="SMS, WhatsApp, email, or in-app log"
+          icon={Send}
+        />
       </div>
-      <div className="grid gap-5 xl:grid-cols-[minmax(360px,0.8fr)_minmax(0,1.2fr)]">
-        <AppointmentBooking tenant={data.tenant} doctors={data.doctors} patients={data.patients} />
-        <AppointmentTable appointments={data.appointments} title="Schedule ledger" />
-      </div>
+      <AppointmentRequestQueue
+        key={data.appointments.map((item) => `${item.id}:${item.status}:${item.scheduled_at}`).join("|")}
+        appointments={data.appointments}
+        doctors={data.doctors}
+      />
     </div>
+  );
+}
+
+function RequestStat({
+  label,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  icon: typeof CalendarClock;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-4">
+        <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-sky-50 text-sky-700">
+          <Icon className="size-5" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-slate-950">{value}</p>
+          <p className="text-sm font-semibold text-slate-700">{label}</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">{detail}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

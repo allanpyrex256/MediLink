@@ -4,12 +4,17 @@ import { buildDemoDashboardData, demoPlatformTenants, demoUser } from "@/lib/dem
 import {
   DEMO_ACCOUNT_COOKIE,
   DEMO_WORKSPACE_COOKIE,
+  demoAccountOptions,
   demoAccountForEmail,
   demoTenantProfileForSlug,
   demoWorkspaceIdForSlug,
   normalizeDemoWorkspaceId,
 } from "@/lib/demo-session";
-import { hydrateLocalDemoDashboardData } from "@/lib/local-demo-store";
+import {
+  getLocalDemoDocumentTemplates,
+  getLocalDemoStaffDirectory,
+  hydrateLocalDemoDashboardData,
+} from "@/lib/local-demo-store";
 import { tenantSlugFromHost } from "@/lib/tenant-host";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
@@ -26,7 +31,10 @@ import type {
   Patient,
   Payment,
   PrescriptionOrder,
+  StaffInvitation,
   Tenant,
+  TenantDocumentTemplate,
+  TenantStaffUser,
   VisitRecord,
 } from "@/lib/types";
 import { formatUgandanCurrency } from "@/lib/utils";
@@ -70,6 +78,18 @@ async function getDemoDashboardData() {
   };
 }
 
+export async function getCurrentDemoWorkspaceId() {
+  const cookieStore = await cookies();
+  const headerStore = await headers();
+  const hostSlug = tenantSlugFromHost(headerStore.get("host"));
+  const hostWorkspaceId = demoWorkspaceIdForSlug(hostSlug);
+
+  return (
+    hostWorkspaceId ??
+    normalizeDemoWorkspaceId(cookieStore.get(DEMO_WORKSPACE_COOKIE)?.value)
+  );
+}
+
 export async function getCurrentProfile(): Promise<AppUser> {
   if (!hasSupabaseConfig()) {
     return (await getDemoDashboardData()).user;
@@ -94,6 +114,87 @@ export async function getCurrentProfile(): Promise<AppUser> {
     return (data as AppUser | null) ?? demoUser;
   } catch {
     return demoUser;
+  }
+}
+
+export async function getTenantStaffDirectory(): Promise<{
+  invitations: StaffInvitation[];
+  users: TenantStaffUser[];
+}> {
+  if (!hasSupabaseConfig()) {
+    const workspaceId = await getCurrentDemoWorkspaceId();
+    const dashboardData = await getDemoDashboardData();
+    const local = await getLocalDemoStaffDirectory(workspaceId);
+    const baseUsers = demoAccountOptions
+      .filter((account) => account.workspaceId === workspaceId && !account.isPlatformAdmin)
+      .map<TenantStaffUser>((account) => ({
+        id: `demo-user-${account.email}`,
+        tenant_id: dashboardData.tenant.id,
+        email: account.email,
+        full_name: account.fullName,
+        role: account.role,
+        phone: null,
+        avatar_url: null,
+        is_platform_admin: false,
+        last_seen_at: null,
+        created_at: dashboardData.tenant.created_at,
+      }));
+    const usersByEmail = new Map<string, TenantStaffUser>();
+
+    for (const user of baseUsers) usersByEmail.set(user.email.toLowerCase(), user);
+    for (const user of local.users) {
+      usersByEmail.set(user.email.toLowerCase(), {
+        ...user,
+        created_at: dashboardData.tenant.created_at,
+      });
+    }
+
+    return {
+      invitations: local.invitations,
+      users: Array.from(usersByEmail.values()),
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const profile = await getCurrentProfile();
+
+  const { data: users } = await supabase
+    .from("users")
+    .select("id, tenant_id, email, full_name, role, phone, avatar_url, is_platform_admin, last_seen_at, created_at, updated_at")
+    .eq("tenant_id", profile.tenant_id)
+    .order("created_at", { ascending: true });
+
+  const { data: invitations } = await supabase
+    .from("staff_invitations")
+    .select("*")
+    .eq("tenant_id", profile.tenant_id)
+    .order("created_at", { ascending: false });
+
+  return {
+    invitations: (invitations ?? []) as StaffInvitation[],
+    users: (users ?? []) as TenantStaffUser[],
+  };
+}
+
+export async function getTenantDocumentTemplates(): Promise<TenantDocumentTemplate[]> {
+  if (!hasSupabaseConfig()) {
+    const workspaceId = await getCurrentDemoWorkspaceId();
+    return getLocalDemoDocumentTemplates(workspaceId);
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const profile = await getCurrentProfile();
+
+    const { data } = await supabase
+      .from("document_templates")
+      .select("*")
+      .eq("tenant_id", profile.tenant_id)
+      .order("created_at", { ascending: false });
+
+    return (data ?? []) as TenantDocumentTemplate[];
+  } catch {
+    return [];
   }
 }
 

@@ -172,7 +172,7 @@ export function PricingPageContent() {
         </h1>
         <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
           Choose the perfect plan for your healthcare facility. All plans include core features
-          to manage your clinic, hospital or pharmacy efficiently.
+          to manage your clinic, dental practice, hospital or pharmacy efficiently.
         </p>
       </motion.div>
 
@@ -334,7 +334,7 @@ export function PricingPageContent() {
         <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <h2 className="text-2xl font-bold tracking-normal text-[#080833]">
-              Built for clinics, hospitals, pharmacies, and labs in Uganda.
+              Built for clinics, dental practices, hospitals, pharmacies, and labs in Uganda.
             </h2>
             <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-slate-600">
               MediLink brings patient records, appointment booking, pharmacy inventory,

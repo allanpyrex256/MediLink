@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | MediLink",
   },
   description:
-    "Multi-tenant care operations platform for clinics, hospitals, and pharmacies in Uganda and East Africa.",
+    "Multi-tenant care operations platform for clinics, dental practices, hospitals, and pharmacies in Uganda and East Africa.",
   manifest: "/manifest.webmanifest",
 };
 

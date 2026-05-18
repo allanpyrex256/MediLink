@@ -148,7 +148,7 @@ export default function SolutionsPage() {
             <span className="block text-violet-600">Healthcare Provider</span>
           </h1>
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
-            Whether you run a small clinic, a large hospital, or a busy pharmacy,
+            Whether you run a small clinic, a dental practice, a large hospital, or a busy pharmacy,
             MediLink has a solution tailored to help you deliver better care and grow your business.
           </p>
         </Reveal>

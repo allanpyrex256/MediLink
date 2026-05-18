@@ -58,6 +58,10 @@ export default async function DashboardPage() {
     return <DoctorDashboard data={data} />;
   }
 
+  if (data.user.role === "dentist") {
+    return <DentistDashboard data={data} />;
+  }
+
   if (data.user.role === "receptionist") {
     return <ReceptionistDashboard data={data} />;
   }
@@ -76,6 +80,10 @@ export default async function DashboardPage() {
 
   if (data.tenant.tenant_kind === "hospital") {
     return <HospitalDashboard data={data} />;
+  }
+
+  if (data.tenant.tenant_kind === "dentistry") {
+    return <DentalDashboard data={data} />;
   }
 
   return <ClinicDashboard data={data} />;
@@ -184,6 +192,112 @@ function DoctorDashboard({ data }: { data: DashboardData }) {
           action="Open prescriptions"
         />
         <HospitalLabCard labResults={data.labResults} />
+      </div>
+    </DashboardFrame>
+  );
+}
+
+function DentistDashboard({ data }: { data: DashboardData }) {
+  const pendingAppointments = data.appointments.filter(
+    (appointment) => appointment.status === "pending",
+  ).length;
+  const activeTreatmentPlans = data.diagnoses.filter(
+    (diagnosis) => diagnosis.status === "active",
+  ).length;
+
+  return (
+    <DashboardFrame
+      eyebrow="Dentist dashboard"
+      title={`${data.user.full_name} dental care workspace`}
+      description="Focused view for dental appointments, patient files, treatment notes, chair timing, and follow-up plans."
+      tone="blue"
+    >
+      <MetricGrid>
+        <MetricCard
+          label="Dental patients"
+          value={String(data.patients.length)}
+          detail="Records available for treatment review"
+          icon={Users}
+          tone="blue"
+          href="/dashboard/patients"
+        />
+        <MetricCard
+          label="Appointments"
+          value={String(data.appointments.length)}
+          detail={`${pendingAppointments} requested visits`}
+          icon={CalendarDays}
+          tone="amber"
+          href="/dashboard/appointments"
+        />
+        <MetricCard
+          label="Treatment plans"
+          value={String(activeTreatmentPlans || data.diagnoses.length)}
+          detail="Active dental notes and follow-ups"
+          icon={Stethoscope}
+          tone="green"
+          href="/dashboard/emr"
+        />
+        <MetricCard
+          label="Procedure notes"
+          value={String(data.visitRecords.length)}
+          detail="Recent dental consultations"
+          icon={ClipboardList}
+          tone="violet"
+          href="/dashboard/emr"
+        />
+      </MetricGrid>
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
+        <AppointmentTable appointments={data.appointments.slice(0, 8)} title="My dental appointment requests" />
+        <WorklistCard
+          title="Dental patient files"
+          description="Patients with dental history, treatment plans, or requested visits."
+          icon={UserRoundCheck}
+          items={data.patients.slice(0, 5).map((patient) =>
+            worklistItem(
+              patient.full_name,
+              `${patient.medical_history[0] ?? "No dental history captured"} - ${patient.phone}`,
+              patient.allergies.length ? "amber" : "blue",
+            ),
+          )}
+          href="/dashboard/patients"
+          action="Open dental patients"
+        />
+      </div>
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-3">
+        <WorklistCard
+          title="Treatment notes"
+          description="Recent treatment context and active dental problems."
+          icon={HeartPulse}
+          items={[
+            ...data.visitRecords.slice(0, 2).map((visit) =>
+              worklistItem(visit.visit_type, `${visit.doctor_name} - ${visit.notes}`, "violet"),
+            ),
+            ...data.diagnoses.slice(0, 3).map((diagnosis) =>
+              worklistItem(
+                diagnosis.label,
+                diagnosis.notes ?? "Treatment plan needs review",
+                diagnosis.status === "active" ? "blue" : "green",
+              ),
+            ),
+          ]}
+          href="/dashboard/emr"
+          action="Open treatment notes"
+        />
+        <DoctorAvailability doctors={data.doctors} />
+        <WorklistCard
+          title="Next actions"
+          description="Keep chair time, records, and patient follow-up moving."
+          icon={ShieldCheck}
+          items={[
+            worklistItem("Approve dental visits", `${pendingAppointments} requests need a decision`, pendingAppointments ? "amber" : "green"),
+            worklistItem("Review treatment plans", `${activeTreatmentPlans} active plans`, activeTreatmentPlans ? "blue" : "green"),
+            worklistItem("Prepare procedure notes", `${data.visitRecords.length} notes on file`, "violet"),
+          ]}
+          href="/dashboard/appointments"
+          action="Open appointments"
+        />
       </div>
     </DashboardFrame>
   );
@@ -476,6 +590,125 @@ function ClinicDashboard({ data }: { data: DashboardData }) {
             worklistItem("Collect unpaid bills", formatDashboardMoney(unpaidInvoiceTotal(data)), pendingBills ? "rose" : "green"),
             worklistItem("Review pharmacy alerts", `${drugStockAlerts.length} stock lines need attention`, drugStockAlerts.length ? "amber" : "green"),
             worklistItem("Print daily report", "Cashier and reception summary", "blue"),
+          ]}
+          href="/dashboard/reports"
+          action="Open reports"
+        />
+      </div>
+    </DashboardFrame>
+  );
+}
+
+function DentalDashboard({ data }: { data: DashboardData }) {
+  const todayAppointments = data.appointments.filter((appointment) =>
+    isSameCalendarDay(appointment.scheduled_at, new Date()),
+  );
+  const pendingAppointments = data.appointments.filter((appointment) => appointment.status === "pending");
+  const activeTreatmentPlans = data.diagnoses.filter((diagnosis) => diagnosis.status === "active");
+  const pendingBills = data.invoices.filter((invoice) => invoice.status !== "paid").length;
+  const collectedRevenue = paidTotal(data.payments) || 520000;
+  const openChairs = Math.max(data.doctors.filter((doctor) => doctor.status === "available").length, 2);
+
+  return (
+    <DashboardFrame
+      eyebrow="Dentistry portal"
+      title={`${data.tenant.name} dental practice view`}
+      description="Dental appointments, chair scheduling, treatment plans, patient records, invoices, and follow-up reminders in one workspace."
+      tone="blue"
+    >
+      <BusinessMetricGrid>
+        <MetricCard
+          label="Dental Visits"
+          value={String(todayAppointments.length || data.appointments.length)}
+          detail={`${pendingAppointments.length} requested appointments`}
+          icon={CalendarDays}
+          tone="blue"
+          href="/dashboard/appointments"
+        />
+        <MetricCard
+          label="Open Chairs"
+          value={String(openChairs)}
+          detail="Available dentists and treatment rooms"
+          icon={Stethoscope}
+          tone="green"
+          href="/dashboard/doctors"
+        />
+        <MetricCard
+          label="Treatment Plans"
+          value={String(activeTreatmentPlans.length || data.diagnoses.length)}
+          detail="Dental notes ready for follow-up"
+          icon={ClipboardList}
+          tone="violet"
+          href="/dashboard/emr"
+        />
+        <MetricCard
+          label="Collections"
+          value={formatDashboardMoney(collectedRevenue)}
+          detail={`${pendingBills} unpaid dental invoices`}
+          icon={WalletCards}
+          tone="amber"
+          href="/dashboard/billing"
+        />
+      </BusinessMetricGrid>
+
+      <QuickActionBar
+        actions={[
+          { label: "Register Patient", href: "/dashboard/patients?action=add-patient", icon: Users },
+          { label: "New Appointment", href: "/dashboard/appointments", icon: CalendarDays },
+          { label: "Treatment Notes", href: "/dashboard/emr", icon: Stethoscope },
+          { label: "Create Invoice", href: "/dashboard/billing?action=new-invoice", icon: ReceiptText },
+        ]}
+      />
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-[0.9fr_1.2fr_0.9fr]">
+        <WorklistCard
+          title="Requested dental visits"
+          description="Patients waiting for approval, rescheduling, or chair assignment."
+          icon={CalendarDays}
+          items={(pendingAppointments.length ? pendingAppointments : data.appointments).slice(0, 5).map((appointment) =>
+            worklistItem(
+              appointment.patient?.full_name ?? "Dental patient",
+              `${appointment.reason} - ${format(new Date(appointment.scheduled_at), "MMM d, HH:mm")}`,
+              appointment.status === "pending" ? "amber" : "green",
+            ),
+          )}
+          href="/dashboard/appointments"
+          action="Open appointment requests"
+        />
+        <AppointmentTable appointments={data.appointments.slice(0, 8)} title="Dental chair schedule" />
+        <FinanceSnapshot
+          title="Dental collections"
+          description="Consultation, cleaning, extraction, and procedure payments."
+          amount={collectedRevenue}
+          payments={data.payments}
+        />
+      </div>
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-3">
+        <WorklistCard
+          title="Treatment plans"
+          description="Active dental problems, procedure notes, and follow-up context."
+          icon={HeartPulse}
+          items={data.diagnoses.slice(0, 5).map((diagnosis) =>
+            worklistItem(
+              diagnosis.label,
+              diagnosis.notes ?? "Treatment note needs review",
+              diagnosis.status === "active" ? "blue" : "green",
+            ),
+          )}
+          href="/dashboard/emr"
+          action="Open treatment notes"
+        />
+        <DoctorAvailability doctors={data.doctors} />
+        <WorklistCard
+          title="Dental operations"
+          description="Daily tasks for reception, dentists, and billing."
+          icon={ShieldCheck}
+          items={[
+            worklistItem("Confirm requested visits", `${pendingAppointments.length} appointments need a decision`, pendingAppointments.length ? "amber" : "green"),
+            worklistItem("Prepare patient files", `${data.patients.length} dental records available`, "blue"),
+            worklistItem("Collect balances", formatDashboardMoney(unpaidInvoiceTotal(data)), pendingBills ? "rose" : "green"),
+            worklistItem("Print dental reports", "Daily treatment and revenue summary", "violet"),
           ]}
           href="/dashboard/reports"
           action="Open reports"
@@ -793,11 +1026,11 @@ function MetricGrid({ children }: { children: React.ReactNode }) {
 }
 
 function DailyMetricGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">{children}</div>;
+  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{children}</div>;
 }
 
 function BusinessMetricGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">{children}</div>;
+  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{children}</div>;
 }
 
 function MetricCard({
@@ -816,21 +1049,25 @@ function MetricCard({
   href?: string;
 }) {
   const content = (
-    <Card className={`min-h-[150px] transition ${href ? "hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-slate-200" : ""}`}>
-      <CardContent className="flex h-full items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-600">{label}</p>
-          <p className="mt-3 break-words text-2xl font-bold tracking-normal text-slate-950">{value}</p>
-          <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{detail}</p>
+    <Card className={`min-h-[172px] transition ${href ? "hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md hover:shadow-slate-200" : ""}`}>
+      <CardContent className="flex h-full flex-col justify-between gap-4 p-4">
+        <div className="flex items-start justify-between gap-4">
+          <p className="max-w-[11rem] text-sm font-bold leading-5 text-slate-700">{label}</p>
+          <div className={`grid size-12 shrink-0 place-items-center rounded-lg ring-1 ${metricToneStyles[tone]}`}>
+            <Icon className="size-6" />
+          </div>
+        </div>
+        <div>
+          <p className="whitespace-nowrap text-3xl font-bold leading-none tracking-normal text-slate-950">{value}</p>
+          <p className="mt-3 min-h-12 text-sm font-medium leading-6 text-slate-600">{detail}</p>
+        </div>
+        <div className="min-h-5">
           {href ? (
-            <p className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-violet-600">
+            <p className="inline-flex items-center gap-1 text-xs font-bold text-violet-600">
               Open details
               <ArrowRight className="size-3.5" />
             </p>
           ) : null}
-        </div>
-        <div className={`grid size-12 shrink-0 place-items-center rounded-lg ring-1 ${metricToneStyles[tone]}`}>
-          <Icon className="size-6" />
         </div>
       </CardContent>
     </Card>

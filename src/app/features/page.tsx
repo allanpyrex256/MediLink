@@ -82,7 +82,7 @@ const featureCards = [
   },
   {
     title: "Role-Based Access",
-    body: "Control user access and permissions for doctors, staff, pharmacists and admins.",
+    body: "Control user access and permissions for doctors, dentists, staff, pharmacists and admins.",
     icon: ShieldCheck,
     tone: "violet",
   },
@@ -109,7 +109,7 @@ const toneStyles = {
 
 export const metadata = {
   title: "Features | MediLink",
-  description: "Powerful healthcare management features for clinics, hospitals and pharmacies.",
+  description: "Powerful healthcare management features for clinics, dental practices, hospitals and pharmacies.",
 };
 
 export default function FeaturesPage() {

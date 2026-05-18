@@ -1,11 +1,12 @@
 export type UserRole =
   | "admin"
   | "doctor"
+  | "dentist"
   | "receptionist"
   | "pharmacist"
   | "patient";
 
-export type TenantKind = "clinic" | "hospital" | "pharmacy";
+export type TenantKind = "clinic" | "hospital" | "pharmacy" | "dentistry";
 
 export type AppointmentStatus =
   | "pending"
@@ -65,6 +66,40 @@ export interface AppUser {
   avatar_url: string | null;
   is_platform_admin: boolean;
   last_seen_at: string | null;
+}
+
+export interface TenantStaffUser extends AppUser {
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StaffInvitation {
+  id: string;
+  tenant_id: string;
+  email: string;
+  full_name: string;
+  role: Exclude<UserRole, "patient">;
+  phone: string | null;
+  status: "pending" | "sent" | "accepted" | "expired";
+  invited_by: string | null;
+  sent_at: string | null;
+  accepted_at: string | null;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenantDocumentTemplate {
+  id: string;
+  tenant_id: string;
+  name: string;
+  file_name: string;
+  content_type: string;
+  size_bytes: number;
+  storage_path: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface Doctor {

@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
     "*.localhost",
   ],
   devIndicators: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.pexels.com",
+        pathname: "/photos/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

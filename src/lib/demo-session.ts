@@ -7,6 +7,7 @@ export type DemoWorkspaceId =
   | "kampala-hospital"
   | "mengo-clinic"
   | "mukono-medical-centre"
+  | "pearl-dental"
   | "vine-pharmacy"
   | "goodlife-pharmacy";
 
@@ -39,6 +40,13 @@ export const demoWorkspaceOptions: {
     kind: "clinic",
     email: "admin@mukonomedical.ug",
     description: "Medical Center Admin - Departments & Billing",
+  },
+  {
+    id: "pearl-dental",
+    name: "Pearl Dental Care",
+    kind: "dentistry",
+    email: "admin@pearldental.ug",
+    description: "Dental Practice Owner - Chairs, Treatments & Billing",
   },
   {
     id: "vine-pharmacy",
@@ -87,6 +95,13 @@ export const demoWorkspaceBranding: Record<
     accentColor: "#0ea5e9",
     tagline: "Medical centre management",
   },
+  "pearl-dental": {
+    name: "Pearl Dental Care",
+    initials: "PD",
+    primaryColor: "#0891b2",
+    accentColor: "#14b8a6",
+    tagline: "Dental appointments and treatment planning",
+  },
   "vine-pharmacy": {
     name: "Vine Pharmacy",
     initials: "VP",
@@ -122,6 +137,12 @@ export const demoWorkspaceAliases: Record<string, DemoWorkspaceId> = {
   "mukono-medical-center": "mukono-medical-centre",
   mukonomedical: "mukono-medical-centre",
   mukono: "mukono-medical-centre",
+  "pearl-dental": "pearl-dental",
+  pearldental: "pearl-dental",
+  "pearl-dental-care": "pearl-dental",
+  "dental-clinic": "pearl-dental",
+  dental: "pearl-dental",
+  dentistry: "pearl-dental",
   "vine-pharmacy": "vine-pharmacy",
   vinepharmacy: "vine-pharmacy",
   "acacia-care-pharmacy": "vine-pharmacy",
@@ -228,6 +249,28 @@ export const demoTenantProfiles: Record<
       tenant_kind: "clinic",
     },
   },
+  "pearl-dental": {
+    workspaceId: "pearl-dental",
+    tenant: {
+      name: "Pearl Dental Care",
+      slug: "pearl-dental",
+      legal_name: "Pearl Dental Care Ltd",
+      email: "admin@pearldental.ug",
+      subdomain: "pearl-dental",
+      tenant_kind: "dentistry",
+    },
+  },
+  pearldental: {
+    workspaceId: "pearl-dental",
+    tenant: {
+      name: "Pearl Dental Care",
+      slug: "pearl-dental",
+      legal_name: "Pearl Dental Care Ltd",
+      email: "admin@pearldental.ug",
+      subdomain: "pearl-dental",
+      tenant_kind: "dentistry",
+    },
+  },
   "vine-pharmacy": {
     workspaceId: "vine-pharmacy",
     tenant: {
@@ -304,6 +347,30 @@ export const demoAccountOptions: {
     role: "admin",
     workspaceId: "mukono-medical-centre",
     description: "Medical Center Admin - Departments & Billing",
+  },
+  {
+    email: "admin@pearldental.ug",
+    password: "demo12345",
+    fullName: "Dr. Miriam Kato",
+    role: "admin",
+    workspaceId: "pearl-dental",
+    description: "Dental Practice Owner - Chairs, Treatments & Billing",
+  },
+  {
+    email: "dentist@pearldental.ug",
+    password: "demo12345",
+    fullName: "Dr. Isaac Nsubuga",
+    role: "dentist",
+    workspaceId: "pearl-dental",
+    description: "Dental Surgeon - Treatment Notes & Appointments",
+  },
+  {
+    email: "reception@pearldental.ug",
+    password: "demo12345",
+    fullName: "Nadia Namusoke",
+    role: "receptionist",
+    workspaceId: "pearl-dental",
+    description: "Dental Reception - Bookings & Patient Intake",
   },
   {
     email: "pharmacy@vinepharmacy.ug",

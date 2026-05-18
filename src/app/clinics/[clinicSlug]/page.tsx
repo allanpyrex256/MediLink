@@ -75,6 +75,8 @@ export default async function PublicTenantProfilePage({
 
   const brand = tenantBranding(data.tenant);
   const isPharmacy = data.tenant.tenant_kind === "pharmacy";
+  const isDentistry = data.tenant.tenant_kind === "dentistry";
+  const kindLabel = publicKindLabel(data.tenant.tenant_kind);
   const whatsapp = whatsappUrl(brand.phone, `Hello ${brand.name}, I found you on MediLink.`);
   const profileUrl = absoluteUrl(publicTenantProfileUrl(data.tenant));
   const structuredData = publicTenantJsonLd(data, profileUrl, whatsapp);
@@ -103,7 +105,7 @@ export default async function PublicTenantProfilePage({
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-100">
           <div className="min-h-[220px] p-6 text-white sm:p-8" style={{ background: brandGradient(brand) }}>
             <Badge tone="green" className="bg-white/20 text-white">
-              {data.tenant.tenant_kind === "hospital" ? "Hospital" : data.tenant.tenant_kind === "pharmacy" ? "Pharmacy" : "Clinic"} profile
+              {kindLabel} profile
             </Badge>
             <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
@@ -111,7 +113,7 @@ export default async function PublicTenantProfilePage({
                   {brand.name}
                 </h1>
                 <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-white/85">
-                  {brand.tagline}. Book appointments, request payments, and send medicine or prescription requests without entering a staff dashboard.
+                  {brand.tagline}. {publicProfileSummary(data.tenant.tenant_kind)}
                 </p>
               </div>
               <div className="rounded-lg bg-white/15 p-4 backdrop-blur">
@@ -125,7 +127,7 @@ export default async function PublicTenantProfilePage({
             <aside className="grid gap-4">
               <InfoRow icon={MapPin} label="Address" value={brand.address} />
               <InfoRow icon={MessageCircle} label="Contact" value={`${brand.phone} / ${brand.email}`} />
-              <InfoRow icon={ShieldCheck} label="MediLink access" value="Appointments, payments, pharmacy requests, and updates" />
+              <InfoRow icon={ShieldCheck} label="MediLink access" value={publicAccessLabel(data.tenant.tenant_kind)} />
             </aside>
 
             <div>
@@ -134,8 +136,8 @@ export default async function PublicTenantProfilePage({
                   <ActionCard
                     href={publicTenantBookUrl(data.tenant)}
                     icon={CalendarDays}
-                    title="Book Appointment"
-                    body="Choose service, doctor, date, and time."
+                    title={isDentistry ? "Book Dental Visit" : "Book Appointment"}
+                    body={isDentistry ? "Choose treatment, dentist, date, and time." : "Choose service, doctor, date, and time."}
                     primary
                   />
                 ) : null}
@@ -149,8 +151,8 @@ export default async function PublicTenantProfilePage({
                 <ActionCard
                   href={publicTenantPharmacyUrl(data.tenant)}
                   icon={Pill}
-                  title={isPharmacy ? "Order Medicine" : "Pharmacy Request"}
-                  body="Request medicines, refills, or prescription dispensing."
+                  title={isPharmacy ? "Order Medicine" : isDentistry ? "Dental Medication" : "Pharmacy Request"}
+                  body={isDentistry ? "Request post-treatment medicine or prescription support." : "Request medicines, refills, or prescription dispensing."}
                 />
                 <ActionCard
                   href={whatsapp}
@@ -164,7 +166,7 @@ export default async function PublicTenantProfilePage({
               <div className="mt-6 grid gap-5 lg:grid-cols-2">
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
                   <h2 className="text-lg font-bold text-slate-950">
-                    {isPharmacy ? "Available medicines" : "Services and doctors"}
+                    {isPharmacy ? "Available medicines" : isDentistry ? "Services and dentists" : "Services and doctors"}
                   </h2>
                   <div className="mt-4 grid gap-3">
                     {isPharmacy
@@ -287,13 +289,33 @@ function EmptyState({ text }: { text: string }) {
 function publicKindLabel(kind: TenantKind) {
   if (kind === "hospital") return "Hospital";
   if (kind === "pharmacy") return "Pharmacy";
+  if (kind === "dentistry") return "Dentistry";
   return "Clinic";
 }
 
 function schemaType(kind: TenantKind) {
   if (kind === "hospital") return "Hospital";
   if (kind === "pharmacy") return "Pharmacy";
+  if (kind === "dentistry") return "Dentist";
   return "MedicalClinic";
+}
+
+function publicProfileSummary(kind: TenantKind) {
+  if (kind === "dentistry") {
+    return "Book dental visits, request payments, and contact the practice without entering a staff dashboard.";
+  }
+
+  if (kind === "pharmacy") {
+    return "Order medicine, request payments, and contact the pharmacy without entering a staff dashboard.";
+  }
+
+  return "Book appointments, request payments, and send medicine or prescription requests without entering a staff dashboard.";
+}
+
+function publicAccessLabel(kind: TenantKind) {
+  if (kind === "dentistry") return "Dental bookings, payments, treatment updates, and reminders";
+  if (kind === "pharmacy") return "Medicine orders, payments, prescription requests, and updates";
+  return "Appointments, payments, pharmacy requests, and updates";
 }
 
 function publicTenantJsonLd(
@@ -311,7 +333,7 @@ function publicTenantJsonLd(
         }
       : {
           "@type": "ReserveAction",
-          name: "Book appointment",
+          name: data.tenant.tenant_kind === "dentistry" ? "Book dental appointment" : "Book appointment",
           target: absoluteUrl(publicTenantBookUrl(data.tenant)),
         },
     {
@@ -331,7 +353,7 @@ function publicTenantJsonLd(
     "@type": schemaType(data.tenant.tenant_kind),
     name: brand.name,
     legalName: brand.legalName,
-    description: `${brand.name} is listed on MediLink for appointments, payments, pharmacy requests, and customer communication.`,
+    description: publicJsonDescription(data.tenant.tenant_kind, brand.name),
     url: profileUrl,
     telephone: brand.phone,
     email: brand.email,
@@ -347,6 +369,18 @@ function publicTenantJsonLd(
     },
     potentialAction: actionTargets,
   };
+}
+
+function publicJsonDescription(kind: TenantKind, name: string) {
+  if (kind === "dentistry") {
+    return `${name} is listed on MediLink for dental appointments, payments, treatment updates, and customer communication.`;
+  }
+
+  if (kind === "pharmacy") {
+    return `${name} is listed on MediLink for medicine orders, payments, prescription requests, and customer communication.`;
+  }
+
+  return `${name} is listed on MediLink for appointments, payments, pharmacy requests, and customer communication.`;
 }
 
 function whatsappUrl(phone: string, text: string) {

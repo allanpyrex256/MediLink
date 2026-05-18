@@ -7,6 +7,7 @@ import {
   Pill,
   ReceiptText,
   Settings,
+  Stethoscope,
   Ticket,
   Users,
 } from "lucide-react";
@@ -297,6 +298,7 @@ export const sectionIcons = {
   analytics: LineChart,
   billing: CreditCard,
   clinics: Users,
+  dentistry: Stethoscope,
   hospitals: Building2,
   payments: CreditCard,
   pharmacies: Pill,
@@ -310,5 +312,6 @@ export const sectionIcons = {
 function kindLabel(kind: TenantKind) {
   if (kind === "hospital") return "Hospital";
   if (kind === "pharmacy") return "Pharmacy";
+  if (kind === "dentistry") return "Dentistry";
   return "Clinic";
 }
