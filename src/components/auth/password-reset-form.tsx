@@ -32,7 +32,6 @@ export function PasswordResetForm() {
     if (!code) return;
 
     const supabase = createSupabaseBrowserClient();
-    setLoading(true);
     supabase.auth
       .exchangeCodeForSession(code)
       .then(({ error: exchangeError }) => {
