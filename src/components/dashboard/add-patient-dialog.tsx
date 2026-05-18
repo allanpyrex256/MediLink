@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Plus, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,7 @@ type PatientForm = typeof initialForm;
 
 export function AddPatientDialog() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [open, setOpen] = useState(() => searchParams.get("action") === "add-patient");
+  const [open, setOpen] = useState(false);
   const [form, setForm] = useState<PatientForm>(initialForm);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -77,6 +76,10 @@ export function AddPatientDialog() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <AddPatientDialogAutoOpen setOpen={setOpen} />
+      </Suspense>
+
       <Button onClick={() => setOpen(true)}>
         <Plus className="size-4" />
         Add patient
@@ -222,4 +225,16 @@ export function AddPatientDialog() {
       ) : null}
     </>
   );
+}
+
+function AddPatientDialogAutoOpen({ setOpen }: { setOpen: (open: boolean) => void }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("action") === "add-patient") {
+      setOpen(true);
+    }
+  }, [searchParams, setOpen]);
+
+  return null;
 }

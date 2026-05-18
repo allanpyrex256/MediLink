@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Globe2, Loader2 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,14 @@ function planDetails(value: SignupPlan) {
 }
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
+  return (
+    <Suspense fallback={<AuthFormFallback />}>
+      <AuthFormContent mode={mode} />
+    </Suspense>
+  );
+}
+
+function AuthFormContent({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -326,6 +334,27 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               {mode === "login" ? "Create an account" : "Sign in"}
             </a>
           </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AuthFormFallback() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-slate-50 px-4 py-8">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="h-12 w-40 rounded-lg bg-slate-200" />
+          <div className="mt-6 h-7 w-56 rounded-lg bg-slate-200" />
+          <div className="mt-3 h-12 rounded-lg bg-slate-100" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <div className="h-11 rounded-lg bg-slate-100" />
+            <div className="h-11 rounded-lg bg-slate-100" />
+            <div className="h-11 rounded-lg bg-slate-200" />
+          </div>
         </CardContent>
       </Card>
     </div>

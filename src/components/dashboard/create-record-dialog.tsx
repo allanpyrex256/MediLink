@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, CheckCircle2, Loader2, PackagePlus, ReceiptText, Save, Stethoscope, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -168,10 +168,8 @@ export function AddInvoiceDialog({ label = "New invoice", autoOpen = true }: { l
 function CreateRecordDialog({ kind, label, autoOpen = true }: { kind: CreateKind; label?: string; autoOpen?: boolean }) {
   const config = configs[kind];
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const shouldAutoOpen = autoOpen && searchParams.get("action") === config.actionParam;
   const initialForm = useMemo(() => initialValues(config.fields), [config.fields]);
-  const [open, setOpen] = useState(shouldAutoOpen);
+  const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Record<string, string>>(initialForm);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -217,6 +215,12 @@ function CreateRecordDialog({ kind, label, autoOpen = true }: { kind: CreateKind
 
   return (
     <>
+      {autoOpen ? (
+        <Suspense fallback={null}>
+          <CreateRecordDialogAutoOpen actionParam={config.actionParam} setOpen={setOpen} />
+        </Suspense>
+      ) : null}
+
       <Button onClick={() => setOpen(true)}>
         {config.icon}
         {label ?? config.trigger}
@@ -317,6 +321,24 @@ function CreateRecordDialog({ kind, label, autoOpen = true }: { kind: CreateKind
       ) : null}
     </>
   );
+}
+
+function CreateRecordDialogAutoOpen({
+  actionParam,
+  setOpen,
+}: {
+  actionParam: string;
+  setOpen: (open: boolean) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("action") === actionParam) {
+      setOpen(true);
+    }
+  }, [actionParam, searchParams, setOpen]);
+
+  return null;
 }
 
 function initialValues(fields: Field[]) {
