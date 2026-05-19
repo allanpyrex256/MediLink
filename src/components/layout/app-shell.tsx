@@ -119,6 +119,7 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const brand = tenantBranding(tenant);
@@ -207,7 +208,13 @@ export function AppShell({
         } as CSSProperties
       }
     >
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[300px] border-r border-slate-300 bg-white/95 shadow-xl shadow-slate-200/60 lg:flex lg:flex-col">
+      <aside
+        id="desktop-navigation"
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden w-[300px] border-r border-slate-300 bg-white/95 shadow-xl shadow-slate-200/60 transition-transform duration-200 lg:flex lg:flex-col",
+          desktopSidebarOpen ? "lg:translate-x-0" : "lg:-translate-x-full",
+        )}
+      >
         <SidebarContent
           pathname={pathname}
           tenant={tenant}
@@ -228,6 +235,7 @@ export function AppShell({
             exit={{ opacity: 0 }}
           >
             <motion.aside
+              id="mobile-navigation"
               className="flex h-full w-[min(21rem,88vw)] flex-col bg-white shadow-2xl shadow-slate-900/20"
               initial={{ x: -360 }}
               animate={{ x: 0 }}
@@ -267,14 +275,31 @@ export function AppShell({
         ) : null}
       </AnimatePresence>
 
-      <div className="lg:pl-[300px]">
+      <div
+        className={cn(
+          "transition-[padding] duration-200",
+          desktopSidebarOpen ? "lg:pl-[300px]" : "lg:pl-0",
+        )}
+      >
         <header className="sticky top-0 z-20 h-[86px] border-b border-slate-300 bg-white/90 shadow-sm shadow-slate-200/80 backdrop-blur-xl">
           <div className="flex h-full items-center justify-between gap-4 px-5 sm:px-8">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="grid size-11 place-items-center rounded-lg text-slate-950 transition hover:bg-slate-100"
+              className="grid size-11 place-items-center rounded-lg text-slate-950 transition hover:bg-slate-100 lg:hidden"
               aria-label="Open navigation"
+              aria-controls="mobile-navigation"
+              aria-expanded={mobileOpen}
+            >
+              <Menu className="size-6" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDesktopSidebarOpen((value) => !value)}
+              className="hidden size-11 place-items-center rounded-lg text-slate-950 transition hover:bg-slate-100 lg:grid"
+              aria-label={desktopSidebarOpen ? "Collapse navigation" : "Open navigation"}
+              aria-controls="desktop-navigation"
+              aria-expanded={desktopSidebarOpen}
             >
               <Menu className="size-6" />
             </button>
