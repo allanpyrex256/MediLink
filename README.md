@@ -96,7 +96,7 @@ Optional subdomain tenancy is supported through `clinicname.medilink.ug`, `clini
 
 Payment adapters are intentionally env-driven:
 
-- Flutterwave uses its mobile-money API flow through configurable base URL.
+- Flutterwave uses its v4 mobile-money API flow through `FLUTTERWAVE_CLIENT_ID`, `FLUTTERWAVE_CLIENT_SECRET`, and a configurable base URL.
 - MTN MoMo uses Collections `RequestToPay`.
 - Airtel Money uses configurable collection/status paths because access varies by Airtel developer account and market.
 - Stripe is available for global card payment expansion.

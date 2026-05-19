@@ -27,7 +27,7 @@ const checks = [
   ["Supabase URL", "NEXT_PUBLIC_SUPABASE_URL", Boolean(appConfig.supabaseUrl)],
   ["Supabase anon key", "NEXT_PUBLIC_SUPABASE_ANON_KEY", Boolean(appConfig.supabaseAnonKey)],
   ["Service role key", "SUPABASE_SERVICE_ROLE_KEY", Boolean(appConfig.supabaseServiceRoleKey)],
-  ["Flutterwave", "FLUTTERWAVE_SECRET_KEY", Boolean(appConfig.flutterwave.secretKey)],
+  ["Flutterwave", "FLUTTERWAVE_CLIENT_ID / FLUTTERWAVE_CLIENT_SECRET", Boolean(appConfig.flutterwave.clientId && appConfig.flutterwave.clientSecret)],
   ["MTN MoMo", "MTN_MOMO_API_USER / MTN_MOMO_API_KEY", Boolean(appConfig.mtn.apiUser && appConfig.mtn.apiKey)],
   ["Airtel Money", "AIRTEL_MONEY_CLIENT_ID / AIRTEL_MONEY_CLIENT_SECRET", Boolean(appConfig.airtel.clientId && appConfig.airtel.clientSecret)],
   ["WhatsApp", "WHATSAPP_CLOUD_API_TOKEN", Boolean(appConfig.whatsapp.token)],

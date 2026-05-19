@@ -9,11 +9,18 @@ export const appConfig = {
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   flutterwave: {
-    secretKey: process.env.FLUTTERWAVE_SECRET_KEY,
+    clientId: process.env.FLUTTERWAVE_CLIENT_ID,
+    clientSecret:
+      process.env.FLUTTERWAVE_CLIENT_SECRET ??
+      process.env.FLUTTERWAVE_SECRET_KEY,
+    encryptionKey: process.env.FLUTTERWAVE_ENCRYPTION_KEY,
     webhookHash: process.env.FLUTTERWAVE_WEBHOOK_SECRET_HASH,
     apiBaseUrl:
       process.env.FLUTTERWAVE_API_BASE_URL ??
       "https://developersandbox-api.flutterwave.com",
+    authUrl:
+      process.env.FLUTTERWAVE_AUTH_URL ??
+      "https://idp.flutterwave.com/realms/flutterwave/protocol/openid-connect/token",
   },
   mtn: {
     subscriptionKey: process.env.MTN_MOMO_SUBSCRIPTION_KEY,
