@@ -166,7 +166,7 @@ export function DailySalesRegister({
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | DailySaleCategory>("all");
   const [paymentFilter, setPaymentFilter] = useState<"all" | DailySalePaymentMethod>("all");
-  const [showSaleRow, setShowSaleRow] = useState(Boolean(activeShift));
+  const [showSaleRow, setShowSaleRow] = useState(false);
   const [showCloseForm, setShowCloseForm] = useState(false);
   const [saleLoading, setSaleLoading] = useState(false);
   const [shiftLoading, setShiftLoading] = useState(false);
@@ -246,6 +246,22 @@ export function DailySalesRegister({
     setMessage("");
     setError("");
     setCloseForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function startNewSaleRow() {
+    if (!activeShift) {
+      setError("Open a shift before adding items.");
+      return;
+    }
+
+    setMessage("");
+    setError("");
+    setSaleForm((current) => ({
+      ...initialSaleForm(selectedDate, tenantKind, activeShift.id),
+      category: current.category,
+      paymentMethod: current.paymentMethod,
+    }));
+    setShowSaleRow(true);
   }
 
   function handleInventoryChange(value: string) {
@@ -505,9 +521,9 @@ export function DailySalesRegister({
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <Button type="button" variant="secondary" onClick={() => setShowSaleRow(true)}>
+              <Button type="button" variant="secondary" onClick={startNewSaleRow}>
                 <Plus className="size-4" />
-                Add sale
+                Add item
               </Button>
               <Button type="button" variant="danger" onClick={openClosePanel}>
                 <LogOut className="size-4" />
@@ -614,9 +630,9 @@ export function DailySalesRegister({
                     </option>
                   ))}
                 </select>
-                <Button type="button" variant="secondary" disabled={!activeShift} onClick={() => setShowSaleRow(true)}>
+                <Button type="button" variant="secondary" disabled={!activeShift} onClick={startNewSaleRow}>
                   <Plus className="size-4" />
-                  Add sale
+                  Add item
                 </Button>
               </div>
             </div>

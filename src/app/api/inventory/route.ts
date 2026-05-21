@@ -47,13 +47,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Only administrators and pharmacists can add stock." }, { status: 403 });
   }
 
-  const { data, error } = await supabase
+  const insert = buildInventoryInsert(parsed.data, profile.tenant_id);
+  let { data, error } = await supabase
     .from("inventory_items")
-    .insert(buildInventoryInsert(parsed.data, profile.tenant_id))
+    .insert(insert)
     .select("*")
     .single();
+
+  if (error && isMissingUnitCostColumn(error.message)) {
+    const legacyInsert = omitUnitCost(insert);
+    const retry = await supabase
+      .from("inventory_items")
+      .insert(legacyInsert)
+      .select("*")
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   return NextResponse.json({ data }, { status: 201 });
+}
+
+function isMissingUnitCostColumn(message: string) {
+  const normalized = message.toLowerCase();
+  return normalized.includes("unit_cost") && normalized.includes("column");
+}
+
+function omitUnitCost<T extends { unit_cost?: number }>(insert: T) {
+  const legacyInsert = { ...insert };
+  delete legacyInsert.unit_cost;
+  return legacyInsert;
 }
