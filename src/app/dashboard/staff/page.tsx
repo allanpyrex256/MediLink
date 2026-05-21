@@ -5,10 +5,13 @@ import { PageHeading } from "@/components/dashboard/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData, getTenantStaffDirectory } from "@/lib/data/repositories";
+import { canManageStaff, dashboardRole, dashboardRoleLabel } from "@/lib/rbac";
 import type { StaffInvitation, TenantStaffUser, UserRole } from "@/lib/types";
 import { StaffInviteForm } from "./staff-invite-form";
 
 const roleTone: Record<UserRole, "amber" | "blue" | "green" | "rose" | "slate"> = {
+  owner: "rose",
+  seller: "blue",
   admin: "rose",
   dentist: "green",
   doctor: "green",
@@ -27,27 +30,27 @@ const invitationTone: Record<StaffInvitation["status"], "amber" | "blue" | "gree
 export default async function StaffPage() {
   const data = await getDashboardData();
 
-  if (data.user.role !== "admin" && !data.user.is_platform_admin) {
+  if (!canManageStaff(data.user.role, data.user.is_platform_admin)) {
     redirect("/dashboard");
   }
 
   const directory = await getTenantStaffDirectory();
   const staffUsers = directory.users.filter((user) => user.role !== "patient");
   const activeInvitations = directory.invitations.filter((invite) => invite.status !== "accepted");
-  const owners = staffUsers.filter((user) => user.role === "admin").length;
+  const owners = staffUsers.filter((user) => dashboardRole(user.role) === "owner").length;
 
   return (
     <div>
       <PageHeading
         eyebrow="Owner access"
         title="Staff accounts"
-        description={`Invite people into ${data.tenant.name} and control what each account can see or change.`}
+        description={`Add sellers and pharmacists into ${data.tenant.name}. Staff do not register themselves.`}
       />
 
       <div className="mb-5 grid gap-4 md:grid-cols-3">
         <SummaryCard icon={Users} label="Workspace accounts" value={String(staffUsers.length)} tone="blue" />
-        <SummaryCard icon={ShieldCheck} label="Owners / admins" value={String(owners)} tone="rose" />
-        <SummaryCard icon={Clock3} label="Open invites" value={String(activeInvitations.length)} tone="amber" />
+        <SummaryCard icon={ShieldCheck} label="Owners" value={String(owners)} tone="rose" />
+        <SummaryCard icon={Clock3} label="Recent staff adds" value={String(activeInvitations.length)} tone="amber" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
@@ -59,7 +62,7 @@ export default async function StaffPage() {
               </div>
               <div>
                 <CardTitle>Current team</CardTitle>
-                <CardDescription>People who sign in under this same clinic, dental practice, hospital, or pharmacy tenant.</CardDescription>
+                <CardDescription>People who sign in with phone number and password under this business.</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -68,7 +71,7 @@ export default async function StaffPage() {
               <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
                 <tr>
                   <th className="px-5 py-3 font-semibold">Name</th>
-                  <th className="px-5 py-3 font-semibold">Email</th>
+                  <th className="px-5 py-3 font-semibold">Login phone</th>
                   <th className="px-5 py-3 font-semibold">Role</th>
                   <th className="px-5 py-3 font-semibold">Phone</th>
                   <th className="px-5 py-3 font-semibold">Added</th>
@@ -91,13 +94,13 @@ export default async function StaffPage() {
                   <UserPlus className="size-5" />
                 </div>
                 <div>
-                  <CardTitle>Invite staff</CardTitle>
-                  <CardDescription>The new account joins this same tenant with only the selected role permissions.</CardDescription>
+                  <CardTitle>Add staff account</CardTitle>
+                  <CardDescription>Create the phone login and choose exactly what this staff member can access.</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <StaffInviteForm tenantKind={data.tenant.tenant_kind} />
+              <StaffInviteForm />
             </CardContent>
           </Card>
 
@@ -108,8 +111,8 @@ export default async function StaffPage() {
                   <Mail className="size-5" />
                 </div>
                 <div>
-                  <CardTitle>Invitations</CardTitle>
-                  <CardDescription>Recent invite status for staff onboarding.</CardDescription>
+                  <CardTitle>Recent staff activity</CardTitle>
+                  <CardDescription>Recent staff accounts added from this owner dashboard.</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -120,20 +123,20 @@ export default async function StaffPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-slate-950">{invite.full_name}</p>
-                        <p className="mt-1 truncate text-xs font-medium text-slate-600">{invite.email}</p>
+                        <p className="mt-1 truncate text-xs font-medium text-slate-600">{invite.phone ?? invite.email}</p>
                       </div>
                       <Badge tone={invitationTone[invite.status]} className="capitalize">
                         {invite.status}
                       </Badge>
                     </div>
                     <p className="mt-2 text-xs font-medium text-slate-500">
-                      {roleLabel(invite.role)} - expires {formatDate(invite.expires_at)}
+                      {roleLabel(invite.role)} - added {formatDate(invite.created_at)}
                     </p>
                   </div>
                 ))
               ) : (
                 <div className="rounded-lg bg-slate-50 p-4 text-sm font-medium leading-6 text-slate-600">
-                  No invitations have been sent yet.
+                  No staff accounts have been added yet.
                 </div>
               )}
             </CardContent>
@@ -180,7 +183,7 @@ function StaffRow({ user }: { user: TenantStaffUser }) {
   return (
     <tr className="hover:bg-slate-50/80">
       <td className="px-5 py-4 font-bold text-slate-950">{user.full_name}</td>
-      <td className="px-5 py-4 text-slate-700">{user.email}</td>
+      <td className="px-5 py-4 text-slate-700">{user.phone ?? user.email}</td>
       <td className="px-5 py-4">
         <Badge tone={roleTone[user.role]}>{roleLabel(user.role)}</Badge>
       </td>
@@ -191,16 +194,7 @@ function StaffRow({ user }: { user: TenantStaffUser }) {
 }
 
 function roleLabel(role: UserRole) {
-  const labels: Record<UserRole, string> = {
-    admin: "Owner / Admin",
-    dentist: "Dentist",
-    doctor: "Doctor",
-    patient: "Patient",
-    pharmacist: "Pharmacist",
-    receptionist: "Receptionist",
-  };
-
-  return labels[role];
+  return dashboardRoleLabel(role);
 }
 
 function formatDate(value: string | null | undefined) {

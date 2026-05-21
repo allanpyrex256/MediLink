@@ -15,10 +15,8 @@ const orderActionSchema = z.object({
 });
 
 const pharmacyOrderRoles: UserRole[] = [
+  "owner",
   "admin",
-  "doctor",
-  "dentist",
-  "receptionist",
   "pharmacist",
 ];
 

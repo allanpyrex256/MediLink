@@ -4,7 +4,7 @@
 create extension if not exists "pgcrypto";
 
 create type public.tenant_kind as enum ('clinic', 'hospital', 'pharmacy', 'dentistry');
-create type public.user_role as enum ('admin', 'doctor', 'dentist', 'receptionist', 'pharmacist', 'patient');
+create type public.user_role as enum ('owner', 'seller', 'admin', 'doctor', 'dentist', 'receptionist', 'pharmacist', 'patient');
 create type public.tenant_status as enum ('active', 'trialing', 'past_due', 'disabled');
 create type public.appointment_status as enum ('pending', 'confirmed', 'completed', 'cancelled');
 create type public.payment_status as enum ('pending', 'processing', 'paid', 'failed', 'refunded');

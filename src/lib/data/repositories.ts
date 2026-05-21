@@ -76,6 +76,7 @@ async function getDemoDashboardData() {
       email: demoAccount.email,
       full_name: demoAccount.fullName,
       role: demoAccount.role,
+      phone: demoAccount.phone,
       is_platform_admin: demoAccount.isPlatformAdmin ?? false,
     },
   };
@@ -136,7 +137,7 @@ export async function getTenantStaffDirectory(): Promise<{
         email: account.email,
         full_name: account.fullName,
         role: account.role,
-        phone: null,
+        phone: account.phone,
         avatar_url: null,
         is_platform_admin: false,
         last_seen_at: null,

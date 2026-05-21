@@ -3,6 +3,7 @@ import {
   DEMO_ACCOUNT_COOKIE,
   DEMO_WORKSPACE_COOKIE,
   demoAccountForEmail,
+  demoAccountForPhone,
   normalizeDemoWorkspaceId,
 } from "@/lib/demo-session";
 import { cookieDomainForHost, isLocalDevelopmentHost } from "@/lib/tenant-host";
@@ -15,7 +16,7 @@ function safeNextPath(value: unknown) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const account = demoAccountForEmail(body.accountEmail);
+  const account = demoAccountForPhone(body.accountPhone) ?? demoAccountForEmail(body.accountEmail);
   const workspaceId = account?.workspaceId ?? normalizeDemoWorkspaceId(body.workspaceId);
   const next = safeNextPath(body.next);
   const response = NextResponse.json({ ok: true, next, workspaceId });

@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const maxUploadBytes = 5 * 1024 * 1024;
 const allowedExtensions = [".pdf", ".doc", ".docx", ".html", ".htm", ".txt", ".png", ".jpg", ".jpeg"];
-const uploadRoles: UserRole[] = ["admin", "receptionist"];
+const uploadRoles: UserRole[] = ["owner", "admin", "seller", "receptionist"];
 
 export async function GET() {
   const templates = await getTenantDocumentTemplates();

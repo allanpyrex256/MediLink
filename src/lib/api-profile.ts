@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { dashboardRole } from "@/lib/rbac";
 
 export async function getAuthenticatedApiProfile() {
   const supabase = await createSupabaseServerClient();
@@ -26,13 +27,15 @@ export async function getAuthenticatedApiProfile() {
 }
 
 export function canManageClinicalSetup(role: string) {
-  return role === "admin";
+  return dashboardRole(role) === "owner";
 }
 
 export function canManagePharmacy(role: string) {
-  return role === "admin" || role === "pharmacist";
+  const normalized = dashboardRole(role);
+  return normalized === "owner" || normalized === "pharmacist";
 }
 
 export function canManageFinance(role: string) {
-  return role === "admin" || role === "receptionist" || role === "pharmacist";
+  const normalized = dashboardRole(role);
+  return normalized === "owner" || normalized === "seller";
 }

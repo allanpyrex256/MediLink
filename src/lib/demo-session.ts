@@ -308,6 +308,7 @@ export const demoTenantProfiles: Record<
 
 export const demoAccountOptions: {
   email: string;
+  phone: string;
   password: string;
   fullName: string;
   role: UserRole;
@@ -317,71 +318,80 @@ export const demoAccountOptions: {
 }[] = [
   {
     email: "owner@medilink.africa",
+    phone: "+256700000001",
     password: "demo12345",
     fullName: "MediLink Platform Owner",
-    role: "admin",
+    role: "owner",
     workspaceId: "kampala-hospital",
     description: "MediLink Platform Owner",
     isPlatformAdmin: true,
   },
   {
     email: "admin@kampalahospital.ug",
+    phone: "+256700000101",
     password: "demo12345",
     fullName: "Kato Byaruhanga",
-    role: "admin",
+    role: "owner",
     workspaceId: "kampala-hospital",
     description: "Hospital Administrator - Operations & Staff Control",
   },
   {
     email: "manager@mengoclinic.ug",
+    phone: "+256700000102",
     password: "demo12345",
     fullName: "Nakato Ssempijja",
-    role: "admin",
+    role: "owner",
     workspaceId: "mengo-clinic",
     description: "Clinic Manager - Front Desk & Branch Operations",
   },
   {
     email: "admin@mukonomedical.ug",
+    phone: "+256700000103",
     password: "demo12345",
     fullName: "Achan Byaruhanga",
-    role: "admin",
+    role: "owner",
     workspaceId: "mukono-medical-centre",
     description: "Medical Center Admin - Departments & Billing",
   },
   {
     email: "admin@pearldental.ug",
+    phone: "+256700000104",
     password: "demo12345",
     fullName: "Dr. Miriam Kato",
-    role: "admin",
+    role: "owner",
     workspaceId: "pearl-dental",
     description: "Dental Practice Owner - Chairs, Treatments & Billing",
   },
   {
     email: "dentist@pearldental.ug",
+    phone: "+256700000105",
     password: "demo12345",
     fullName: "Dr. Isaac Nsubuga",
-    role: "dentist",
+    role: "pharmacist",
     workspaceId: "pearl-dental",
     description: "Dental Surgeon - Treatment Notes & Appointments",
   },
   {
     email: "reception@pearldental.ug",
+    phone: "+256700000106",
     password: "demo12345",
     fullName: "Nadia Namusoke",
-    role: "receptionist",
+    role: "seller",
     workspaceId: "pearl-dental",
     description: "Dental Reception - Bookings & Patient Intake",
   },
   {
     email: "pharmacy@vinepharmacy.ug",
+    phone: "+256700000201",
     password: "demo12345",
     fullName: "Turyasingura Nankya",
-    role: "pharmacist",
+    role: "owner",
     workspaceId: "vine-pharmacy",
     description: "Pharmacy Manager - Stock & Dispensing Control",
   },
   {
     email: "manager@goodlifepharmacy.ug",
+    phone: "+256700000202",
     password: "demo12345",
     fullName: "Okello Mwangi",
     role: "pharmacist",
@@ -390,25 +400,28 @@ export const demoAccountOptions: {
   },
   {
     email: "dr.namusoke@kampalahospital.ug",
+    phone: "+256700000107",
     password: "demo12345",
     fullName: "Dr. Sarah Namusoke",
-    role: "doctor",
+    role: "pharmacist",
     workspaceId: "kampala-hospital",
     description: "Senior Medical Officer - Patient Records",
   },
   {
     email: "reception@mengoclinic.ug",
+    phone: "+256700000108",
     password: "demo12345",
     fullName: "Nankya Ssempijja",
-    role: "receptionist",
+    role: "seller",
     workspaceId: "mengo-clinic",
     description: "Front Desk Reception - Appointments & Patient Intake",
   },
   {
     email: "patient@medilinkdemo.ug",
+    phone: "+256700000109",
     password: "demo12345",
     fullName: "Brian Kato",
-    role: "patient",
+    role: "seller",
     workspaceId: "kampala-hospital",
     description: "Patient Account - Book Appointments",
   },
@@ -435,6 +448,21 @@ export function demoTenantProfileForSlug(value: string | null | undefined) {
 }
 
 export function demoAccountForEmail(value: string | null | undefined) {
-  const normalized = value?.toLowerCase().trim();
+  const normalized = safeDecode(value)?.toLowerCase().trim();
   return demoAccountOptions.find((account) => account.email === normalized) ?? null;
+}
+
+export function demoAccountForPhone(value: string | null | undefined) {
+  const normalized = value?.replace(/\s/g, "");
+  return demoAccountOptions.find((account) => account.phone.replace(/\s/g, "") === normalized) ?? null;
+}
+
+function safeDecode(value: string | null | undefined) {
+  if (!value) return value;
+
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }

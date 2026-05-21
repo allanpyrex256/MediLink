@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   if (!profile) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canManagePharmacy(profile.role)) {
-    return NextResponse.json({ error: "Only administrators and pharmacists can add stock." }, { status: 403 });
+    return NextResponse.json({ error: "Only owners and pharmacists can add stock." }, { status: 403 });
   }
 
   const insert = buildInventoryInsert(parsed.data, profile.tenant_id);

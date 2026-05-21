@@ -16,7 +16,7 @@ const assetColumns: Record<BrandingAssetType, "logo_url" | "cover_image_url" | "
 };
 const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/avif"];
 const maxUploadBytes = 5 * 1024 * 1024;
-const uploadRoles: UserRole[] = ["admin"];
+const uploadRoles: UserRole[] = ["owner", "admin"];
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData().catch(() => null);

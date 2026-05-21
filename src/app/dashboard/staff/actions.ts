@@ -2,19 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { appConfig, hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
+import { hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
 import { getCurrentDemoWorkspaceId, getDashboardData } from "@/lib/data/repositories";
 import { saveLocalDemoStaffMember } from "@/lib/local-demo-store";
+import { normalizeUgandanPhone } from "@/lib/phone";
+import { canManageStaff, dashboardRoleLabel } from "@/lib/rbac";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { AppUser, StaffInvitation, TenantKind, UserRole } from "@/lib/types";
+import type { AppUser, StaffInvitation, UserRole } from "@/lib/types";
 
-const staffRoles = ["admin", "doctor", "dentist", "receptionist", "pharmacist"] as const;
+type StaffRole = Exclude<UserRole, "patient">;
 
-const inviteStaffSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+const staffRoles = ["seller", "pharmacist"] as const;
+
+const staffSchema = z.object({
   fullName: z.string().trim().min(2, "Enter the staff member's full name."),
-  phone: z.string().trim().max(32).optional(),
+  phone: z.string().trim().min(7, "Enter a phone number."),
+  password: z.string().min(8, "Temporary password must be at least 8 characters."),
   role: z.enum(staffRoles),
 });
 
@@ -27,10 +31,10 @@ export async function inviteStaffMember(
   _previousState: StaffInviteState,
   formData: FormData,
 ): Promise<StaffInviteState> {
-  const parsed = inviteStaffSchema.safeParse({
-    email: formData.get("email"),
+  const parsed = staffSchema.safeParse({
     fullName: formData.get("fullName"),
     phone: formData.get("phone"),
+    password: formData.get("password"),
     role: formData.get("role"),
   });
 
@@ -45,14 +49,17 @@ export async function inviteStaffMember(
     };
   }
 
+  const phone = normalizeUgandanPhone(parsed.data.phone);
+  if (!phone) return { status: "error", message: "Enter a valid phone number." };
+
   if (!hasSupabaseConfig()) {
-    return inviteDemoStaffMember(parsed.data);
+    return addDemoStaffMember({ ...parsed.data, phone });
   }
 
   if (!hasSupabaseAdminConfig()) {
     return {
       status: "error",
-      message: "Staff invites need SUPABASE_SERVICE_ROLE_KEY so MediLink can create tenant-linked auth users.",
+      message: "Adding staff needs SUPABASE_SERVICE_ROLE_KEY so MediLink can create phone login accounts.",
     };
   }
 
@@ -61,9 +68,7 @@ export async function inviteStaffMember(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { status: "error", message: "You must be signed in to invite staff." };
-  }
+  if (!user) return { status: "error", message: "You must be signed in to add staff." };
 
   const { data: profile } = await supabase
     .from("users")
@@ -71,115 +76,53 @@ export async function inviteStaffMember(
     .eq("id", user.id)
     .single();
 
-  if (!profile) {
-    return { status: "error", message: "Your user profile could not be found." };
-  }
-
-  if (profile.role !== "admin" && !profile.is_platform_admin) {
-    return { status: "error", message: "Only the owner or an administrator can invite staff." };
+  if (!profile || !canManageStaff(profile.role, profile.is_platform_admin)) {
+    return { status: "error", message: "Only the owner can add staff accounts." };
   }
 
   const admin = createSupabaseAdminClient();
-  const { data: tenant } = await admin
-    .from("tenants")
-    .select("tenant_kind")
-    .eq("id", profile.tenant_id)
-    .single();
-
-  if (!isRoleAllowedForTenant(parsed.data.role, tenant?.tenant_kind)) {
-    return {
-      status: "error",
-      message: "That role does not fit this business type.",
-    };
-  }
-
-  const { data: existingUsers } = await admin
-    .from("users")
-    .select("id")
-    .eq("tenant_id", profile.tenant_id)
-    .ilike("email", parsed.data.email)
-    .limit(1);
-
-  if (existingUsers?.length) {
-    return {
-      status: "error",
-      message: "That email is already a member of this workspace.",
-    };
-  }
-
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: invitation, error: invitationError } = await admin
-    .from("staff_invitations")
-    .insert({
+  const { error } = await admin.auth.admin.createUser({
+    phone,
+    password: parsed.data.password,
+    phone_confirm: true,
+    user_metadata: {
+      full_name: parsed.data.fullName,
+      phone,
+      role: parsed.data.role,
       tenant_id: profile.tenant_id,
-      email: parsed.data.email,
-      full_name: parsed.data.fullName,
-      phone: parsed.data.phone || null,
-      role: parsed.data.role,
-      invited_by: user.id,
-      expires_at: expiresAt,
-      status: "pending",
-    })
-    .select("id")
-    .single();
-
-  if (invitationError || !invitation) {
-    return {
-      status: "error",
-      message: invitationError?.message ?? "Unable to create the staff invitation.",
-    };
-  }
-
-  const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(parsed.data.email, {
-    data: {
-      full_name: parsed.data.fullName,
-      phone: parsed.data.phone || null,
-      role: parsed.data.role,
-      staff_invitation_id: invitation.id,
     },
-    redirectTo: `${appConfig.siteUrl}/auth/callback?next=/dashboard`,
   });
 
-  if (inviteError) {
-    await admin.from("staff_invitations").delete().eq("id", invitation.id);
-
-    return {
-      status: "error",
-      message: inviteError.message,
-    };
-  }
+  if (error) return { status: "error", message: error.message };
 
   revalidatePath("/dashboard/staff");
   revalidatePath("/dashboard");
 
   return {
     status: "success",
-    message: `${parsed.data.fullName} was invited as ${roleLabel(parsed.data.role)}.`,
+    message: `${parsed.data.fullName} can now log in as ${dashboardRoleLabel(parsed.data.role)} using ${phone}.`,
   };
 }
 
-async function inviteDemoStaffMember(
-  staff: z.infer<typeof inviteStaffSchema>,
+async function addDemoStaffMember(
+  staff: z.infer<typeof staffSchema> & { phone: string },
 ): Promise<StaffInviteState> {
   const data = await getDashboardData();
 
-  if (data.user.role !== "admin" && !data.user.is_platform_admin) {
-    return { status: "error", message: "Only the owner or an administrator can invite staff." };
-  }
-
-  if (!isRoleAllowedForTenant(staff.role, data.tenant.tenant_kind)) {
-    return { status: "error", message: "That role does not fit this business type." };
+  if (!canManageStaff(data.user.role, data.user.is_platform_admin)) {
+    return { status: "error", message: "Only the owner can add staff accounts." };
   }
 
   const workspaceId = await getCurrentDemoWorkspaceId();
   const now = new Date().toISOString();
+  const syntheticEmail = `${staff.phone.replace(/\D/g, "")}@phone.medilink.local`;
   const invitation: StaffInvitation = {
-    id: `local-invite-${crypto.randomUUID()}`,
+    id: `local-staff-${crypto.randomUUID()}`,
     tenant_id: data.tenant.id,
-    email: staff.email,
+    email: syntheticEmail,
     full_name: staff.fullName,
-    role: staff.role,
-    phone: staff.phone || null,
+    role: staff.role as StaffRole,
+    phone: staff.phone,
     status: "accepted",
     invited_by: data.user.id,
     sent_at: now,
@@ -191,10 +134,10 @@ async function inviteDemoStaffMember(
   const user: AppUser = {
     id: `local-user-${crypto.randomUUID()}`,
     tenant_id: data.tenant.id,
-    email: staff.email,
+    email: syntheticEmail,
     full_name: staff.fullName,
-    role: staff.role,
-    phone: staff.phone || null,
+    role: staff.role as UserRole,
+    phone: staff.phone,
     avatar_url: null,
     is_platform_admin: false,
     last_seen_at: null,
@@ -205,26 +148,6 @@ async function inviteDemoStaffMember(
 
   return {
     status: "success",
-    message: `${staff.fullName} was added locally as ${roleLabel(staff.role)}.`,
+    message: `${staff.fullName} was added locally as ${dashboardRoleLabel(staff.role)}.`,
   };
-}
-
-function isRoleAllowedForTenant(role: Exclude<UserRole, "patient">, tenantKind?: TenantKind) {
-  if (tenantKind === "pharmacy") return role === "admin" || role === "pharmacist";
-  if (tenantKind === "dentistry") return role === "admin" || role === "dentist" || role === "receptionist";
-  if (role === "dentist") return false;
-
-  return staffRoles.some((staffRole) => staffRole === role);
-}
-
-function roleLabel(role: Exclude<UserRole, "patient">) {
-  const labels: Record<Exclude<UserRole, "patient">, string> = {
-    admin: "Owner / Admin",
-    dentist: "Dentist",
-    doctor: "Doctor",
-    pharmacist: "Pharmacist",
-    receptionist: "Receptionist",
-  };
-
-  return labels[role];
 }

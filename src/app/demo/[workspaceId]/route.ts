@@ -9,7 +9,7 @@ import {
 import { cookieDomainForHost, isLocalDevelopmentHost } from "@/lib/tenant-host";
 import type { UserRole } from "@/lib/types";
 
-const demoRoles: UserRole[] = ["admin", "doctor", "dentist", "receptionist", "pharmacist", "patient"];
+const demoRoles: UserRole[] = ["owner", "seller", "pharmacist", "admin", "receptionist"];
 
 function safeNextPath(value: string | null) {
   if (!value) return "/dashboard";
@@ -21,6 +21,15 @@ function safeDemoRole(value: string | null): UserRole | null {
   return demoRoles.includes(value as UserRole) ? (value as UserRole) : null;
 }
 
+function originFromRequest(request: NextRequest) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost ?? request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const protocol = forwardedProto ? `${forwardedProto}:` : request.nextUrl.protocol;
+
+  return host ? `${protocol}//${host}` : request.nextUrl.origin;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ workspaceId: string }> },
@@ -28,21 +37,24 @@ export async function GET(
   const { workspaceId } = await params;
   const demoWorkspaceId = demoWorkspaceIdForSlug(workspaceId) ?? normalizeDemoWorkspaceId(workspaceId);
   const requestedAccount = request.nextUrl.searchParams.get("account");
+  const requestedAccountEmail = requestedAccount?.toLowerCase().trim();
+  const requestedAccountPhone = requestedAccount?.replace(/\s/g, "");
   const requestedRole = safeDemoRole(request.nextUrl.searchParams.get("role"));
   const demoAccount =
     demoAccountOptions.find(
       (account) =>
         account.workspaceId === demoWorkspaceId &&
-        requestedAccount &&
-        account.email === requestedAccount.toLowerCase().trim(),
+        Boolean(requestedAccount) &&
+        (account.email === requestedAccountEmail ||
+          account.phone.replace(/\s/g, "") === requestedAccountPhone),
     ) ??
     demoAccountOptions.find(
       (account) =>
         account.workspaceId === demoWorkspaceId &&
-        account.role === (requestedRole ?? "admin"),
+        account.role === (requestedRole ?? "owner"),
     );
   const next = safeNextPath(request.nextUrl.searchParams.get("next"));
-  const response = NextResponse.redirect(new URL(next, request.url));
+  const response = NextResponse.redirect(new URL(next, originFromRequest(request)));
   const cookieDomain = cookieDomainForHost(request.headers.get("host"));
   const cookieOptions = {
     httpOnly: true,

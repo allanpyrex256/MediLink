@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   if (!profile) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!canManageFinance(profile.role)) {
-    return NextResponse.json({ error: "Only administrators, receptionists, and pharmacists can open shifts." }, { status: 403 });
+    return NextResponse.json({ error: "Only owners and sellers can open shifts." }, { status: 403 });
   }
 
   const { data: existingShift } = await supabase

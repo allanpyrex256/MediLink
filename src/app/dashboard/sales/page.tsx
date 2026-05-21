@@ -9,6 +9,7 @@ import { PageHeading } from "@/components/dashboard/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
+import { dashboardRoleForUser } from "@/lib/rbac";
 import type { SalesShiftType } from "@/lib/types";
 import { formatUgandanCurrency } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export default async function DailySalesPage({
   const selectedDate = normalizeDate(params.date) ?? todayInEastAfrica();
   const selectedShiftType = normalizeShiftType(params.shift) ?? "day";
   const data = await getDashboardData();
+  const role = dashboardRoleForUser(data.user);
   const daySales = data.dailySales
     .filter((sale) => sale.sale_date === selectedDate)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -50,6 +52,7 @@ export default async function DailySalesPage({
         title="Shift sales register"
         description="Every day starts with a seller shift. Type the drug or item name, quantity, and price manually, then close the shift."
         actions={
+          role === "seller" ? null :
           <div className="flex flex-wrap items-end gap-2">
             <form action="/dashboard/sales" className="flex flex-wrap items-end gap-2">
               <input type="hidden" name="shift" value={selectedShiftType} />
