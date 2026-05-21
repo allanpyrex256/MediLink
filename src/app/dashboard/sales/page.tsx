@@ -88,14 +88,6 @@ export default async function DailySalesPage({
               <FileDown className="size-4" />
               PDF
             </a>
-            <a
-              href={`${reportUrl}&mode=inline`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-400 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm shadow-slate-300/70 transition hover:border-violet-400 hover:bg-violet-50"
-            >
-              Print
-            </a>
           </div>
         }
       />
