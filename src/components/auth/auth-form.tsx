@@ -150,32 +150,15 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
         <CardHeader>
           <Logo label={authLabel} tagline={authTagline} initials={authInitials} color={authColor} />
           <CardTitle className="mt-6">
-            {mode === "login" ? "Admin and staff login" : "Create owner account"}
+            {mode === "login" ? "Sign in with phone" : "Create owner account"}
           </CardTitle>
           <CardDescription>
             {mode === "login"
-              ? "Owners/admins, sellers, and pharmacists all sign in here with the phone number and password assigned to them."
+              ? "Use the phone number and password assigned to your MediLink account."
               : "The first account becomes the owner. Staff accounts are added later by the owner."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {mode === "login" ? (
-            <div className="mb-4 grid gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-slate-700">
-              <p className="font-bold text-slate-950">Use this login for:</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-white px-3 py-1 font-semibold text-sky-700 ring-1 ring-sky-200">
-                  Owner/Admin
-                </span>
-                <span className="rounded-full bg-white px-3 py-1 font-semibold text-sky-700 ring-1 ring-sky-200">
-                  Seller
-                </span>
-                <span className="rounded-full bg-white px-3 py-1 font-semibold text-sky-700 ring-1 ring-sky-200">
-                  Pharmacist
-                </span>
-              </div>
-            </div>
-          ) : null}
-
           {!configured ? (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-800">
               Demo mode is active. Use password <span className="font-bold">demo12345</span>.
@@ -235,6 +218,13 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
               {mode === "login" ? "Create owner account" : "Sign in"}
             </a>
           </p>
+          {mode === "login" ? (
+            <p className="mt-3 text-center text-sm">
+              <a className="font-semibold text-sky-700 hover:text-sky-800" href="/reset-password">
+                Forgot password?
+              </a>
+            </p>
+          ) : null}
         </CardContent>
       </Card>
     </div>
