@@ -42,9 +42,9 @@ export default async function StaffPage() {
   return (
     <div>
       <PageHeading
-        eyebrow="Owner access"
+        eyebrow="Admin access"
         title="Staff accounts"
-        description={`Add sellers and pharmacists into ${data.tenant.name}. Staff do not register themselves.`}
+        description={`Add sellers and pharmacists into ${data.tenant.name} from any phone, tablet, or computer. Staff do not register themselves.`}
       />
 
       <div className="mb-5 grid gap-4 md:grid-cols-3">
@@ -95,7 +95,7 @@ export default async function StaffPage() {
                 </div>
                 <div>
                   <CardTitle>Add staff account</CardTitle>
-                  <CardDescription>Create the phone login and choose exactly what this staff member can access.</CardDescription>
+                  <CardDescription>Create a phone login from any device and choose exactly what this staff member can access.</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -112,7 +112,7 @@ export default async function StaffPage() {
                 </div>
                 <div>
                   <CardTitle>Recent staff activity</CardTitle>
-                  <CardDescription>Recent staff accounts added from this owner dashboard.</CardDescription>
+                  <CardDescription>Recent staff accounts added from this admin dashboard.</CardDescription>
                 </div>
               </div>
             </CardHeader>

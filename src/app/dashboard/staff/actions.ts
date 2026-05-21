@@ -77,7 +77,7 @@ export async function inviteStaffMember(
     .single();
 
   if (!profile || !canManageStaff(profile.role, profile.is_platform_admin)) {
-    return { status: "error", message: "Only the owner can add staff accounts." };
+    return { status: "error", message: "Only an owner or admin can add staff accounts." };
   }
 
   const admin = createSupabaseAdminClient();
@@ -93,7 +93,16 @@ export async function inviteStaffMember(
     },
   });
 
-  if (error) return { status: "error", message: error.message };
+  if (error) {
+    const needsMigration = error.message.toLowerCase().includes("database error creating new user");
+
+    return {
+      status: "error",
+      message: needsMigration
+        ? "Database is not ready for phone staff accounts. Run the Supabase migration 20260521170000_three_role_phone_auth.sql, then try again."
+        : error.message,
+    };
+  }
 
   revalidatePath("/dashboard/staff");
   revalidatePath("/dashboard");
@@ -110,7 +119,7 @@ async function addDemoStaffMember(
   const data = await getDashboardData();
 
   if (!canManageStaff(data.user.role, data.user.is_platform_admin)) {
-    return { status: "error", message: "Only the owner can add staff accounts." };
+    return { status: "error", message: "Only an owner or admin can add staff accounts." };
   }
 
   const workspaceId = await getCurrentDemoWorkspaceId();
