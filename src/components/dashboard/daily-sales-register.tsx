@@ -8,6 +8,7 @@ import {
   type TdHTMLAttributes,
   type ThHTMLAttributes,
 } from "react";
+import Link from "next/link";
 import {
   AlertCircle,
   CheckCircle2,
@@ -519,6 +520,7 @@ export function DailySalesRegister({
                 </CardDescription>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <ShiftSheetSwitch selectedDate={selectedDate} selectedShiftType={selectedShiftType} />
                 <label className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <input
@@ -693,6 +695,33 @@ function Field({
       <span>{label}</span>
       {children}
     </label>
+  );
+}
+
+function ShiftSheetSwitch({
+  selectedDate,
+  selectedShiftType,
+}: {
+  selectedDate: string;
+  selectedShiftType: SalesShiftType;
+}) {
+  return (
+    <div className="grid min-w-[250px] grid-cols-2 gap-1 rounded-lg border border-slate-300 bg-slate-100 p-1">
+      {(["day", "night"] as const).map((type) => (
+        <Link
+          key={type}
+          href={`/dashboard/sales?date=${selectedDate}&shift=${type}`}
+          className={cn(
+            "inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-semibold transition",
+            selectedShiftType === type
+              ? "bg-sky-600 text-white shadow-sm shadow-sky-200"
+              : "bg-white text-slate-700 hover:bg-sky-50 hover:text-sky-800",
+          )}
+        >
+          {shiftTypeLabel(type)}
+        </Link>
+      ))}
+    </div>
   );
 }
 

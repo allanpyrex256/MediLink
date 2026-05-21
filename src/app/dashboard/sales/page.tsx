@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
 import type { DailySale, SalesShiftType } from "@/lib/types";
-import { cn, formatUgandanCurrency } from "@/lib/utils";
+import { formatUgandanCurrency } from "@/lib/utils";
 
 export default async function DailySalesPage({
   searchParams,
@@ -185,25 +185,6 @@ export default async function DailySalesPage({
         </Card>
       </div>
 
-      <div className="mb-5 rounded-lg border border-slate-300 bg-white p-2 shadow-sm shadow-slate-300/40">
-        <div className="grid gap-2 sm:grid-cols-2">
-          {(["day", "night"] as const).map((type) => (
-            <Link
-              key={type}
-              href={`/dashboard/sales?date=${selectedDate}&shift=${type}`}
-              className={cn(
-                "flex min-h-12 items-center justify-center rounded-md border px-4 text-sm font-semibold transition",
-                selectedShiftType === type
-                  ? "border-sky-600 bg-sky-600 text-white shadow-md shadow-sky-200"
-                  : "border-slate-300 bg-white text-slate-700 hover:border-sky-300 hover:bg-sky-50",
-              )}
-            >
-              {shiftTypeLabel(type)}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       <DailySalesRegister
         key={`${selectedDate}:${selectedShiftType}:${activeShift?.id ?? "no-shift"}`}
         sales={selectedShiftSales}
@@ -271,8 +252,4 @@ function shiftDate(shift: { shift_date?: string; opened_at: string }) {
 
 function shiftType(shift: { shift_type?: string }) {
   return shift.shift_type === "night" ? "night" : "day";
-}
-
-function shiftTypeLabel(type: SalesShiftType) {
-  return type === "night" ? "Night Shift" : "Day Shift";
 }
