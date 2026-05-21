@@ -158,6 +158,9 @@ export function DailySalesRegister({
       return matchesQuery;
     });
   }, [query, sales]);
+  const shiftTotal = sales
+    .filter((sale) => sale.status === "sold")
+    .reduce((sum, sale) => sum + Number(sale.total_amount), 0);
 
   const activeShiftSales = activeShift
     ? sales.filter((sale) => sale.shift_id === activeShift.id && sale.status === "sold")
@@ -537,6 +540,16 @@ export function DailySalesRegister({
                       </tr>
                     )}
                   </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-100 text-sm font-bold text-slate-950">
+                      <SheetCell colSpan={2} className="text-right uppercase tracking-normal text-slate-600">
+                        Total price of items sold
+                      </SheetCell>
+                      <SheetCell className="text-right">
+                        {formatUgandanCurrency(shiftTotal)}
+                      </SheetCell>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
               {showSaleRow && activeShift ? (
