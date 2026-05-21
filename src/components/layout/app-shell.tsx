@@ -88,7 +88,6 @@ const pharmacyNavigation: NavigationItem[] = [
   { href: "/dashboard/sales", label: "Daily Sales", icon: ShoppingCart, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/payments", label: "Payments", icon: CreditCard, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/inventory", label: "Inventory", icon: Package, roles: ["admin", "pharmacist"] },
-  { href: "/dashboard/prescriptions", label: "Prescriptions", icon: ReceiptText, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/suppliers", label: "Suppliers", icon: Truck, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/expiry-alerts", label: "Expiry Alerts", icon: Pill, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/staff", label: "Staff", icon: ShieldCheck, roles: ["admin"] },
