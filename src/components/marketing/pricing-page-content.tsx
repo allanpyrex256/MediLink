@@ -50,7 +50,7 @@ const plans = [
       "Drug inventory management",
       "Expiry alerts",
       "Sales & receipts",
-      "Prescription orders",
+      "Daily sales sheet",
       "3 User Accounts",
       "Email & WhatsApp Support",
     ],

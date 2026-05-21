@@ -84,7 +84,7 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
         <div>
           <h1 className="text-2xl font-bold text-[#080833]">Order from {tenant.name}</h1>
           <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
-            Request medicine, refills, or prescription dispensing without entering the staff dashboard.
+            Request medicine or refills without entering the staff dashboard.
           </p>
         </div>
       </div>
@@ -95,10 +95,10 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
           <Input label="Phone number" placeholder="+256 700 000 000" value={phone} onChange={(event) => setPhone(event.target.value)} />
         </div>
         <div className="grid gap-4 md:grid-cols-[1fr_140px]">
-          <Input label="Medicine or prescription request" placeholder="Amoxicillin 500mg, BP refill, inhaler..." value={medicine} onChange={(event) => setMedicine(event.target.value)} />
+          <Input label="Medicine request" placeholder="Amoxicillin 500mg, BP refill, inhaler..." value={medicine} onChange={(event) => setMedicine(event.target.value)} />
           <Input label="Quantity" type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
         </div>
-        <Input label="Prescriber optional" placeholder="Dr. Namusoke / clinic prescription" value={prescriber} onChange={(event) => setPrescriber(event.target.value)} />
+        <Input label="Clinic note optional" placeholder="Dr. Namusoke / clinic note" value={prescriber} onChange={(event) => setPrescriber(event.target.value)} />
         <div className="grid gap-4 md:grid-cols-2">
           <Select label="Pickup or delivery" value={pickupOption} onChange={(event) => setPickupOption(event.target.value)}>
             <option value="pickup">Pick up at pharmacy</option>
@@ -120,14 +120,14 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
         ) : null}
         <Textarea
           label="Notes optional"
-          placeholder="Upload flow comes later. For now, describe the prescription or dosage instructions."
+          placeholder="Add dosage instructions, delivery details, or anything the pharmacy should know."
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
         />
 
         <div className="rounded-lg border border-dashed border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold leading-6 text-emerald-800">
           <UploadCloud className="mb-2 size-5" aria-hidden="true" />
-          Prescription image upload is the next step. This demo captures the request and sends it to the pharmacy queue.
+          Image upload can be added later. This demo captures the request and sends it to the pharmacy queue.
         </div>
 
         {status ? (

@@ -89,7 +89,7 @@ export function PublicPaymentRequest({ tenant }: { tenant: Tenant }) {
         </div>
         <Textarea
           label="What are you paying for?"
-          placeholder="Consultation, prescription, invoice number, lab test, or medicine order"
+          placeholder="Consultation, invoice number, lab test, medicine order, or clinic service"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
         />

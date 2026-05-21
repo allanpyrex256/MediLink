@@ -79,13 +79,13 @@ export function PaymentPanel({
         <CardTitle>{isPharmacy ? "Collect pharmacy payment" : "Collect appointment payment"}</CardTitle>
         <CardDescription>
           {isPharmacy
-            ? "Initiate mobile money or card payment for prescription orders."
+            ? "Initiate mobile money or card payment for pharmacy sales."
             : "Initiate mobile money or card payment with auditable references."}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <Select
-          label={isPharmacy ? "Prescription order" : "Appointment"}
+          label={isPharmacy ? "Pharmacy sale" : "Appointment"}
           value={appointmentId}
           onChange={(event) => setAppointmentId(event.target.value)}
         >

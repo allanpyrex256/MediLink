@@ -12,7 +12,7 @@ export default async function AppointmentsPage() {
   const bookingUrl = tenantBookingUrl(data.tenant);
 
   if (data.tenant.tenant_kind === "pharmacy") {
-    redirect("/dashboard/prescriptions");
+    redirect("/dashboard/sales");
   }
 
   return (

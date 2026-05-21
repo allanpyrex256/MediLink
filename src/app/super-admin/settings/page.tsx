@@ -38,7 +38,7 @@ const ownerControls = [
   },
   {
     title: "Monitor storage",
-    description: "Track logos, cover images, reports, receipts, prescriptions, and uploaded documents.",
+    description: "Track logos, cover images, reports, receipts, and uploaded documents.",
     icon: Database,
   },
   {

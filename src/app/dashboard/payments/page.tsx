@@ -20,7 +20,7 @@ export default async function PaymentsPage() {
         title={isPharmacy ? "Pharmacy sales and invoices" : "Mobile money and invoices"}
         description={
           isPharmacy
-            ? "Track counter sales, prescription payments, MTN MoMo, Airtel Money, and receipts."
+            ? "Track counter sales, MTN MoMo, Airtel Money, and receipts."
             : "Collect appointment payments through MTN Mobile Money, Airtel Money, Flutterwave, or Stripe."
         }
       />

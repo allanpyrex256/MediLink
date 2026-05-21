@@ -225,7 +225,7 @@ export const subscriptionPlans = [
     name: "Advanced Pharmacy",
     price: 100_000,
     tenants: 6,
-    features: "Everything in Basic plus prescription orders and pickup tracking",
+    features: "Everything in Basic plus shift reports and pickup tracking",
   },
   {
     name: "Enterprise",

@@ -1529,7 +1529,7 @@ function buildPharmacyDashboardData(
     scheduled_at: prescription.fulfillment_due,
     duration_minutes: 15,
     status: prescription.status === "collected" ? "completed" : "pending",
-    reason: `Prescription order: ${prescription.medicine}`,
+    reason: `Medicine order: ${prescription.medicine}`,
     notes: prescription.prescriber,
     fee: prescription.total_amount,
     payment_status: prescription.status === "collected" ? "paid" : "pending",
@@ -1541,7 +1541,7 @@ function buildPharmacyDashboardData(
     user,
     metrics: [
       {
-        label: "Active prescriptions",
+        label: "Open medicine orders",
         value: String(prescriptions.filter((item) => item.status !== "collected").length),
         change: "Dispensing queue",
         tone: "blue",

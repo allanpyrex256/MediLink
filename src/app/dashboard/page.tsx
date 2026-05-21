@@ -22,11 +22,10 @@ import { AppointmentTable } from "@/components/dashboard/appointment-table";
 import { DoctorAvailability } from "@/components/dashboard/doctor-availability";
 import { InventorySnapshot } from "@/components/dashboard/inventory-snapshot";
 import { PaymentList } from "@/components/dashboard/payment-list";
-import { PrescriptionTable } from "@/components/dashboard/prescription-table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
-import type { DashboardData, InventoryItem, LabResult, Payment, PrescriptionOrder } from "@/lib/types";
+import type { DashboardData, InventoryItem, LabResult, Payment } from "@/lib/types";
 import { formatUgandanCurrency } from "@/lib/utils";
 
 type Tone = "blue" | "green" | "amber" | "rose" | "slate" | "violet";
@@ -188,8 +187,8 @@ function DoctorDashboard({ data }: { data: DashboardData }) {
               prescription.status === "active" ? "blue" : "slate",
             ),
           )}
-          href="/dashboard/prescriptions"
-          action="Open prescriptions"
+          href="/dashboard/emr"
+          action="Open EMR"
         />
         <HospitalLabCard labResults={data.labResults} />
       </div>
@@ -864,9 +863,6 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
     ["low_stock", "out_of_stock"].includes(item.status),
   );
   const expiredMedicines = data.inventory.filter((item) => item.status === "expiring");
-  const prescriptionsPending = data.prescriptions.filter((prescription) =>
-    ["received", "dispensing", "ready"].includes(prescription.status),
-  );
   const salesToday = paidTotal(data.payments) || 1860000;
   const mobileMoneyPayments =
     data.payments
@@ -879,9 +875,9 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
     .filter((payment) => payment.status === "paid" && payment.provider === "airtel_money")
     .reduce((sum, payment) => sum + Number(payment.amount), 0) || 420000;
   const profitToday = Math.round(salesToday * 0.28);
-  const prescriptionSteps = [
-    worklistItem("1. Customer brings prescription", "Record customer name, prescriber, and medicine requested.", "blue"),
-    worklistItem("2. Search medicine", "Check available quantity before selling.", lowStock.length ? "amber" : "green"),
+  const saleSteps = [
+    worklistItem("1. Search medicine", "Check available quantity before selling.", lowStock.length ? "amber" : "green"),
+    worklistItem("2. Enter sale", "Type item name, quantity, and selling price.", "blue"),
     worklistItem("3. Cash or MoMo payment", `MTN ${formatDashboardMoney(mtnMomo)} / Airtel ${formatDashboardMoney(airtelMoney)}`, "green"),
     worklistItem("4. Print receipt", "Stock reduces after sale is completed.", "violet"),
   ];
@@ -890,14 +886,14 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
     <DashboardFrame
       eyebrow="Pharmacy dashboard"
       title={`${data.tenant.name} POS dashboard`}
-      description="Simple sales, mobile money, stock, expiry alerts, receipts, and prescription orders for Ugandan pharmacies."
+      description="Simple sales, mobile money, stock, expiry alerts, and receipts for Ugandan pharmacies."
       tone="green"
     >
       <BusinessMetricGrid>
         <MetricCard
           label="Sales Today"
           value={formatDashboardMoney(salesToday)}
-          detail="Counter sales and prescriptions"
+          detail="Counter sales"
           icon={WalletCards}
           tone="green"
           href="/dashboard/payments"
@@ -917,14 +913,6 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           icon={Package}
           tone={lowStock.length ? "rose" : "green"}
           href="/dashboard/expiry-alerts"
-        />
-        <MetricCard
-          label="Prescriptions Pending"
-          value={String(prescriptionsPending.length)}
-          detail="Not yet picked up"
-          icon={ReceiptText}
-          tone="blue"
-          href="/dashboard/prescriptions"
         />
         <MetricCard
           label="Expired Medicines"
@@ -948,26 +936,23 @@ function PharmacyDashboard({ data }: { data: DashboardData }) {
           { label: "New Sale", href: "/dashboard/payments", icon: ShoppingCart },
           { label: "Add Medicine", href: "/dashboard/inventory?action=add-item", icon: Package },
           { label: "Print Receipt", href: "/dashboard/payments", icon: ReceiptText },
-          { label: "Prescription Order", href: "/dashboard/prescriptions", icon: ShieldCheck },
           { label: "Expiry Alerts", href: "/dashboard/expiry-alerts", icon: Pill },
         ]}
       />
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-[0.85fr_1.15fr_0.9fr]">
+      <div className="mt-6 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
         <WorklistCard
           title="Pharmacy sale workflow"
-          description="The everyday counter process: prescription, stock check, payment, receipt."
+          description="The everyday counter process: stock check, payment, receipt."
           icon={ShoppingCart}
-          items={prescriptionSteps}
+          items={saleSteps}
           href="/dashboard/payments"
           action="Open sales"
         />
-        <PrescriptionTable prescriptions={data.prescriptions.slice(0, 8)} title="Prescription Orders" />
         <InventorySnapshot items={data.inventory} title="Low stock and expiry alerts" />
       </div>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-3">
-        <PharmacyPrescriptionCard prescriptions={data.prescriptions} />
+      <div className="mt-6 grid gap-5 xl:grid-cols-2">
         <PharmacyStockCard items={data.inventory} />
         <FinanceSnapshot
           title="MTN and Airtel tracking"
@@ -1362,24 +1347,6 @@ function HospitalLabCard({ labResults }: { labResults: LabResult[] }) {
   );
 }
 
-function PharmacyPrescriptionCard({ prescriptions }: { prescriptions: PrescriptionOrder[] }) {
-  return (
-    <WorklistCard
-      title="Prescription orders"
-      description="Simple tracking for who prescribed, what was given, quantity, and pickup."
-      icon={ShieldCheck}
-      items={[
-        laneItem("Received", prescriptions, "received", "blue"),
-        laneItem("Preparing", prescriptions, "dispensing", "amber"),
-        laneItem("Ready", prescriptions, "ready", "green"),
-        laneItem("Picked Up", prescriptions, "collected", "slate"),
-      ]}
-      href="/dashboard/prescriptions"
-      action="Open prescriptions"
-    />
-  );
-}
-
 function PharmacyStockCard({ items }: { items: InventoryItem[] }) {
   const expiring = items.filter((item) => item.status === "expiring").length;
   const out = items.filter((item) => item.status === "out_of_stock").length;
@@ -1399,16 +1366,6 @@ function PharmacyStockCard({ items }: { items: InventoryItem[] }) {
       action="Open inventory"
     />
   );
-}
-
-function laneItem(
-  title: string,
-  prescriptions: PrescriptionOrder[],
-  status: PrescriptionOrder["status"],
-  tone: Tone,
-) {
-  const count = prescriptions.filter((prescription) => prescription.status === status).length;
-  return worklistItem(title, `${count} order${count === 1 ? "" : "s"}`, tone);
 }
 
 function worklistItem(title: string, body: string, tone: Tone): WorklistItem {

@@ -23,7 +23,7 @@ export default async function NotificationsPage() {
         title={isPharmacy ? "Customer reminders" : "Patient reminders"}
         description={
           isPharmacy
-            ? "Queued and sent prescription pickup reminders through email, WhatsApp, and in-app notifications."
+            ? "Queued and sent pickup and delivery reminders through email, WhatsApp, and in-app notifications."
             : "Queued and sent appointment reminders through email, WhatsApp, and in-app notifications."
         }
         actions={

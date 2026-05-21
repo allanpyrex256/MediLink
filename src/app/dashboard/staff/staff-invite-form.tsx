@@ -49,7 +49,7 @@ const roleOptions: Array<{
   {
     value: "pharmacist",
     label: "Pharmacist",
-    description: "Inventory, prescriptions, dispensing, and pharmacy payments.",
+    description: "Inventory, counter sales, stock updates, and pharmacy payments.",
     tenantKinds: ["clinic", "hospital", "pharmacy"],
   },
 ];

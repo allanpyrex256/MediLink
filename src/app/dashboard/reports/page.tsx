@@ -61,7 +61,7 @@ export default async function ReportsPage() {
   ];
   const reportPacks = isPharmacy
     ? [
-        { label: "Daily prescription ledger", href: "/api/documents/daily-prescription-ledger" },
+        { label: "Daily sales ledger", href: "/api/documents/daily-sales-ledger" },
         { label: "Inventory reorder watch", href: "/api/documents/inventory-reorder-watch" },
         { label: "Mobile money reconciliation", href: "/api/documents/mobile-money-reconciliation" },
         { label: "Sales growth", href: "/api/documents/sales-growth" },
@@ -80,7 +80,7 @@ export default async function ReportsPage() {
         title={`${brand.name} reports`}
         description={
           isPharmacy
-            ? "Operational analytics for sales, prescription volume, inventory risk, and payment status."
+            ? "Operational analytics for sales, inventory risk, and payment status."
             : "Operational analytics for revenue, care volume, patient retention, and payment risk."
         }
         actions={
@@ -122,7 +122,7 @@ export default async function ReportsPage() {
             />
             <CardTitle>{isPharmacy ? "Sales performance" : "Revenue performance"}</CardTitle>
             <CardDescription>
-              {isPharmacy ? "Monthly prescription order collections and demand signal." : "Monthly appointment collections and demand signal."}
+              {isPharmacy ? "Monthly counter sales collections and demand signal." : "Monthly appointment collections and demand signal."}
             </CardDescription>
           </CardHeader>
           <CardContent>

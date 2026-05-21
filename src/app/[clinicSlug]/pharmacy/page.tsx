@@ -20,7 +20,7 @@ export async function generateMetadata({
   return {
     title: data ? `Pharmacy Orders | ${data.tenant.name}` : "Pharmacy Orders | MediLink",
     description: data
-      ? `Request medicine or prescription dispensing from ${data.tenant.name}.`
+      ? `Request medicine or refills from ${data.tenant.name}.`
       : "Request medicine through MediLink.",
   };
 }
@@ -67,7 +67,7 @@ export default async function PublicPharmacyPage({
           </div>
           <h2 className="mt-5 text-2xl font-bold text-slate-950">Medicine request link</h2>
           <p className="mt-3 text-sm font-medium leading-6 text-slate-600">
-            Customers can request medicines, refills, prescription pickup, or delivery. Delivery requests include the address and enter {brand.name}&apos;s prescription/order queue.
+            Customers can request medicines, refills, pickup, or delivery. Delivery requests include the address and enter {brand.name}&apos;s medicine order queue.
           </p>
           <div className="mt-5 rounded-lg bg-slate-50 p-4">
             <p className="text-sm font-bold text-slate-950">Public stock preview</p>

@@ -351,7 +351,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     const fallbackData = buildDemoDashboardData();
     const normalizedTenant = (tenant as Tenant | null) ?? fallbackData.tenant;
     const isPharmacy = normalizedTenant.tenant_kind === "pharmacy";
-    const prescriptionAppointments: Appointment[] = normalizedPrescriptions.map((prescription) => ({
+    const medicineOrderAppointments: Appointment[] = normalizedPrescriptions.map((prescription) => ({
       id: `rx-${prescription.id}`,
       tenant_id: tenantId,
       doctor_id: prescription.id,
@@ -359,7 +359,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       scheduled_at: prescription.fulfillment_due,
       duration_minutes: 15,
       status: prescription.status === "collected" ? "completed" : "pending",
-      reason: `Prescription order: ${prescription.medicine}`,
+      reason: `Medicine order: ${prescription.medicine}`,
       notes:
         prescription.fulfillment_method === "delivery"
           ? `Delivery: ${prescription.delivery_address ?? "address missing"}`
@@ -398,8 +398,8 @@ export async function getDashboardData(): Promise<DashboardData> {
       patients: normalizedPatients.length
         ? normalizedPatients
         : fallbackData.patients,
-      appointments: isPharmacy && prescriptionAppointments.length
-        ? prescriptionAppointments
+      appointments: isPharmacy && medicineOrderAppointments.length
+        ? medicineOrderAppointments
         : normalizedAppointments.length
         ? normalizedAppointments
         : fallbackData.appointments,
@@ -450,7 +450,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       metrics: isPharmacy
         ? [
             {
-              label: "Active prescriptions",
+              label: "Open medicine orders",
               value: String(effectivePrescriptions.filter((item) => item.status !== "collected").length),
               change: "Live from Supabase",
               tone: "blue",

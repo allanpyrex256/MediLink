@@ -22,7 +22,7 @@ export default async function EmrPage() {
   const data = await getDashboardData();
 
   if (data.tenant.tenant_kind === "pharmacy") {
-    redirect("/dashboard/prescriptions");
+    redirect("/dashboard/sales");
   }
 
   return (

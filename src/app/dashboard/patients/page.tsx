@@ -34,7 +34,7 @@ export default async function PatientsPage() {
   ];
 
   if (data.tenant.tenant_kind === "pharmacy") {
-    redirect("/dashboard/prescriptions");
+    redirect("/dashboard/sales");
   }
 
   return (

@@ -60,10 +60,10 @@ export async function GET(request: NextRequest, { params }: DocumentContext) {
       );
     case "patient-growth":
       return csvDownload(patientGrowthRows(data), fileName(data, "patient-growth", "csv"), disposition);
-    case "daily-prescription-ledger":
+    case "daily-sales-ledger":
       return csvDownload(
-        prescriptionLedgerRows(data),
-        fileName(data, "daily-prescription-ledger", "csv"),
+        dailySalesLedgerRows(data),
+        fileName(data, "daily-sales-ledger", "csv"),
         disposition,
       );
     case "inventory-reorder-watch":
@@ -273,7 +273,7 @@ function operationalReport(data: DashboardData) {
         values:
           data.tenant.tenant_kind === "pharmacy"
             ? [
-                ["Prescription orders", String(data.prescriptions.length)],
+                ["Sales entries", String(data.payments.length)],
                 ["Inventory items", String(data.inventory.length)],
                 ["Low or risky stock", String(data.inventory.filter((item) => item.status !== "in_stock").length)],
               ]
@@ -366,19 +366,16 @@ function patientGrowthRows(data: DashboardData) {
   ];
 }
 
-function prescriptionLedgerRows(data: DashboardData) {
+function dailySalesLedgerRows(data: DashboardData) {
   return [
-    ["Prescription ID", "Created", "Patient", "Medicine", "Quantity", "Prescriber", "Status", "Total", "Fulfillment due"],
-    ...data.prescriptions.map((prescription) => [
-      prescription.id,
-      formatDateTime(prescription.created_at),
-      prescription.patient_name,
-      prescription.medicine,
-      String(prescription.quantity),
-      prescription.prescriber,
-      prescription.status,
-      formatUgandanCurrency(prescription.total_amount),
-      formatDateTime(prescription.fulfillment_due),
+    ["Payment ID", "Created", "Reference", "Method", "Status", "Amount"],
+    ...data.payments.map((payment) => [
+      payment.id,
+      formatDateTime(payment.created_at),
+      payment.provider_reference,
+      payment.provider,
+      payment.status,
+      formatUgandanCurrency(payment.amount),
     ]),
   ];
 }

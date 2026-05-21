@@ -55,7 +55,7 @@ const workflow = [
   },
   {
     title: "Dispense and collect",
-    body: "Pharmacy and billing teams manage stock, prescriptions, invoices, and receipts.",
+    body: "Pharmacy and billing teams manage stock, sales, invoices, and receipts.",
     icon: Pill,
     image: photos.pharmacy,
     alt: "Medical practitioner organizing medication supplies in a clinic",
@@ -83,7 +83,7 @@ const features = [
   },
   {
     title: "Pharmacy Control",
-    body: "Prescriptions, stock alerts, dispensing status, and sales tracking.",
+    body: "Stock alerts, daily sales sheets, expiry status, and payment tracking.",
     icon: Pill,
     tone: "bg-rose-100 text-rose-800",
   },
@@ -116,7 +116,7 @@ const pricing = [
     audience: "Retail pharmacies",
     monthlyPrice: 50_000,
     body: "For pharmacies that need stock control, sales, expiry alerts, and receipts.",
-    features: ["Inventory control", "Expiry alerts", "Prescription orders", "Sales receipts"],
+    features: ["Inventory control", "Expiry alerts", "Daily sales sheet", "Sales receipts"],
     href: "/register?intent=demo&plan=starter&kind=pharmacy",
   },
   {
@@ -131,8 +131,8 @@ const pricing = [
     name: "Clinic",
     audience: "Growing teams",
     monthlyPrice: 100_000,
-    body: "For teams that need staff roles, prescriptions, payments, and stock visibility.",
-    features: ["Staff access control", "Prescription tracking", "Mastercard, MTN and Airtel payments", "Stock alerts"],
+    body: "For teams that need staff roles, payments, reports, and stock visibility.",
+    features: ["Staff access control", "Daily reports", "Mastercard, MTN and Airtel payments", "Stock alerts"],
     href: "/register?intent=demo&plan=growth&kind=clinic",
     featured: true,
   },
@@ -173,7 +173,7 @@ export function HomePageContent() {
               Beautiful digital operations for modern medical teams.
             </p>
             <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-slate-100 sm:text-lg">
-              Manage patient records, appointments, prescriptions, billing, pharmacy stock,
+              Manage patient records, appointments, billing, pharmacy stock,
               and staff accounts from one clean workspace.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -298,7 +298,7 @@ export function HomePageContent() {
         <div className="grid gap-5 lg:grid-cols-3">
           <StepCard number="01" title="Create your workspace" body="Register the clinic, dental practice, hospital, or pharmacy and choose the right plan." icon={Building2} />
           <StepCard number="02" title="Invite your team" body="Add owners, doctors, dentists, receptionists, and pharmacists under the same business." icon={UserRoundCheck} />
-          <StepCard number="03" title="Run the day" body="Track patients, payments, prescriptions, stock, and reports from one dashboard." icon={FileText} />
+          <StepCard number="03" title="Run the day" body="Track patients, payments, stock, and reports from one dashboard." icon={FileText} />
         </div>
       </SectionShell>
 
@@ -319,7 +319,7 @@ export function HomePageContent() {
               Make the clinic feel organized from the first login.
             </h2>
             <p className="mt-5 max-w-3xl text-base font-medium leading-7 text-slate-300">
-              See how MediLink can help your team manage patients, prescriptions,
+              See how MediLink can help your team manage patients,
               billing, pharmacy, and staff access with less paperwork.
             </p>
           </div>
