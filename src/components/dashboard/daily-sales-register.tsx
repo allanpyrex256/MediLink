@@ -166,7 +166,7 @@ export function DailySalesRegister({
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | DailySaleCategory>("all");
   const [paymentFilter, setPaymentFilter] = useState<"all" | DailySalePaymentMethod>("all");
-  const [showSaleRow, setShowSaleRow] = useState(false);
+  const [showSaleRow, setShowSaleRow] = useState(Boolean(activeShift));
   const [showCloseForm, setShowCloseForm] = useState(false);
   const [saleLoading, setSaleLoading] = useState(false);
   const [shiftLoading, setShiftLoading] = useState(false);
@@ -645,19 +645,19 @@ export function DailySalesRegister({
                     <tr>
                       <SheetHead className="w-[145px]">Date</SheetHead>
                       <SheetHead className="w-[84px]">Time</SheetHead>
+                      <SheetHead className="w-[230px]">Drug / item name</SheetHead>
+                      <SheetHead className="w-[90px]">Qty</SheetHead>
+                      <SheetHead className="w-[130px]">Unit price</SheetHead>
+                      <SheetHead className="w-[140px]">Total</SheetHead>
+                      <SheetHead className="w-[150px]">Payment</SheetHead>
                       <SheetHead className="w-[150px]">Seller</SheetHead>
                       <SheetHead className="w-[150px]">Shift ID</SheetHead>
                       <SheetHead className="w-[160px]">Customer</SheetHead>
-                      <SheetHead className="w-[230px]">Drug / item name</SheetHead>
-                      <SheetHead className="w-[230px]">Stock link</SheetHead>
                       <SheetHead className="w-[160px]">Category</SheetHead>
-                      <SheetHead className="w-[90px]">Qty</SheetHead>
                       <SheetHead className="w-[120px]">Cost</SheetHead>
-                      <SheetHead className="w-[130px]">Unit</SheetHead>
-                      <SheetHead className="w-[140px]">Total</SheetHead>
                       <SheetHead className="w-[130px]">Profit</SheetHead>
                       <SheetHead className="w-[120px]">Stock</SheetHead>
-                      <SheetHead className="w-[150px]">Payment</SheetHead>
+                      <SheetHead className="w-[230px]">Inventory link</SheetHead>
                       <SheetHead className="w-[220px]">Notes</SheetHead>
                       <SheetHead className="w-[130px]">Status</SheetHead>
                     </tr>
@@ -676,17 +676,6 @@ export function DailySalesRegister({
                           />
                         </SheetCell>
                         <SheetCell className="font-semibold text-sky-700">New</SheetCell>
-                        <SheetCell className="font-semibold text-slate-950">{activeShift.seller_name}</SheetCell>
-                        <SheetCell className="text-xs font-semibold text-slate-600">{shortShiftCode(activeShift.shift_code)}</SheetCell>
-                        <SheetCell>
-                          <input
-                            aria-label="Customer"
-                            className={cellInputClass}
-                            placeholder="Optional"
-                            value={saleForm.customerName}
-                            onChange={(event) => updateSaleField("customerName", event.target.value)}
-                          />
-                        </SheetCell>
                         <SheetCell>
                           <input
                             aria-label="Item sold"
@@ -698,35 +687,6 @@ export function DailySalesRegister({
                           />
                         </SheetCell>
                         <SheetCell>
-                          <select
-                            aria-label="Optional stock link"
-                            className={cellInputClass}
-                            value={saleForm.inventoryItemId}
-                            onChange={(event) => handleInventoryChange(event.target.value)}
-                          >
-                            <option value="">Manual entry</option>
-                            {inventory.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name} ({formatQuantity(item.stock_on_hand)})
-                              </option>
-                            ))}
-                          </select>
-                        </SheetCell>
-                        <SheetCell>
-                          <select
-                            aria-label="Category"
-                            className={cellInputClass}
-                            value={saleForm.category}
-                            onChange={(event) => updateSaleField("category", event.target.value as DailySaleCategory)}
-                          >
-                            {categoryOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </SheetCell>
-                        <SheetCell>
                           <input
                             aria-label="Quantity"
                             className={cn(cellInputClass, "text-right")}
@@ -736,17 +696,6 @@ export function DailySalesRegister({
                             value={saleForm.quantity}
                             onChange={(event) => updateSaleField("quantity", event.target.value)}
                             required
-                          />
-                        </SheetCell>
-                        <SheetCell>
-                          <input
-                            aria-label="Unit cost"
-                            className={cn(cellInputClass, "text-right")}
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={saleForm.unitCost}
-                            onChange={(event) => updateSaleField("unitCost", event.target.value)}
                           />
                         </SheetCell>
                         <SheetCell>
@@ -764,12 +713,6 @@ export function DailySalesRegister({
                         <SheetCell className="text-right font-bold text-slate-950">
                           {formatUgandanCurrency(lineTotal)}
                         </SheetCell>
-                        <SheetCell className={cn("text-right font-bold", lineProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>
-                          {formatUgandanCurrency(lineProfit)}
-                        </SheetCell>
-                        <SheetCell className={cn("text-right font-semibold", stockAfter !== null && stockAfter < 0 ? "text-rose-700" : "text-slate-700")}>
-                          {stockAfter === null ? "" : formatQuantity(stockAfter)}
-                        </SheetCell>
                         <SheetCell>
                           <select
                             aria-label="Payment method"
@@ -780,6 +723,63 @@ export function DailySalesRegister({
                             {paymentOptions.map((option) => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </SheetCell>
+                        <SheetCell className="font-semibold text-slate-950">{activeShift.seller_name}</SheetCell>
+                        <SheetCell className="text-xs font-semibold text-slate-600">{shortShiftCode(activeShift.shift_code)}</SheetCell>
+                        <SheetCell>
+                          <input
+                            aria-label="Customer"
+                            className={cellInputClass}
+                            placeholder="Optional"
+                            value={saleForm.customerName}
+                            onChange={(event) => updateSaleField("customerName", event.target.value)}
+                          />
+                        </SheetCell>
+                        <SheetCell>
+                          <select
+                            aria-label="Category"
+                            className={cellInputClass}
+                            value={saleForm.category}
+                            onChange={(event) => updateSaleField("category", event.target.value as DailySaleCategory)}
+                          >
+                            {categoryOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </SheetCell>
+                        <SheetCell>
+                          <input
+                            aria-label="Unit cost"
+                            className={cn(cellInputClass, "text-right")}
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={saleForm.unitCost}
+                            onChange={(event) => updateSaleField("unitCost", event.target.value)}
+                          />
+                        </SheetCell>
+                        <SheetCell className={cn("text-right font-bold", lineProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>
+                          {formatUgandanCurrency(lineProfit)}
+                        </SheetCell>
+                        <SheetCell className={cn("text-right font-semibold", stockAfter !== null && stockAfter < 0 ? "text-rose-700" : "text-slate-700")}>
+                          {stockAfter === null ? "" : formatQuantity(stockAfter)}
+                        </SheetCell>
+                        <SheetCell>
+                          <select
+                            aria-label="Optional inventory link"
+                            className={cellInputClass}
+                            value={saleForm.inventoryItemId}
+                            onChange={(event) => handleInventoryChange(event.target.value)}
+                          >
+                            <option value="">Manual entry</option>
+                            {inventory.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name} ({formatQuantity(item.stock_on_hand)})
                               </option>
                             ))}
                           </select>
@@ -813,29 +813,29 @@ export function DailySalesRegister({
                           >
                             <SheetCell>{sale.sale_date}</SheetCell>
                             <SheetCell>{formatTime(sale.created_at)}</SheetCell>
+                            <SheetCell className="font-medium text-slate-950">{sale.item_name}</SheetCell>
+                            <SheetCell className="text-right font-medium text-slate-950">{formatQuantity(sale.quantity)}</SheetCell>
+                            <SheetCell className="text-right text-slate-700">{formatUgandanCurrency(Number(sale.unit_price))}</SheetCell>
+                            <SheetCell className="text-right font-semibold text-slate-950">
+                              {formatUgandanCurrency(Number(sale.total_amount))}
+                            </SheetCell>
+                            <SheetCell>{paymentLabel[sale.payment_method]}</SheetCell>
                             <SheetCell className="font-medium text-slate-950">{shift?.seller_name ?? sale.sold_by ?? "Seller"}</SheetCell>
                             <SheetCell className="text-xs font-semibold text-slate-600">
                               {shift ? shortShiftCode(shift.shift_code) : sale.shift_id ?? ""}
                             </SheetCell>
                             <SheetCell className="text-slate-700">{sale.customer_name ?? ""}</SheetCell>
-                            <SheetCell className="font-medium text-slate-950">{sale.item_name}</SheetCell>
-                            <SheetCell className="text-slate-600">{sale.inventory_item_id ? "Inventory" : "Manual"}</SheetCell>
                             <SheetCell>
                               <Badge tone={categoryTone[sale.category]}>{categoryLabel[sale.category]}</Badge>
                             </SheetCell>
-                            <SheetCell className="text-right font-medium text-slate-950">{formatQuantity(sale.quantity)}</SheetCell>
                             <SheetCell className="text-right text-slate-700">{formatUgandanCurrency(Number(sale.unit_cost))}</SheetCell>
-                            <SheetCell className="text-right text-slate-700">{formatUgandanCurrency(Number(sale.unit_price))}</SheetCell>
-                            <SheetCell className="text-right font-semibold text-slate-950">
-                              {formatUgandanCurrency(Number(sale.total_amount))}
-                            </SheetCell>
                             <SheetCell className={cn("text-right font-semibold", Number(sale.profit_amount) >= 0 ? "text-emerald-700" : "text-rose-700")}>
                               {formatUgandanCurrency(Number(sale.profit_amount))}
                             </SheetCell>
                             <SheetCell className="text-right text-slate-700">
                               {sale.stock_remaining_after === null ? "" : formatQuantity(sale.stock_remaining_after)}
                             </SheetCell>
-                            <SheetCell>{paymentLabel[sale.payment_method]}</SheetCell>
+                            <SheetCell className="text-slate-600">{sale.inventory_item_id ? "Inventory" : "Manual"}</SheetCell>
                             <SheetCell className="max-w-[260px] truncate text-slate-600">{sale.notes ?? ""}</SheetCell>
                             <SheetCell>
                               <Badge tone={statusTone(sale.status)}>{statusLabel(sale.status)}</Badge>
