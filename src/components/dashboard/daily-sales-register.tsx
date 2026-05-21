@@ -1,16 +1,13 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
-import { Loader2, ReceiptText, Save } from "lucide-react";
+import { useMemo, useState, type FormEvent, type TdHTMLAttributes, type ThHTMLAttributes } from "react";
+import { Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import type { DailySale, DailySaleCategory, DailySalePaymentMethod, TenantKind } from "@/lib/types";
-import { formatUgandanCurrency } from "@/lib/utils";
+import { cn, formatUgandanCurrency } from "@/lib/utils";
 
 const categoryOptions: Array<{ value: DailySaleCategory; label: string }> = [
   { value: "medicine", label: "Medicine" },
@@ -129,165 +126,205 @@ export function DailySalesRegister({
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]">
-      <Card>
-        <CardHeader>
-          <CardTitle>Record sale</CardTitle>
-          <CardDescription>Medicine, tablets, clinic services, lab tests, and other counter sales.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="grid gap-4">
-            {message ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
-                {message}
-              </div>
-            ) : null}
-            {error ? (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">
-                {error}
-              </div>
-            ) : null}
+    <Card>
+      <CardHeader>
+        <CardTitle>Daily sales sheet</CardTitle>
+        <CardDescription>{selectedDate}</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <form onSubmit={handleSubmit}>
+          {(message || error) ? (
+            <div className="border-b border-slate-200 px-5 py-3">
+              {message ? (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
+                  {message}
+                </div>
+              ) : null}
+              {error ? (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">
+                  {error}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
-            <Input
-              label="Sale date"
-              name="saleDate"
-              type="date"
-              value={form.saleDate}
-              onChange={(event) => updateField("saleDate", event.target.value)}
-              required
-            />
-            <Input
-              label="Item sold"
-              name="itemName"
-              placeholder={tenantKind === "pharmacy" ? "Paracetamol 500mg tablets" : "Consultation fee"}
-              value={form.itemName}
-              onChange={(event) => updateField("itemName", event.target.value)}
-              required
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Select
-                label="Category"
-                name="category"
-                value={form.category}
-                onChange={(event) => updateField("category", event.target.value as DailySaleCategory)}
-              >
-                {categoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-              <Select
-                label="Payment"
-                name="paymentMethod"
-                value={form.paymentMethod}
-                onChange={(event) => updateField("paymentMethod", event.target.value as DailySalePaymentMethod)}
-              >
-                {paymentOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input
-                label="Quantity"
-                name="quantity"
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={form.quantity}
-                onChange={(event) => updateField("quantity", event.target.value)}
-                required
-              />
-              <Input
-                label="Unit amount UGX"
-                name="unitPrice"
-                type="number"
-                min="0"
-                step="1"
-                value={form.unitPrice}
-                onChange={(event) => updateField("unitPrice", event.target.value)}
-                required
-              />
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-medium text-slate-500">Line total</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-950">{formatUgandanCurrency(lineTotal)}</p>
-            </div>
-            <Textarea
-              label="Notes"
-              name="notes"
-              placeholder="Receipt note, patient name, or delivery reference"
-              value={form.notes}
-              onChange={(event) => updateField("notes", event.target.value)}
-            />
-            <Button type="submit" size="lg" disabled={loading}>
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              {loading ? "Saving..." : "Save sale"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <CardTitle>Sales for {selectedDate}</CardTitle>
-              <CardDescription>Entries are stored by sale date and separated from tomorrow&apos;s register.</CardDescription>
-            </div>
-            <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-sky-50 text-sky-700">
-              <ReceiptText className="size-5" />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="overflow-x-auto p-0">
-          <table className="w-full min-w-[820px] text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-[0.14em] text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-semibold">Time</th>
-                <th className="px-5 py-3 font-semibold">Item</th>
-                <th className="px-5 py-3 font-semibold">Category</th>
-                <th className="px-5 py-3 font-semibold">Qty</th>
-                <th className="px-5 py-3 font-semibold">Unit</th>
-                <th className="px-5 py-3 font-semibold">Total</th>
-                <th className="px-5 py-3 font-semibold">Payment</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {sales.length ? (
-                sales.map((sale) => (
-                  <tr key={sale.id} className="hover:bg-slate-50/80">
-                    <td className="px-5 py-4 text-slate-600">{formatTime(sale.created_at)}</td>
-                    <td className="px-5 py-4">
-                      <p className="font-medium text-slate-950">{sale.item_name}</p>
-                      {sale.notes ? <p className="mt-1 text-xs text-slate-500">{sale.notes}</p> : null}
-                    </td>
-                    <td className="px-5 py-4">
-                      <Badge tone={categoryTone[sale.category]}>{categoryLabel[sale.category]}</Badge>
-                    </td>
-                    <td className="px-5 py-4 font-medium text-slate-950">{formatQuantity(sale.quantity)}</td>
-                    <td className="px-5 py-4 text-slate-700">{formatUgandanCurrency(Number(sale.unit_price))}</td>
-                    <td className="px-5 py-4 font-semibold text-slate-950">
-                      {formatUgandanCurrency(Number(sale.total_amount))}
-                    </td>
-                    <td className="px-5 py-4 text-slate-700">{paymentLabel[sale.payment_method]}</td>
-                  </tr>
-                ))
-              ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
+              <thead className="bg-slate-100 text-xs uppercase tracking-normal text-slate-600">
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm font-medium text-slate-500">
-                    No sales recorded for this day.
-                  </td>
+                  <SheetHead className="w-[150px]">Date</SheetHead>
+                  <SheetHead className="w-[86px]">Time</SheetHead>
+                  <SheetHead className="min-w-[250px]">Item sold</SheetHead>
+                  <SheetHead className="w-[170px]">Category</SheetHead>
+                  <SheetHead className="w-[110px]">Qty</SheetHead>
+                  <SheetHead className="w-[150px]">Unit UGX</SheetHead>
+                  <SheetHead className="w-[160px]">Total</SheetHead>
+                  <SheetHead className="w-[160px]">Payment</SheetHead>
+                  <SheetHead className="min-w-[220px]">Notes</SheetHead>
+                  <SheetHead className="w-[120px]">Action</SheetHead>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-    </div>
+              </thead>
+              <tbody>
+                <tr className="bg-sky-50/80">
+                  <SheetCell>
+                    <input
+                      aria-label="Sale date"
+                      className={cellInputClass}
+                      name="saleDate"
+                      type="date"
+                      value={form.saleDate}
+                      onChange={(event) => updateField("saleDate", event.target.value)}
+                      required
+                    />
+                  </SheetCell>
+                  <SheetCell className="font-semibold text-sky-700">New</SheetCell>
+                  <SheetCell>
+                    <input
+                      aria-label="Item sold"
+                      className={cellInputClass}
+                      name="itemName"
+                      placeholder={tenantKind === "pharmacy" ? "Paracetamol 500mg tablets" : "Consultation fee"}
+                      value={form.itemName}
+                      onChange={(event) => updateField("itemName", event.target.value)}
+                      required
+                    />
+                  </SheetCell>
+                  <SheetCell>
+                    <select
+                      aria-label="Category"
+                      className={cellInputClass}
+                      name="category"
+                      value={form.category}
+                      onChange={(event) => updateField("category", event.target.value as DailySaleCategory)}
+                    >
+                      {categoryOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </SheetCell>
+                  <SheetCell>
+                    <input
+                      aria-label="Quantity"
+                      className={cn(cellInputClass, "text-right")}
+                      name="quantity"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={form.quantity}
+                      onChange={(event) => updateField("quantity", event.target.value)}
+                      required
+                    />
+                  </SheetCell>
+                  <SheetCell>
+                    <input
+                      aria-label="Unit amount UGX"
+                      className={cn(cellInputClass, "text-right")}
+                      name="unitPrice"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={form.unitPrice}
+                      onChange={(event) => updateField("unitPrice", event.target.value)}
+                      required
+                    />
+                  </SheetCell>
+                  <SheetCell className="text-right font-bold text-slate-950">
+                    {formatUgandanCurrency(lineTotal)}
+                  </SheetCell>
+                  <SheetCell>
+                    <select
+                      aria-label="Payment method"
+                      className={cellInputClass}
+                      name="paymentMethod"
+                      value={form.paymentMethod}
+                      onChange={(event) => updateField("paymentMethod", event.target.value as DailySalePaymentMethod)}
+                    >
+                      {paymentOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </SheetCell>
+                  <SheetCell>
+                    <input
+                      aria-label="Notes"
+                      className={cellInputClass}
+                      name="notes"
+                      placeholder="Receipt note"
+                      value={form.notes}
+                      onChange={(event) => updateField("notes", event.target.value)}
+                    />
+                  </SheetCell>
+                  <SheetCell>
+                    <Button type="submit" size="sm" disabled={loading} className="w-full">
+                      {loading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                      Save
+                    </Button>
+                  </SheetCell>
+                </tr>
+
+                {sales.length ? (
+                  sales.map((sale, index) => (
+                    <tr key={sale.id} className={cn(index % 2 === 0 ? "bg-white" : "bg-slate-50/60", "hover:bg-sky-50/50")}>
+                      <SheetCell>{sale.sale_date}</SheetCell>
+                      <SheetCell>{formatTime(sale.created_at)}</SheetCell>
+                      <SheetCell className="font-medium text-slate-950">{sale.item_name}</SheetCell>
+                      <SheetCell>
+                        <Badge tone={categoryTone[sale.category]}>{categoryLabel[sale.category]}</Badge>
+                      </SheetCell>
+                      <SheetCell className="text-right font-medium text-slate-950">{formatQuantity(sale.quantity)}</SheetCell>
+                      <SheetCell className="text-right text-slate-700">{formatUgandanCurrency(Number(sale.unit_price))}</SheetCell>
+                      <SheetCell className="text-right font-semibold text-slate-950">
+                        {formatUgandanCurrency(Number(sale.total_amount))}
+                      </SheetCell>
+                      <SheetCell>{paymentLabel[sale.payment_method]}</SheetCell>
+                      <SheetCell className="max-w-[260px] truncate text-slate-600">{sale.notes ?? ""}</SheetCell>
+                      <SheetCell className="text-slate-400">Saved</SheetCell>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <SheetCell colSpan={10} className="py-10 text-center text-sm font-medium text-slate-500">
+                      No saved rows for this day.
+                    </SheetCell>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+const cellInputClass =
+  "h-10 w-full border-0 bg-transparent px-2 text-sm text-slate-950 outline-none ring-1 ring-transparent transition placeholder:text-slate-400 focus:bg-white focus:ring-sky-400";
+
+function SheetHead({
+  className,
+  ...props
+}: ThHTMLAttributes<HTMLTableCellElement>) {
+  return (
+    <th
+      className={cn("border border-slate-300 px-3 py-2 font-bold", className)}
+      {...props}
+    />
+  );
+}
+
+function SheetCell({
+  className,
+  ...props
+}: TdHTMLAttributes<HTMLTableCellElement>) {
+  return (
+    <td
+      className={cn("h-12 border border-slate-200 px-3 py-2 align-middle", className)}
+      {...props}
+    />
   );
 }
 
