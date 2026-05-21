@@ -16,6 +16,7 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
   const [quantity, setQuantity] = useState("1");
   const [prescriber, setPrescriber] = useState("");
   const [pickupOption, setPickupOption] = useState("pickup");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("mtn_momo");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,11 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
 
     if (!customerName || !phone || !medicine || Number(quantity) < 1) {
       setStatus({ kind: "error", message: "Please complete the medicine request details." });
+      return;
+    }
+
+    if (pickupOption === "delivery" && !deliveryAddress.trim()) {
+      setStatus({ kind: "error", message: "Please enter the delivery address so the pharmacy knows where to send the medicine." });
       return;
     }
 
@@ -42,6 +48,7 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
           quantity: Number(quantity),
           prescriber,
           pickupOption,
+          deliveryAddress,
           paymentMethod,
           notes,
         }),
@@ -52,10 +59,11 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
 
       setStatus({
         kind: "success",
-        message: `${tenant.name} has received your medicine request. Pharmacy staff will confirm stock and pickup details.`,
+        message: `${tenant.name} has received your medicine request. Pharmacy staff will confirm stock and notify you when it is ready for ${pickupOption === "delivery" ? "delivery" : "pickup"}.`,
         reference: payload.data?.reference,
       });
       setMedicine("");
+      setDeliveryAddress("");
       setNotes("");
     } catch (caught) {
       setStatus({
@@ -102,6 +110,14 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
             <option value="cash">Cash on pickup</option>
           </Select>
         </div>
+        {pickupOption === "delivery" ? (
+          <Textarea
+            label="Delivery address"
+            placeholder="House number, road, area, nearby landmark, and any rider instructions."
+            value={deliveryAddress}
+            onChange={(event) => setDeliveryAddress(event.target.value)}
+          />
+        ) : null}
         <Textarea
           label="Notes optional"
           placeholder="Upload flow comes later. For now, describe the prescription or dosage instructions."

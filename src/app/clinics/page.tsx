@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Building2, MapPin, Pill, Search, Stethoscope } from "lucide-react";
+import { ArrowRight, MapPin, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import {
@@ -109,42 +109,32 @@ export default async function PublicDirectoryPage({
           {filtered.map((listing) => {
             const brand = tenantBranding(listing.tenant);
             const isPharmacy = listing.tenant.tenant_kind === "pharmacy";
-            const Icon = isPharmacy ? Pill : listing.tenant.tenant_kind === "hospital" ? Building2 : Stethoscope;
 
             return (
               <article key={listing.tenant.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-100 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="grid size-12 shrink-0 place-items-center rounded-lg text-white" style={{ backgroundColor: brand.primaryColor }}>
-                      <Icon className="size-6" aria-hidden="true" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-slate-950">{brand.name}</p>
-                      <p className="mt-1 text-sm font-semibold capitalize text-slate-500">
-                        {kindLabel(listing.tenant.tenant_kind)}
-                      </p>
-                    </div>
+                <div className="flex items-start gap-4">
+                  <TenantLogoMark
+                    color={brand.primaryColor}
+                    imageUrl={brand.logoUrl}
+                    initials={brand.initials}
+                    label={brand.name}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-xl font-bold text-slate-950">{brand.name}</p>
+                    <p className="mt-1 text-sm font-semibold capitalize text-slate-500">
+                      {kindLabel(listing.tenant.tenant_kind)}
+                    </p>
                   </div>
-                  <Badge tone={listing.tenant.status === "active" ? "green" : "blue"} className="capitalize">
-                    {listing.tenant.status}
-                  </Badge>
                 </div>
 
                 <p className="mt-4 flex items-start gap-2 text-sm font-medium leading-6 text-slate-600">
                   <MapPin className="mt-0.5 size-4 shrink-0 text-slate-400" />
-                  {brand.address}
+                  {publicLocation(brand.address, listing.tenant.region)}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {(listing.services.length ? listing.services : ["Appointments", "Payments", "Customer requests"]).map((service) => (
-                    <span key={service} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                      {service}
-                    </span>
-                  ))}
-                </div>
 
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   <Link href={publicTenantProfileUrl(listing.tenant)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-bold text-white transition hover:bg-violet-700">
-                    Open page
+                    View profile
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                   <Link href={isPharmacy ? publicTenantPharmacyUrl(listing.tenant) : publicTenantBookUrl(listing.tenant)} className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-slate-800 transition hover:border-violet-300 hover:bg-violet-50">
@@ -177,4 +167,41 @@ function normalizeKind(value: string | undefined): TenantKind | "all" {
 function kindLabel(kind: TenantKind) {
   if (kind === "dentistry") return "Dentistry";
   return kind;
+}
+
+function publicLocation(address: string, region: string) {
+  if (!address || address.toLowerCase() === "pending setup") return region;
+  return address;
+}
+
+function TenantLogoMark({
+  color,
+  imageUrl,
+  initials,
+  label,
+}: {
+  color: string;
+  imageUrl: string | null;
+  initials: string;
+  label: string;
+}) {
+  return (
+    <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-100">
+      {imageUrl ? (
+        <span
+          aria-label={`${label} logo`}
+          role="img"
+          className="size-full bg-contain bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${imageUrl})` }}
+        />
+      ) : (
+        <span
+          className="grid size-full place-items-center text-sm font-black text-white"
+          style={{ backgroundColor: color }}
+        >
+          {initials}
+        </span>
+      )}
+    </div>
+  );
 }

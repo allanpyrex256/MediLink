@@ -17,6 +17,7 @@ const publicPharmacyOrderSchema = z.object({
   quantity: z.number().int().positive(),
   prescriber: z.string().optional(),
   pickupOption: z.enum(["pickup", "delivery"]),
+  deliveryAddress: z.string().optional(),
   paymentMethod: z.enum(["mtn_momo", "airtel_money", "cash"]),
   notes: z.string().optional(),
 });
@@ -32,6 +33,15 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid medicine request", details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const deliveryAddress = parsed.data.deliveryAddress?.trim() ?? "";
+
+  if (parsed.data.pickupOption === "delivery" && !deliveryAddress) {
+    return NextResponse.json(
+      { error: "Delivery address is required for medicine delivery requests." },
       { status: 400 },
     );
   }
@@ -58,6 +68,8 @@ export async function POST(request: NextRequest) {
           reference,
           status: "received",
           demo: true,
+          fulfillmentMethod: parsed.data.pickupOption,
+          deliveryAddress: parsed.data.pickupOption === "delivery" ? deliveryAddress : null,
         },
       },
       { status: 201 },
@@ -70,12 +82,17 @@ export async function POST(request: NextRequest) {
     .insert({
       tenant_id: profile.tenant.id,
       patient_name: parsed.data.customerName,
+      customer_phone: parsed.data.phone,
       prescriber: parsed.data.prescriber || "Customer request",
       medicine: parsed.data.medicine,
       quantity: parsed.data.quantity,
       status: "received",
       total_amount: 0,
       fulfillment_due: publicFulfillmentDate(),
+      fulfillment_method: parsed.data.pickupOption,
+      delivery_address: parsed.data.pickupOption === "delivery" ? deliveryAddress : null,
+      payment_method: parsed.data.paymentMethod,
+      customer_notes: parsed.data.notes || null,
       created_by: null,
     })
     .select("*")
@@ -90,7 +107,7 @@ export async function POST(request: NextRequest) {
     channel: "in_app",
     destination: profile.tenant.email,
     subject: "Public medicine request received",
-    body: `${parsed.data.customerName} requested ${parsed.data.quantity} x ${parsed.data.medicine}. Phone: ${parsed.data.phone}. ${parsed.data.pickupOption}. Payment: ${parsed.data.paymentMethod}. Notes: ${parsed.data.notes || "None"}. Reference: ${reference}.`,
+    body: `${parsed.data.customerName} requested ${parsed.data.quantity} x ${parsed.data.medicine}. Phone: ${parsed.data.phone}. ${fulfillmentSummary(parsed.data.pickupOption, deliveryAddress)} Payment: ${paymentLabel(parsed.data.paymentMethod)}. Notes: ${parsed.data.notes || "None"}. Reference: ${reference}.`,
     status: "queued",
   });
 
@@ -103,4 +120,18 @@ export async function POST(request: NextRequest) {
     },
     { status: 201 },
   );
+}
+
+function fulfillmentSummary(method: "pickup" | "delivery", deliveryAddress: string) {
+  if (method === "delivery") {
+    return `Delivery address: ${deliveryAddress}.`;
+  }
+
+  return "Customer will pick up at the pharmacy.";
+}
+
+function paymentLabel(method: "mtn_momo" | "airtel_money" | "cash") {
+  if (method === "mtn_momo") return "MTN MoMo";
+  if (method === "airtel_money") return "Airtel Money";
+  return "Cash";
 }

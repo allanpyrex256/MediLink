@@ -304,12 +304,18 @@ export interface PrescriptionOrder {
   id: string;
   tenant_id: string;
   patient_name: string;
+  customer_phone: string | null;
   prescriber: string;
   medicine: string;
   quantity: number;
   status: "received" | "dispensing" | "ready" | "collected" | "cancelled";
   total_amount: number;
   fulfillment_due: string;
+  fulfillment_method: "pickup" | "delivery";
+  delivery_address: string | null;
+  payment_method: "mtn_momo" | "airtel_money" | "cash" | null;
+  customer_notes: string | null;
+  ready_notification_sent_at: string | null;
   created_at: string;
 }
 

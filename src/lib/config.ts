@@ -52,6 +52,7 @@ export const appConfig = {
   whatsapp: {
     token: process.env.WHATSAPP_CLOUD_API_TOKEN,
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+    graphApiVersion: process.env.WHATSAPP_GRAPH_API_VERSION ?? "v25.0",
   },
   email: {
     resendApiKey: process.env.RESEND_API_KEY,

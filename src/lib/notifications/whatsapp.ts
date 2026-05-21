@@ -16,7 +16,7 @@ export async function sendWhatsApp(message: WhatsAppMessage) {
   }
 
   const response = await fetch(
-    `https://graph.facebook.com/v21.0/${appConfig.whatsapp.phoneNumberId}/messages`,
+    `https://graph.facebook.com/${appConfig.whatsapp.graphApiVersion}/${appConfig.whatsapp.phoneNumberId}/messages`,
     {
       method: "POST",
       headers: {
@@ -36,7 +36,10 @@ export async function sendWhatsApp(message: WhatsAppMessage) {
   );
 
   if (!response.ok) {
-    throw new Error(`WhatsApp send failed with ${response.status}`);
+    const details = await response.text().catch(() => "");
+    throw new Error(
+      `WhatsApp send failed with ${response.status}${details ? `: ${details}` : ""}`,
+    );
   }
 
   return response.json();

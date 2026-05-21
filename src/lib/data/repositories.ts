@@ -332,7 +332,10 @@ export async function getDashboardData(): Promise<DashboardData> {
       duration_minutes: 15,
       status: prescription.status === "collected" ? "completed" : "pending",
       reason: `Prescription order: ${prescription.medicine}`,
-      notes: prescription.prescriber,
+      notes:
+        prescription.fulfillment_method === "delivery"
+          ? `Delivery: ${prescription.delivery_address ?? "address missing"}`
+          : prescription.prescriber,
       fee: Number(prescription.total_amount),
       payment_status: prescription.status === "collected" ? "paid" : "pending",
       created_at: prescription.created_at,
@@ -343,7 +346,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         full_name: prescription.patient_name,
         date_of_birth: null,
         sex: "other",
-        phone: "+256700000000",
+        phone: prescription.customer_phone ?? "+256700000000",
         email: null,
         national_id: null,
         medical_history: [],

@@ -76,7 +76,7 @@ export default async function PrescriptionsPage() {
               <p className="text-2xl font-semibold text-slate-950">
                 {data.prescriptions.filter((item) => item.status === "ready").length}
               </p>
-              <p className="text-sm text-slate-500">Ready for pickup</p>
+              <p className="text-sm text-slate-500">Ready pickup/delivery</p>
             </div>
           </CardContent>
         </Card>
@@ -101,7 +101,7 @@ export default async function PrescriptionsPage() {
               color={brand.primaryColor}
             />
             <CardTitle>Order Status</CardTitle>
-            <CardDescription>Simple status view for prescriptions at the counter.</CardDescription>
+            <CardDescription>Simple status view for prescriptions, pickup, and delivery notifications.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
             {data.prescriptions.map((item) => (
@@ -110,6 +110,13 @@ export default async function PrescriptionsPage() {
                   <div>
                     <p className="text-sm font-semibold text-slate-950">{item.patient_name}</p>
                     <p className="mt-1 text-xs leading-5 text-slate-500">{item.medicine}</p>
+                    {item.fulfillment_method === "delivery" ? (
+                      <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                        Delivery: {item.delivery_address ?? "Address missing"}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">Pickup at pharmacy</p>
+                    )}
                   </div>
                   <Badge tone={statusTone[item.status]}>
                     {statusLabel[item.status]}
