@@ -174,8 +174,6 @@ export function DailySalesRegister({
   const activeShiftCash = activeShiftSales
     .filter((sale) => sale.payment_method === "cash")
     .reduce((sum, sale) => sum + Number(sale.total_amount), 0);
-  const activeShiftRevenue = activeShiftSales.reduce((sum, sale) => sum + Number(sale.total_amount), 0);
-  const activeShiftProfit = activeShiftSales.reduce((sum, sale) => sum + Number(sale.profit_amount ?? 0), 0);
   const expectedCash =
     Number(activeShift?.opening_cash_balance ?? 0) +
     activeShiftCash -
@@ -344,13 +342,6 @@ export function DailySalesRegister({
                 <span className="text-sm text-slate-500">{dayShift.branch_name}</span>
                 <span className="text-sm text-slate-500">{getShiftDate(dayShift)}</span>
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                <ShiftMetric label="Seller" value={dayShift.seller_name} />
-                <ShiftMetric label="Opening cash" value={formatUgandanCurrency(dayShift.opening_cash_balance)} />
-                <ShiftMetric label="Expected cash" value={formatUgandanCurrency(dayShift.expected_cash ?? 0)} />
-                <ShiftMetric label="Physical cash" value={formatUgandanCurrency(dayShift.closing_cash_balance ?? 0)} />
-                <ShiftMetric label="Difference" value={formatUgandanCurrency(dayShift.cash_difference ?? 0)} />
-              </div>
             </div>
           </div>
         </section>
@@ -447,13 +438,6 @@ export function DailySalesRegister({
                 <Badge tone="blue">{shiftTypeLabel(getShiftType(activeShift))}</Badge>
                 <span className="text-sm text-slate-500">{activeShift.branch_name}</span>
                 <span className="text-sm text-slate-500">{getShiftDate(activeShift)}</span>
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                <ShiftMetric label="Seller" value={activeShift.seller_name} />
-                <ShiftMetric label="Opening cash" value={formatUgandanCurrency(activeShift.opening_cash_balance)} />
-                <ShiftMetric label="Cash expected" value={formatUgandanCurrency(expectedCash)} />
-                <ShiftMetric label="Shift sales" value={formatUgandanCurrency(activeShiftRevenue)} />
-                <ShiftMetric label="Shift profit" value={formatUgandanCurrency(activeShiftProfit)} />
               </div>
             </div>
             <div className="flex items-start gap-2">
@@ -709,15 +693,6 @@ function Field({
       <span>{label}</span>
       {children}
     </label>
-  );
-}
-
-function ShiftMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-      <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-slate-950">{value}</p>
-    </div>
   );
 }
 
