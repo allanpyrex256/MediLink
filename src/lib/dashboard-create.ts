@@ -95,6 +95,7 @@ export const salesShiftOpenSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((value) => value || todayInEastAfrica()),
+  shiftType: z.enum(["day", "night"]).default("day"),
   sellerName: z.string().trim().min(2).max(120),
   branchName: z.string().trim().min(2).max(120),
   openingCashBalance: z.coerce.number().min(0).max(100000000).default(0),
@@ -247,8 +248,9 @@ export function buildLocalDemoDailySale(
 export function buildSalesShiftOpenInsert(input: SalesShiftOpenInput, tenantId: string, sellerId: string | null) {
   return {
     tenant_id: tenantId,
-    shift_code: buildShiftCode(input.shiftDate),
+    shift_code: buildShiftCode(input.shiftDate, input.shiftType),
     shift_date: input.shiftDate,
+    shift_type: input.shiftType,
     seller_id: sellerId,
     seller_name: input.sellerName,
     branch_name: input.branchName,
@@ -290,9 +292,9 @@ export function inventoryStatus(stockOnHand: number, reorderLevel: number, expir
   return "in_stock";
 }
 
-function buildShiftCode(shiftDate: string) {
+function buildShiftCode(shiftDate: string, shiftType: SalesShiftOpenInput["shiftType"]) {
   const date = shiftDate.replaceAll("-", "");
-  return `SHIFT-${date}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+  return `SHIFT-${date}-${shiftType.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
 }
 
 function todayInEastAfrica() {

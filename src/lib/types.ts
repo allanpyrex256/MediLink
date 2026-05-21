@@ -46,6 +46,7 @@ export type DailySalePaymentMethod =
 
 export type DailySaleStatus = "sold" | "refunded" | "void";
 export type SalesShiftStatus = "open" | "closed";
+export type SalesShiftType = "day" | "night";
 
 export type NotificationChannel = "email" | "whatsapp" | "sms" | "in_app";
 
@@ -227,6 +228,7 @@ export interface SalesShift {
   tenant_id: string;
   shift_code: string;
   shift_date: string;
+  shift_type: SalesShiftType;
   seller_id: string | null;
   seller_name: string;
   branch_name: string;

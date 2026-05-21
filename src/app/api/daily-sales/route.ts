@@ -50,36 +50,37 @@ export async function POST(request: NextRequest) {
     }
 
     let stockRemaining: number | null = null;
-    let unitCost = parsed.data.unitCost;
     const shiftDate = getShiftDate(shift);
     let saleInput = {
       ...parsed.data,
       saleDate: shiftDate,
     };
+    const inventoryItem = findInventoryMatch(inventory, parsed.data.itemName, parsed.data.inventoryItemId);
 
-    if (parsed.data.inventoryItemId) {
-      const item = inventory.find((inventoryItem) => inventoryItem.id === parsed.data.inventoryItemId);
-      if (!item) return NextResponse.json({ error: "Inventory item not found." }, { status: 404 });
-      if (Number(item.stock_on_hand) < parsed.data.quantity) {
+    if (parsed.data.inventoryItemId && !inventoryItem) {
+      return NextResponse.json({ error: "Inventory item not found." }, { status: 404 });
+    }
+
+    if (inventoryItem) {
+      if (Number(inventoryItem.stock_on_hand) < parsed.data.quantity) {
         return NextResponse.json({ error: "Not enough stock remaining for this sale." }, { status: 409 });
       }
 
-      stockRemaining = Number(item.stock_on_hand) - parsed.data.quantity;
-      unitCost = Number(item.unit_cost ?? parsed.data.unitCost ?? 0);
+      stockRemaining = Number(inventoryItem.stock_on_hand) - parsed.data.quantity;
       saleInput = {
         ...saleInput,
-        itemName: item.name,
-        category: categoryFromInventory(item.category),
-        unitPrice: Number(item.unit_price),
-        unitCost,
+        inventoryItemId: inventoryItem.id,
+        itemName: inventoryItem.name,
+        category: categoryFromInventory(inventoryItem.category),
+        unitCost: Number(inventoryItem.unit_cost ?? parsed.data.unitCost ?? 0),
       };
 
       await saveLocalDemoInventoryItem({
         workspaceId,
         item: {
-          ...item,
+          ...inventoryItem,
           stock_on_hand: Math.max(0, Math.floor(stockRemaining)),
-          status: inventoryStatus(Math.max(0, Math.floor(stockRemaining)), item.reorder_level, item.expiry_date),
+          status: inventoryStatus(Math.max(0, Math.floor(stockRemaining)), inventoryItem.reorder_level, inventoryItem.expiry_date),
         },
       });
     }
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
       workspaceId,
       sale: {
         ...localSale,
-        unit_cost: unitCost,
+        unit_cost: saleInput.unitCost,
         stock_remaining_after: stockRemaining,
       },
     });
@@ -122,18 +123,17 @@ export async function POST(request: NextRequest) {
     ...parsed.data,
     saleDate: shiftDate,
   };
+  const { data: inventoryRows } = await supabase
+    .from("inventory_items")
+    .select("*")
+    .eq("tenant_id", profile.tenant_id);
+  const inventoryItem = findInventoryMatch((inventoryRows ?? []) as InventoryItem[], parsed.data.itemName, parsed.data.inventoryItemId);
 
-  if (parsed.data.inventoryItemId) {
-    const { data: item, error: itemError } = await supabase
-      .from("inventory_items")
-      .select("*")
-      .eq("id", parsed.data.inventoryItemId)
-      .eq("tenant_id", profile.tenant_id)
-      .single();
+  if (parsed.data.inventoryItemId && !inventoryItem) {
+    return NextResponse.json({ error: "Inventory item not found." }, { status: 404 });
+  }
 
-    if (itemError || !item) return NextResponse.json({ error: "Inventory item not found." }, { status: 404 });
-
-    const inventoryItem = item as InventoryItem;
+  if (inventoryItem) {
     if (Number(inventoryItem.stock_on_hand) < parsed.data.quantity) {
       return NextResponse.json({ error: "Not enough stock remaining for this sale." }, { status: 409 });
     }
@@ -141,9 +141,9 @@ export async function POST(request: NextRequest) {
     stockRemaining = Number(inventoryItem.stock_on_hand) - parsed.data.quantity;
     saleInput = {
       ...saleInput,
+      inventoryItemId: inventoryItem.id,
       itemName: inventoryItem.name,
       category: categoryFromInventory(inventoryItem.category),
-      unitPrice: Number(inventoryItem.unit_price),
       unitCost: Number(inventoryItem.unit_cost ?? parsed.data.unitCost ?? 0),
     };
   }
@@ -159,11 +159,11 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  if (parsed.data.inventoryItemId && stockRemaining !== null) {
+  if (saleInput.inventoryItemId && stockRemaining !== null) {
     const { data: currentItem } = await supabase
       .from("inventory_items")
       .select("*")
-      .eq("id", parsed.data.inventoryItemId)
+      .eq("id", saleInput.inventoryItemId)
       .eq("tenant_id", profile.tenant_id)
       .single();
 
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
           stock_on_hand: Math.max(0, Math.floor(stockRemaining)),
           status: inventoryStatus(Math.max(0, Math.floor(stockRemaining)), item.reorder_level, item.expiry_date),
         })
-        .eq("id", parsed.data.inventoryItemId)
+        .eq("id", saleInput.inventoryItemId)
         .eq("tenant_id", profile.tenant_id);
     }
   }
@@ -199,4 +199,30 @@ function mergeById<T extends { id: string }>(base: T[], overrides: T[]) {
 
 function getShiftDate(shift: { shift_date?: string; opened_at: string }) {
   return shift.shift_date ?? shift.opened_at.slice(0, 10);
+}
+
+function findInventoryMatch(
+  items: InventoryItem[],
+  itemName: string,
+  inventoryItemId?: string | null,
+) {
+  if (inventoryItemId) {
+    return items.find((item) => item.id === inventoryItemId) ?? null;
+  }
+
+  const typedName = normalizeItemName(itemName);
+  if (!typedName) return null;
+
+  return (
+    items.find((item) => normalizeItemName(item.name) === typedName) ??
+    items.find((item) => {
+      const stockName = normalizeItemName(item.name);
+      return stockName.includes(typedName) || typedName.includes(stockName);
+    }) ??
+    null
+  );
+}
+
+function normalizeItemName(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
 }

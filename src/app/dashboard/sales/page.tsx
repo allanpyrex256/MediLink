@@ -14,16 +14,17 @@ import { PageHeading } from "@/components/dashboard/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
-import type { DailySale } from "@/lib/types";
-import { formatUgandanCurrency } from "@/lib/utils";
+import type { DailySale, SalesShiftType } from "@/lib/types";
+import { cn, formatUgandanCurrency } from "@/lib/utils";
 
 export default async function DailySalesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; shift?: string }>;
 }) {
   const params = await searchParams;
   const selectedDate = normalizeDate(params.date) ?? todayInEastAfrica();
+  const selectedShiftType = normalizeShiftType(params.shift) ?? "day";
   const data = await getDashboardData();
   const daySales = data.dailySales
     .filter((sale) => sale.sale_date === selectedDate)
@@ -45,11 +46,21 @@ export default async function DailySalesPage({
       .filter(Boolean),
   );
   const customerCount = knownCustomers.size || soldSales.length;
-  const selectedDayShifts = data.salesShifts.filter((shift) => shiftDate(shift) === selectedDate);
+  const selectedDayShifts = data.salesShifts.filter(
+    (shift) => shiftDate(shift) === selectedDate && shiftType(shift) === selectedShiftType,
+  );
   const activeShift =
     selectedDayShifts.find((shift) => shift.status === "open" && shift.seller_id === data.user.id) ??
     selectedDayShifts.find((shift) => shift.status === "open") ??
     null;
+  const selectedShift =
+    activeShift ??
+    selectedDayShifts.find((shift) => shift.seller_id === data.user.id) ??
+    selectedDayShifts[0] ??
+    null;
+  const selectedShiftSales = selectedShift
+    ? daySales.filter((sale) => sale.shift_id === selectedShift.id)
+    : [];
   const topItems = topSellingItems(soldSales);
   const lowStockItems = data.inventory
     .filter((item) => ["low_stock", "out_of_stock", "expiring"].includes(item.status))
@@ -65,6 +76,7 @@ export default async function DailySalesPage({
         actions={
           <div className="flex flex-wrap items-end gap-2">
             <form action="/dashboard/sales" className="flex flex-wrap items-end gap-2">
+              <input type="hidden" name="shift" value={selectedShiftType} />
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 <span>Open date</span>
                 <input
@@ -80,7 +92,7 @@ export default async function DailySalesPage({
               </Button>
             </form>
             <Link
-              href="/dashboard/sales"
+              href={`/dashboard/sales?shift=${selectedShiftType}`}
               className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-400 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm shadow-slate-300/70 transition hover:border-violet-400 hover:bg-violet-50"
             >
               Today
@@ -173,15 +185,37 @@ export default async function DailySalesPage({
         </Card>
       </div>
 
+      <div className="mb-5 rounded-lg border border-slate-300 bg-white p-2 shadow-sm shadow-slate-300/40">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {(["day", "night"] as const).map((type) => (
+            <Link
+              key={type}
+              href={`/dashboard/sales?date=${selectedDate}&shift=${type}`}
+              className={cn(
+                "flex min-h-12 items-center justify-center rounded-md border px-4 text-sm font-semibold transition",
+                selectedShiftType === type
+                  ? "border-sky-600 bg-sky-600 text-white shadow-md shadow-sky-200"
+                  : "border-slate-300 bg-white text-slate-700 hover:border-sky-300 hover:bg-sky-50",
+              )}
+            >
+              {shiftTypeLabel(type)}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <DailySalesRegister
-        key={`${selectedDate}:${activeShift?.id ?? "no-shift"}`}
-        sales={daySales}
+        key={`${selectedDate}:${selectedShiftType}:${activeShift?.id ?? "no-shift"}`}
+        sales={selectedShiftSales}
         selectedDate={selectedDate}
+        selectedShiftType={selectedShiftType}
+        dailyTotal={dayTotal}
         tenantKind={data.tenant.tenant_kind}
         activeShift={activeShift}
         shifts={data.salesShifts}
         user={data.user}
         branches={data.branches}
+        inventory={data.inventory}
         topItems={topItems}
         lowStockItems={lowStockItems}
       />
@@ -192,6 +226,10 @@ export default async function DailySalesPage({
 function normalizeDate(value: string | undefined) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   return value;
+}
+
+function normalizeShiftType(value: string | undefined): SalesShiftType | null {
+  return value === "night" ? "night" : value === "day" ? "day" : null;
 }
 
 function todayInEastAfrica() {
@@ -229,4 +267,12 @@ function topSellingItems(sales: DailySale[]) {
 
 function shiftDate(shift: { shift_date?: string; opened_at: string }) {
   return shift.shift_date ?? shift.opened_at.slice(0, 10);
+}
+
+function shiftType(shift: { shift_type?: string }) {
+  return shift.shift_type === "night" ? "night" : "day";
+}
+
+function shiftTypeLabel(type: SalesShiftType) {
+  return type === "night" ? "Night Shift" : "Day Shift";
 }

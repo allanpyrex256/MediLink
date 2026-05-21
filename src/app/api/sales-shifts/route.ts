@@ -35,11 +35,14 @@ export async function POST(request: NextRequest) {
     const local = await getLocalDemoWorkspaceState(workspaceId);
     const shifts = mergeById(demo.salesShifts, local.salesShifts);
     const existingShift = shifts.find(
-      (shift) => getShiftDate(shift) === parsed.data.shiftDate && shift.seller_id === demo.user.id,
+      (shift) =>
+        getShiftDate(shift) === parsed.data.shiftDate &&
+        getShiftType(shift) === parsed.data.shiftType &&
+        shift.seller_id === demo.user.id,
     );
 
     if (existingShift) {
-      return NextResponse.json({ error: "This seller already has a shift for this day." }, { status: 409 });
+      return NextResponse.json({ error: `This seller already has a ${parsed.data.shiftType} shift for this day.` }, { status: 409 });
     }
 
     const shift = await saveLocalDemoSalesShift({
@@ -63,10 +66,11 @@ export async function POST(request: NextRequest) {
     .eq("tenant_id", profile.tenant_id)
     .eq("seller_id", profile.id)
     .eq("shift_date", parsed.data.shiftDate)
+    .eq("shift_type", parsed.data.shiftType)
     .maybeSingle();
 
   if (existingShift) {
-    return NextResponse.json({ error: "This seller already has a shift for this day." }, { status: 409 });
+    return NextResponse.json({ error: `This seller already has a ${parsed.data.shiftType} shift for this day.` }, { status: 409 });
   }
 
   const { data, error } = await supabase
@@ -88,4 +92,8 @@ function mergeById<T extends { id: string }>(base: T[], overrides: T[]) {
 
 function getShiftDate(shift: { shift_date?: string; opened_at: string }) {
   return shift.shift_date ?? shift.opened_at.slice(0, 10);
+}
+
+function getShiftType(shift: { shift_type?: string }) {
+  return shift.shift_type === "night" ? "night" : "day";
 }

@@ -31,6 +31,7 @@ import type {
   DailySalePaymentMethod,
   InventoryItem,
   SalesShift,
+  SalesShiftType,
   TenantKind,
 } from "@/lib/types";
 import { cn, formatUgandanCurrency } from "@/lib/utils";
@@ -51,6 +52,7 @@ type SaleForm = {
 
 type ShiftOpenForm = {
   shiftDate: string;
+  shiftType: SalesShiftType;
   sellerName: string;
   branchName: string;
   openingCashBalance: string;
@@ -89,21 +91,27 @@ function initialSaleForm(selectedDate: string, tenantKind: TenantKind, shiftId: 
 export function DailySalesRegister({
   sales,
   selectedDate,
+  selectedShiftType,
+  dailyTotal,
   tenantKind,
   activeShift,
   shifts,
   user,
   branches,
+  inventory,
   topItems,
   lowStockItems,
 }: {
   sales: DailySale[];
   selectedDate: string;
+  selectedShiftType: SalesShiftType;
+  dailyTotal: number;
   tenantKind: TenantKind;
   activeShift: SalesShift | null;
   shifts: SalesShift[];
   user: AppUser;
   branches: Branch[];
+  inventory: InventoryItem[];
   topItems: TopItem[];
   lowStockItems: InventoryItem[];
 }) {
@@ -113,6 +121,7 @@ export function DailySalesRegister({
   );
   const [shiftForm, setShiftForm] = useState<ShiftOpenForm>(() => ({
     shiftDate: selectedDate,
+    shiftType: selectedShiftType,
     sellerName: user.full_name,
     branchName: branches[0]?.name ?? "Main branch",
     openingCashBalance: "0",
@@ -135,10 +144,17 @@ export function DailySalesRegister({
 
   const dayShift = useMemo(
     () =>
-      shifts.find((shift) => getShiftDate(shift) === selectedDate && shift.seller_id === user.id) ??
-      shifts.find((shift) => getShiftDate(shift) === selectedDate) ??
+      shifts.find(
+        (shift) =>
+          getShiftDate(shift) === selectedDate &&
+          getShiftType(shift) === selectedShiftType &&
+          shift.seller_id === user.id,
+      ) ??
+      shifts.find(
+        (shift) => getShiftDate(shift) === selectedDate && getShiftType(shift) === selectedShiftType,
+      ) ??
       null,
-    [selectedDate, shifts, user.id],
+    [selectedDate, selectedShiftType, shifts, user.id],
   );
   const visibleSales = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -324,6 +340,7 @@ export function DailySalesRegister({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="slate">Closed</Badge>
                 <span className="text-sm font-semibold text-slate-950">{dayShift.shift_code}</span>
+                <Badge tone="blue">{shiftTypeLabel(getShiftType(dayShift))}</Badge>
                 <span className="text-sm text-slate-500">{dayShift.branch_name}</span>
                 <span className="text-sm text-slate-500">{getShiftDate(dayShift)}</span>
               </div>
@@ -345,8 +362,8 @@ export function DailySalesRegister({
                 <LockKeyhole className="size-5" />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-slate-950">Open shift</h2>
-                <p className="mt-1 text-sm text-slate-600">Create one dated shift for the seller before recording sales.</p>
+                <h2 className="text-base font-semibold text-slate-950">Open {shiftTypeLabel(selectedShiftType)}</h2>
+                <p className="mt-1 text-sm text-slate-600">Open this dated sheet before recording {selectedShiftType} sales.</p>
               </div>
             </div>
           </div>
@@ -367,6 +384,11 @@ export function DailySalesRegister({
                 onChange={(event) => updateShiftField("sellerName", event.target.value)}
                 required
               />
+            </Field>
+            <Field label="Shift" className="xl:col-span-2">
+              <div className="flex h-11 items-center rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-800">
+                {shiftTypeLabel(selectedShiftType)}
+              </div>
             </Field>
             <Field label="Branch" className="xl:col-span-2">
               <select
@@ -410,7 +432,7 @@ export function DailySalesRegister({
             <div className="flex items-end xl:col-span-1">
               <Button type="submit" className="w-full" disabled={shiftLoading}>
                 {shiftLoading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
-                Open New Shift
+                Open {shiftTypeLabel(selectedShiftType)}
               </Button>
             </div>
           </form>
@@ -422,6 +444,7 @@ export function DailySalesRegister({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="green">Open</Badge>
                 <span className="text-sm font-semibold text-slate-950">{activeShift.shift_code}</span>
+                <Badge tone="blue">{shiftTypeLabel(getShiftType(activeShift))}</Badge>
                 <span className="text-sm text-slate-500">{activeShift.branch_name}</span>
                 <span className="text-sm text-slate-500">{getShiftDate(activeShift)}</span>
               </div>
@@ -506,8 +529,10 @@ export function DailySalesRegister({
           <CardHeader className="space-y-4">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <CardTitle>Sales sheet</CardTitle>
-                <CardDescription>{selectedDate}</CardDescription>
+                <CardTitle>{shiftTypeLabel(selectedShiftType)} sales sheet</CardTitle>
+                <CardDescription>
+                  {selectedDate} - Daily total {formatUgandanCurrency(dailyTotal)}
+                </CardDescription>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <label className="relative">
@@ -543,12 +568,18 @@ export function DailySalesRegister({
                         <SheetCell>
                           <input
                             aria-label="Item name"
+                            list="sales-stock-items"
                             className={cellInputClass}
                             placeholder={tenantKind === "pharmacy" ? "Paracetamol 500mg" : "Consultation fee"}
                             value={saleForm.itemName}
                             onChange={(event) => updateSaleField("itemName", event.target.value)}
                             required
                           />
+                          <datalist id="sales-stock-items">
+                            {inventory.map((item) => (
+                              <option key={item.id} value={item.name} />
+                            ))}
+                          </datalist>
                         </SheetCell>
                         <SheetCell>
                           <input
@@ -716,6 +747,14 @@ function SheetCell({
 
 function getShiftDate(shift: { shift_date?: string; opened_at: string }) {
   return shift.shift_date ?? shift.opened_at.slice(0, 10);
+}
+
+function getShiftType(shift: { shift_type?: string }): SalesShiftType {
+  return shift.shift_type === "night" ? "night" : "day";
+}
+
+function shiftTypeLabel(type: SalesShiftType) {
+  return type === "night" ? "Night Shift" : "Day Shift";
 }
 
 function statusLabel(value: string) {
