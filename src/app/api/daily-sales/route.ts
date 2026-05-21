@@ -15,7 +15,7 @@ import {
   saveLocalDemoInventoryItem,
 } from "@/lib/local-demo-store";
 import { rateLimit } from "@/lib/security/rate-limit";
-import type { DailySaleCategory, InventoryItem } from "@/lib/types";
+import type { DailySaleCategory, InventoryItem, SalesShift } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   const ip =
@@ -51,7 +51,11 @@ export async function POST(request: NextRequest) {
 
     let stockRemaining: number | null = null;
     let unitCost = parsed.data.unitCost;
-    let saleInput = parsed.data;
+    const shiftDate = getShiftDate(shift);
+    let saleInput = {
+      ...parsed.data,
+      saleDate: shiftDate,
+    };
 
     if (parsed.data.inventoryItemId) {
       const item = inventory.find((inventoryItem) => inventoryItem.id === parsed.data.inventoryItemId);
@@ -63,7 +67,7 @@ export async function POST(request: NextRequest) {
       stockRemaining = Number(item.stock_on_hand) - parsed.data.quantity;
       unitCost = Number(item.unit_cost ?? parsed.data.unitCost ?? 0);
       saleInput = {
-        ...parsed.data,
+        ...saleInput,
         itemName: item.name,
         category: categoryFromInventory(item.category),
         unitPrice: Number(item.unit_price),
@@ -113,7 +117,11 @@ export async function POST(request: NextRequest) {
   }
 
   let stockRemaining: number | null = null;
-  let saleInput = parsed.data;
+  const shiftDate = getShiftDate(shift as SalesShift);
+  let saleInput = {
+    ...parsed.data,
+    saleDate: shiftDate,
+  };
 
   if (parsed.data.inventoryItemId) {
     const { data: item, error: itemError } = await supabase
@@ -132,7 +140,7 @@ export async function POST(request: NextRequest) {
 
     stockRemaining = Number(inventoryItem.stock_on_hand) - parsed.data.quantity;
     saleInput = {
-      ...parsed.data,
+      ...saleInput,
       itemName: inventoryItem.name,
       category: categoryFromInventory(inventoryItem.category),
       unitPrice: Number(inventoryItem.unit_price),
@@ -187,4 +195,8 @@ function mergeById<T extends { id: string }>(base: T[], overrides: T[]) {
   const rows = new Map(base.map((item) => [item.id, item]));
   for (const item of overrides) rows.set(item.id, item);
   return Array.from(rows.values());
+}
+
+function getShiftDate(shift: { shift_date?: string; opened_at: string }) {
+  return shift.shift_date ?? shift.opened_at.slice(0, 10);
 }

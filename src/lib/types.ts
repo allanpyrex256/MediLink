@@ -226,6 +226,7 @@ export interface SalesShift {
   id: string;
   tenant_id: string;
   shift_code: string;
+  shift_date: string;
   seller_id: string | null;
   seller_name: string;
   branch_name: string;

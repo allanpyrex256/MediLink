@@ -45,9 +45,10 @@ export default async function DailySalesPage({
       .filter(Boolean),
   );
   const customerCount = knownCustomers.size || soldSales.length;
+  const selectedDayShifts = data.salesShifts.filter((shift) => shiftDate(shift) === selectedDate);
   const activeShift =
-    data.salesShifts.find((shift) => shift.status === "open" && shift.seller_id === data.user.id) ??
-    data.salesShifts.find((shift) => shift.status === "open") ??
+    selectedDayShifts.find((shift) => shift.status === "open" && shift.seller_id === data.user.id) ??
+    selectedDayShifts.find((shift) => shift.status === "open") ??
     null;
   const topItems = topSellingItems(soldSales);
   const lowStockItems = data.inventory
@@ -60,7 +61,7 @@ export default async function DailySalesPage({
       <PageHeading
         eyebrow="Daily sales"
         title="Shift sales register"
-        description="Open a seller shift, record each sale like a spreadsheet, and close the day with cash, MoMo, profit, stock, and report totals."
+        description="Every day starts with a seller shift. Type the drug or item name, quantity, and price manually, then close the shift with cash and MoMo totals."
         actions={
           <div className="flex flex-wrap items-end gap-2">
             <form action="/dashboard/sales" className="flex flex-wrap items-end gap-2">
@@ -225,4 +226,8 @@ function topSellingItems(sales: DailySale[]) {
   return Array.from(rows.values())
     .sort((a, b) => b.quantity - a.quantity)
     .slice(0, 5);
+}
+
+function shiftDate(shift: { shift_date?: string; opened_at: string }) {
+  return shift.shift_date ?? shift.opened_at.slice(0, 10);
 }

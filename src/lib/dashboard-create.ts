@@ -89,6 +89,12 @@ export const dailySaleCreateSchema = z.object({
 });
 
 export const salesShiftOpenSchema = z.object({
+  shiftDate: z
+    .string()
+    .date()
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => value || todayInEastAfrica()),
   sellerName: z.string().trim().min(2).max(120),
   branchName: z.string().trim().min(2).max(120),
   openingCashBalance: z.coerce.number().min(0).max(100000000).default(0),
@@ -241,7 +247,8 @@ export function buildLocalDemoDailySale(
 export function buildSalesShiftOpenInsert(input: SalesShiftOpenInput, tenantId: string, sellerId: string | null) {
   return {
     tenant_id: tenantId,
-    shift_code: buildShiftCode(),
+    shift_code: buildShiftCode(input.shiftDate),
+    shift_date: input.shiftDate,
     seller_id: sellerId,
     seller_name: input.sellerName,
     branch_name: input.branchName,
@@ -283,7 +290,19 @@ export function inventoryStatus(stockOnHand: number, reorderLevel: number, expir
   return "in_stock";
 }
 
-function buildShiftCode() {
-  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+function buildShiftCode(shiftDate: string) {
+  const date = shiftDate.replaceAll("-", "");
   return `SHIFT-${date}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+}
+
+function todayInEastAfrica() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Kampala",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
 }

@@ -273,6 +273,7 @@ create table public.sales_shifts (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
   shift_code text not null,
+  shift_date date not null default current_date,
   seller_id uuid references public.users(id) on delete set null,
   seller_name text not null,
   branch_name text not null default 'Main branch',
@@ -416,10 +417,10 @@ create index on public.appointments (tenant_id, scheduled_at);
 create index on public.payments (tenant_id, status, created_at);
 create index on public.invoices (tenant_id, status, created_at);
 create index on public.inventory_items (tenant_id, status);
-create unique index sales_shifts_one_open_shift_per_seller_idx
-  on public.sales_shifts (tenant_id, seller_id)
-  where status = 'open' and seller_id is not null;
-create index on public.sales_shifts (tenant_id, status, opened_at desc);
+create unique index sales_shifts_one_shift_per_seller_day_idx
+  on public.sales_shifts (tenant_id, seller_id, shift_date)
+  where seller_id is not null;
+create index on public.sales_shifts (tenant_id, shift_date, status, opened_at desc);
 create index on public.shift_expenses (tenant_id, shift_id, created_at desc);
 create index on public.daily_sales (tenant_id, sale_date, created_at desc);
 create index on public.daily_sales (tenant_id, shift_id, created_at desc);

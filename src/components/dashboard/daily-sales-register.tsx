@@ -87,6 +87,7 @@ type SaleForm = {
 };
 
 type ShiftOpenForm = {
+  shiftDate: string;
   sellerName: string;
   branchName: string;
   openingCashBalance: string;
@@ -150,6 +151,7 @@ export function DailySalesRegister({
     initialSaleForm(selectedDate, tenantKind, activeShift?.id ?? ""),
   );
   const [shiftForm, setShiftForm] = useState<ShiftOpenForm>(() => ({
+    shiftDate: selectedDate,
     sellerName: user.full_name,
     branchName: branches[0]?.name ?? "Main branch",
     openingCashBalance: "0",
@@ -172,6 +174,13 @@ export function DailySalesRegister({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const dayShift = useMemo(
+    () =>
+      shifts.find((shift) => getShiftDate(shift) === selectedDate && shift.seller_id === user.id) ??
+      shifts.find((shift) => getShiftDate(shift) === selectedDate) ??
+      null,
+    [selectedDate, shifts, user.id],
+  );
   const shiftLookup = useMemo(() => new Map(shifts.map((shift) => [shift.id, shift])), [shifts]);
   const inventoryLookup = useMemo(
     () => new Map(inventory.map((item) => [item.id, item])),
@@ -379,7 +388,27 @@ export function DailySalesRegister({
         </div>
       ) : null}
 
-      {!activeShift ? (
+      {!activeShift && dayShift ? (
+        <section className="rounded-lg border border-slate-300 bg-white shadow-md shadow-slate-300/40">
+          <div className="grid gap-4 p-5 xl:grid-cols-[1fr_auto]">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone="slate">Closed</Badge>
+                <span className="text-sm font-semibold text-slate-950">{dayShift.shift_code}</span>
+                <span className="text-sm text-slate-500">{dayShift.branch_name}</span>
+                <span className="text-sm text-slate-500">{getShiftDate(dayShift)}</span>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <ShiftMetric label="Seller" value={dayShift.seller_name} />
+                <ShiftMetric label="Opening cash" value={formatUgandanCurrency(dayShift.opening_cash_balance)} />
+                <ShiftMetric label="Expected cash" value={formatUgandanCurrency(dayShift.expected_cash ?? 0)} />
+                <ShiftMetric label="Physical cash" value={formatUgandanCurrency(dayShift.closing_cash_balance ?? 0)} />
+                <ShiftMetric label="Difference" value={formatUgandanCurrency(dayShift.cash_difference ?? 0)} />
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : !activeShift ? (
         <section className="rounded-lg border border-slate-300 bg-white shadow-md shadow-slate-300/40">
           <div className="border-b border-slate-300 bg-sky-50/80 p-5">
             <div className="flex items-center gap-3">
@@ -388,11 +417,20 @@ export function DailySalesRegister({
               </div>
               <div>
                 <h2 className="text-base font-semibold text-slate-950">Open shift</h2>
-                <p className="mt-1 text-sm text-slate-600">Sales entry unlocks after a cashier shift is open.</p>
+                <p className="mt-1 text-sm text-slate-600">Create one dated shift for the seller before recording sales.</p>
               </div>
             </div>
           </div>
           <form onSubmit={handleOpenShift} className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-6">
+            <Field label="Shift date" className="xl:col-span-2">
+              <input
+                className={inputClass}
+                type="date"
+                value={shiftForm.shiftDate}
+                onChange={(event) => updateShiftField("shiftDate", event.target.value)}
+                required
+              />
+            </Field>
             <Field label="Seller name" className="xl:col-span-2">
               <input
                 className={inputClass}
@@ -456,6 +494,7 @@ export function DailySalesRegister({
                 <Badge tone="green">Open</Badge>
                 <span className="text-sm font-semibold text-slate-950">{activeShift.shift_code}</span>
                 <span className="text-sm text-slate-500">{activeShift.branch_name}</span>
+                <span className="text-sm text-slate-500">{getShiftDate(activeShift)}</span>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <ShiftMetric label="Seller" value={activeShift.seller_name} />
@@ -593,8 +632,8 @@ export function DailySalesRegister({
                       <SheetHead className="w-[150px]">Seller</SheetHead>
                       <SheetHead className="w-[150px]">Shift ID</SheetHead>
                       <SheetHead className="w-[160px]">Customer</SheetHead>
-                      <SheetHead className="w-[230px]">Stock item</SheetHead>
-                      <SheetHead className="w-[230px]">Item sold</SheetHead>
+                      <SheetHead className="w-[230px]">Drug / item name</SheetHead>
+                      <SheetHead className="w-[230px]">Stock link</SheetHead>
                       <SheetHead className="w-[160px]">Category</SheetHead>
                       <SheetHead className="w-[90px]">Qty</SheetHead>
                       <SheetHead className="w-[120px]">Cost</SheetHead>
@@ -616,7 +655,7 @@ export function DailySalesRegister({
                             className={cellInputClass}
                             type="date"
                             value={saleForm.saleDate}
-                            onChange={(event) => updateSaleField("saleDate", event.target.value)}
+                            readOnly
                             required
                           />
                         </SheetCell>
@@ -633,21 +672,6 @@ export function DailySalesRegister({
                           />
                         </SheetCell>
                         <SheetCell>
-                          <select
-                            aria-label="Stock item"
-                            className={cellInputClass}
-                            value={saleForm.inventoryItemId}
-                            onChange={(event) => handleInventoryChange(event.target.value)}
-                          >
-                            <option value="">Manual sale</option>
-                            {inventory.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name} ({formatQuantity(item.stock_on_hand)})
-                              </option>
-                            ))}
-                          </select>
-                        </SheetCell>
-                        <SheetCell>
                           <input
                             aria-label="Item sold"
                             className={cellInputClass}
@@ -656,6 +680,21 @@ export function DailySalesRegister({
                             onChange={(event) => updateSaleField("itemName", event.target.value)}
                             required
                           />
+                        </SheetCell>
+                        <SheetCell>
+                          <select
+                            aria-label="Optional stock link"
+                            className={cellInputClass}
+                            value={saleForm.inventoryItemId}
+                            onChange={(event) => handleInventoryChange(event.target.value)}
+                          >
+                            <option value="">Manual entry</option>
+                            {inventory.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name} ({formatQuantity(item.stock_on_hand)})
+                              </option>
+                            ))}
+                          </select>
                         </SheetCell>
                         <SheetCell>
                           <select
@@ -763,8 +802,8 @@ export function DailySalesRegister({
                               {shift ? shortShiftCode(shift.shift_code) : sale.shift_id ?? ""}
                             </SheetCell>
                             <SheetCell className="text-slate-700">{sale.customer_name ?? ""}</SheetCell>
-                            <SheetCell className="text-slate-600">{sale.inventory_item_id ? "Inventory" : "Manual"}</SheetCell>
                             <SheetCell className="font-medium text-slate-950">{sale.item_name}</SheetCell>
+                            <SheetCell className="text-slate-600">{sale.inventory_item_id ? "Inventory" : "Manual"}</SheetCell>
                             <SheetCell>
                               <Badge tone={categoryTone[sale.category]}>{categoryLabel[sale.category]}</Badge>
                             </SheetCell>
@@ -918,6 +957,10 @@ function categoryFromInventory(category: string): DailySaleCategory {
 function shortShiftCode(value: string) {
   const parts = value.split("-");
   return parts.length >= 3 ? `${parts[0]}-${parts.at(-1)}` : value;
+}
+
+function getShiftDate(shift: { shift_date?: string; opened_at: string }) {
+  return shift.shift_date ?? shift.opened_at.slice(0, 10);
 }
 
 function statusTone(value: DailySale["status"] | InventoryItem["status"]): "blue" | "green" | "amber" | "rose" | "slate" {

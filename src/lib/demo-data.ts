@@ -345,6 +345,7 @@ export const demoPatients: Patient[] = [
 ];
 
 const now = new Date();
+const today = now.toISOString().slice(0, 10);
 
 export const demoAppointments: Appointment[] = [
   {
@@ -493,6 +494,7 @@ export const demoSalesShifts: SalesShift[] = [
     id: "shift-1",
     tenant_id: demoTenant.id,
     shift_code: `SHIFT-${new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10).replaceAll("-", "")}-001`,
+    shift_date: today,
     seller_id: demoUser.id,
     seller_name: demoUser.full_name,
     branch_name: "Main branch",
@@ -1033,6 +1035,7 @@ export const demoPharmacySalesShifts: SalesShift[] = [
     id: "rx-shift-1",
     tenant_id: demoPharmacyTenant.id,
     shift_code: `SHIFT-${new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10).replaceAll("-", "")}-RX1`,
+    shift_date: today,
     seller_id: demoPharmacyUser.id,
     seller_name: demoPharmacyUser.full_name,
     branch_name: "Main counter",
