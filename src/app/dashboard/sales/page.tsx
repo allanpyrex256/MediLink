@@ -1,10 +1,8 @@
 import Link from "next/link";
 import {
-  Banknote,
   CalendarDays,
   FileDown,
   ReceiptText,
-  WalletCards,
 } from "lucide-react";
 import { DailySalesRegister } from "@/components/dashboard/daily-sales-register";
 import { PageHeading } from "@/components/dashboard/page-heading";
@@ -28,12 +26,6 @@ export default async function DailySalesPage({
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   const soldSales = daySales.filter((sale) => sale.status === "sold");
   const dayTotal = soldSales.reduce((sum, sale) => sum + Number(sale.total_amount), 0);
-  const cashTotal = soldSales
-    .filter((sale) => sale.payment_method === "cash")
-    .reduce((sum, sale) => sum + Number(sale.total_amount), 0);
-  const momoTotal = soldSales
-    .filter((sale) => sale.payment_method === "mtn_momo" || sale.payment_method === "airtel_money")
-    .reduce((sum, sale) => sum + Number(sale.total_amount), 0);
   const selectedDayShifts = data.salesShifts.filter(
     (shift) => shiftDate(shift) === selectedDate && shiftType(shift) === selectedShiftType,
   );
@@ -56,7 +48,7 @@ export default async function DailySalesPage({
       <PageHeading
         eyebrow="Daily sales"
         title="Shift sales register"
-        description="Every day starts with a seller shift. Type the drug or item name, quantity, and price manually, then close the shift with cash and MoMo totals."
+        description="Every day starts with a seller shift. Type the drug or item name, quantity, and price manually, then close the shift."
         actions={
           <div className="flex flex-wrap items-end gap-2">
             <form action="/dashboard/sales" className="flex flex-wrap items-end gap-2">
@@ -92,7 +84,7 @@ export default async function DailySalesPage({
         }
       />
 
-      <div className="mb-5 grid gap-4 md:grid-cols-3">
+      <div className="mb-5 max-w-xl">
         <Card>
           <CardContent className="flex items-center gap-4">
             <div className="grid size-12 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
@@ -100,29 +92,7 @@ export default async function DailySalesPage({
             </div>
             <div>
               <p className="text-xl font-semibold text-slate-950">{formatUgandanCurrency(dayTotal)}</p>
-              <p className="text-sm text-slate-500">Today revenue</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="grid size-12 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
-              <Banknote className="size-5" />
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-slate-950">{formatUgandanCurrency(cashTotal)}</p>
-              <p className="text-sm text-slate-500">Cash</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="grid size-12 place-items-center rounded-lg bg-sky-50 text-sky-700">
-              <WalletCards className="size-5" />
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-slate-950">{formatUgandanCurrency(momoTotal)}</p>
-              <p className="text-sm text-slate-500">MoMo</p>
+              <p className="text-sm text-slate-500">Today&apos;s sales</p>
             </div>
           </CardContent>
         </Card>
