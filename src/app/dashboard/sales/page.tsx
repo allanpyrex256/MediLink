@@ -4,9 +4,6 @@ import {
   CalendarDays,
   FileDown,
   ReceiptText,
-  RotateCcw,
-  TrendingUp,
-  Users,
   WalletCards,
 } from "lucide-react";
 import { DailySalesRegister } from "@/components/dashboard/daily-sales-register";
@@ -30,7 +27,6 @@ export default async function DailySalesPage({
     .filter((sale) => sale.sale_date === selectedDate)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   const soldSales = daySales.filter((sale) => sale.status === "sold");
-  const refundedSales = daySales.filter((sale) => sale.status === "refunded");
   const dayTotal = soldSales.reduce((sum, sale) => sum + Number(sale.total_amount), 0);
   const cashTotal = soldSales
     .filter((sale) => sale.payment_method === "cash")
@@ -38,14 +34,6 @@ export default async function DailySalesPage({
   const momoTotal = soldSales
     .filter((sale) => sale.payment_method === "mtn_momo" || sale.payment_method === "airtel_money")
     .reduce((sum, sale) => sum + Number(sale.total_amount), 0);
-  const profitTotal = soldSales.reduce((sum, sale) => sum + Number(sale.profit_amount ?? 0), 0);
-  const refundTotal = refundedSales.reduce((sum, sale) => sum + Number(sale.total_amount), 0);
-  const knownCustomers = new Set(
-    soldSales
-      .map((sale) => sale.customer_name?.trim().toLowerCase())
-      .filter(Boolean),
-  );
-  const customerCount = knownCustomers.size || soldSales.length;
   const selectedDayShifts = data.salesShifts.filter(
     (shift) => shiftDate(shift) === selectedDate && shiftType(shift) === selectedShiftType,
   );
@@ -112,7 +100,7 @@ export default async function DailySalesPage({
         }
       />
 
-      <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="mb-5 grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4">
             <div className="grid size-12 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
@@ -143,39 +131,6 @@ export default async function DailySalesPage({
             <div>
               <p className="text-xl font-semibold text-slate-950">{formatUgandanCurrency(momoTotal)}</p>
               <p className="text-sm text-slate-500">MoMo</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="grid size-12 place-items-center rounded-lg bg-amber-50 text-amber-700">
-              <TrendingUp className="size-5" />
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-slate-950">{formatUgandanCurrency(profitTotal)}</p>
-              <p className="text-sm text-slate-500">Profit</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="grid size-12 place-items-center rounded-lg bg-violet-50 text-violet-700">
-              <Users className="size-5" />
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-slate-950">{formatQuantity(customerCount)}</p>
-              <p className="text-sm text-slate-500">Customers</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <div className="grid size-12 place-items-center rounded-lg bg-rose-50 text-rose-700">
-              <RotateCcw className="size-5" />
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-slate-950">{formatUgandanCurrency(refundTotal)}</p>
-              <p className="text-sm text-slate-500">Refunds</p>
             </div>
           </CardContent>
         </Card>
@@ -217,12 +172,6 @@ function todayInEastAfrica() {
   const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
 
   return `${lookup.year}-${lookup.month}-${lookup.day}`;
-}
-
-function formatQuantity(value: number) {
-  return new Intl.NumberFormat("en-UG", {
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function shiftDate(shift: { shift_date?: string; opened_at: string }) {
