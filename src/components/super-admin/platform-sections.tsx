@@ -18,7 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { PlatformTenant, SupportTicket } from "@/lib/platform-demo";
 import { subscriptionPlans } from "@/lib/platform-demo";
 import type { TenantKind } from "@/lib/types";
-import { formatUsd } from "@/lib/utils";
+import { formatUgx } from "@/lib/utils";
 
 const statusTone = {
   active: "green",
@@ -123,7 +123,7 @@ export function TenantDirectory({
                 </td>
                 <td className="px-5 py-4 text-slate-700">{tenant.nextDue}</td>
                 <td className="px-5 py-4 font-bold text-slate-950">
-                  {tenant.amount ? formatUsd(tenant.amount) : "Trial"}
+                  {tenant.amount ? formatUgx(tenant.amount) : "Trial"}
                 </td>
                 <td className="px-5 py-4 text-slate-700">{tenant.paymentMethod}</td>
                 <td className="px-5 py-4">
@@ -202,7 +202,7 @@ export function PlanCards() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-slate-950">
-              {formatUsd(plan.price)}
+              {formatUgx(plan.price)}
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-500">per tenant / month</p>
             <div className="mt-5 rounded-lg bg-slate-50 p-4">

@@ -20,10 +20,11 @@ import {
 
 const plans = [
   {
+    value: "starter",
+    kind: "clinic",
     name: "Starter Clinic",
     description: "Perfect for small clinics and solo practitioners",
-    monthlyPrice: 25,
-    annualMonthlyPrice: 20,
+    monthlyPrice: 50_000,
     accent: "violet",
     icon: Stethoscope,
     features: [
@@ -38,10 +39,49 @@ const plans = [
     popular: false,
   },
   {
+    value: "starter",
+    kind: "pharmacy",
+    name: "Pharmacy Plan",
+    description: "For pharmacies, drug shops, and dispensary counters",
+    monthlyPrice: 50_000,
+    accent: "orange",
+    icon: Pill,
+    features: [
+      "Drug inventory management",
+      "Expiry alerts",
+      "Sales & receipts",
+      "Prescription orders",
+      "3 User Accounts",
+      "Email & WhatsApp Support",
+    ],
+    cta: "Choose Plan",
+    popular: false,
+  },
+  {
+    value: "dental",
+    kind: "dentistry",
+    name: "Dentistry Plan",
+    description: "For dental practices and chair-based appointment workflows",
+    monthlyPrice: 60_000,
+    accent: "green",
+    icon: Stethoscope,
+    features: [
+      "Dental appointments",
+      "Treatment notes",
+      "Patient records",
+      "Billing reminders",
+      "5 User Accounts",
+      "Priority Support",
+    ],
+    cta: "Choose Plan",
+    popular: false,
+  },
+  {
+    value: "growth",
+    kind: "clinic",
     name: "Growing Clinic",
     description: "For growing clinics and medical centers",
-    monthlyPrice: 50,
-    annualMonthlyPrice: 40,
+    monthlyPrice: 100_000,
     accent: "green",
     icon: BriefcaseMedical,
     features: [
@@ -56,10 +96,11 @@ const plans = [
     popular: false,
   },
   {
+    value: "enterprise",
+    kind: "hospital",
     name: "Hospital Plan",
     description: "For hospitals and multi-department healthcare facilities",
-    monthlyPrice: 100,
-    annualMonthlyPrice: 80,
+    monthlyPrice: 200_000,
     accent: "violet",
     icon: Building2,
     features: [
@@ -72,42 +113,6 @@ const plans = [
     ],
     cta: "Choose Plan",
     popular: true,
-  },
-  {
-    name: "Pharmacy Plan",
-    description: "For pharmacies and drug stores",
-    monthlyPrice: 15,
-    annualMonthlyPrice: 12,
-    accent: "orange",
-    icon: Pill,
-    features: [
-      "Drug Inventory Management",
-      "Expiry Alerts",
-      "Sales & Purchase Tracking",
-      "Prescription Management",
-      "3 User Accounts",
-      "Email & WhatsApp Support",
-    ],
-    cta: "Choose Plan",
-    popular: false,
-  },
-  {
-    name: "Enterprise",
-    description: "For large hospitals and healthcare networks",
-    monthlyPrice: null,
-    annualMonthlyPrice: null,
-    accent: "blue",
-    icon: Building2,
-    features: [
-      "All Hospital Plan features",
-      "Unlimited Users",
-      "Custom Integrations",
-      "API Access",
-      "On-site Training",
-      "24/7 Dedicated Support",
-    ],
-    cta: "Contact Sales",
-    popular: false,
   },
 ] as const;
 
@@ -158,7 +163,7 @@ const accentStyles = {
 type BillingCycle = "monthly" | "annual";
 
 export function PricingPageContent() {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
 
   return (
     <section id="pricing" className="mx-auto max-w-[1450px] px-5 pb-12 pt-12 sm:px-8 lg:pt-16">
@@ -206,7 +211,7 @@ export function PricingPageContent() {
                         : "ml-1 rounded-full bg-violet-100 px-2 py-1 text-[11px] text-violet-700"
                     }
                   >
-                    Save 20%
+                    12 months
                   </span>
                 ) : null}
               </span>
@@ -229,13 +234,13 @@ export function PricingPageContent() {
           className="hidden max-w-[220px] text-sm font-semibold leading-6 text-violet-600 md:block"
         >
           {billingCycle === "annual"
-            ? "Annual billing is selected. Prices show the monthly equivalent."
-            : "Monthly billing is selected. Switch to annual to save 20%."}
+            ? "Annual billing is selected. Prices show the yearly payment."
+            : "Monthly billing is selected. Switch to annual for yearly payment."}
         </motion.p>
       </div>
 
       <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-3">
-        {["USD pricing", "Mastercard accepted", "MTN MoMo", "Airtel Money", "Bank transfer"].map((item, index) => (
+        {["UGX pricing", "Mastercard accepted", "MTN MoMo", "Airtel Money", "Bank transfer"].map((item, index) => (
           <span
             key={item}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm"
@@ -252,18 +257,13 @@ export function PricingPageContent() {
         {plans.map((plan, index) => {
           const Icon = plan.icon;
           const styles = accentStyles[plan.accent];
-          const price =
-            plan.monthlyPrice === null
-              ? "Custom"
-              : formatPrice(
-                  billingCycle === "annual" ? plan.annualMonthlyPrice : plan.monthlyPrice,
-                );
+          const price = formatPrice(
+            billingCycle === "annual" ? plan.monthlyPrice * 12 : plan.monthlyPrice,
+          );
           const billedLine =
-            plan.monthlyPrice === null
-              ? "Tailored to your needs"
-              : billingCycle === "annual"
-                ? `Billed annually (${formatPrice((plan.annualMonthlyPrice ?? 0) * 12)}/year)`
-                : "Billed monthly. Save 20% with annual billing.";
+            billingCycle === "annual"
+              ? `Billed annually at ${formatPrice(plan.monthlyPrice * 12)}/year`
+              : "Billed monthly. Annual billing is also available.";
 
           return (
             <motion.section
@@ -296,9 +296,9 @@ export function PricingPageContent() {
                   className={`mt-6 text-2xl font-bold tracking-normal ${styles.price}`}
                 >
                   {price}
-                  {plan.monthlyPrice !== null ? (
-                    <span className="text-sm font-semibold text-slate-600"> / month</span>
-                  ) : null}
+                  <span className="text-sm font-semibold text-slate-600">
+                    {billingCycle === "annual" ? " / year" : " / month"}
+                  </span>
                 </motion.p>
                 <p className="mt-3 min-h-5 text-xs font-medium text-slate-600">{billedLine}</p>
               </div>
@@ -311,7 +311,7 @@ export function PricingPageContent() {
                 ))}
               </ul>
               <Link
-                href={plan.name === "Enterprise" ? "/register" : "/login"}
+                href={`/register?plan=${plan.value}&kind=${plan.kind}&billing=${billingCycle}`}
                 className={`mt-auto inline-flex h-11 items-center justify-center rounded-lg border px-4 text-sm font-bold shadow-sm transition active:scale-[0.98] ${
                   plan.popular ? styles.primary : styles.button
                 }`}
@@ -370,9 +370,10 @@ export function PricingPageContent() {
 
 function formatPrice(value: number | null) {
   if (value === null) return "Custom";
-  return new Intl.NumberFormat("en-US", {
-    currency: "USD",
-    maximumFractionDigits: 0,
-    style: "currency",
+  const compact = new Intl.NumberFormat("en-UG", {
+    maximumFractionDigits: value >= 1_000_000 ? 1 : 0,
+    notation: "compact",
   }).format(value);
+
+  return `UGX ${compact.toUpperCase()}`;
 }

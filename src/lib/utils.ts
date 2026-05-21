@@ -19,14 +19,6 @@ export function formatUgx(amount: number) {
   }).format(amount)}`;
 }
 
-export function formatUsd(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    currency: "USD",
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(amount);
-}
-
 export function formatCompactNumber(value: number) {
   return new Intl.NumberFormat("en-UG", {
     notation: "compact",

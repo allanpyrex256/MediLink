@@ -26,7 +26,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supportTickets } from "@/lib/platform-demo";
 import type { PlatformTenant } from "@/lib/platform-demo";
 import { getPlatformOverview } from "@/lib/platform-live";
-import { formatUsd } from "@/lib/utils";
+import { formatUgx } from "@/lib/utils";
 
 const statusTone = {
   active: "green",
@@ -95,7 +95,7 @@ export default async function SuperAdminPage() {
         />
         <MetricCard
           label="Monthly SaaS Revenue"
-          value={formatUsd(metrics.monthlyRevenue)}
+          value={formatUgx(metrics.monthlyRevenue)}
           detail="Your platform income"
           icon={Banknote}
           tone="bg-emerald-100 text-emerald-700"
@@ -433,7 +433,7 @@ function BusinessTable({
             <td className="px-5 py-4 text-slate-700">{tenant.lastPayment}</td>
             <td className="px-5 py-4 text-slate-700">{tenant.nextDue}</td>
             <td className="px-5 py-4 font-bold text-slate-950">
-              {tenant.amount ? formatUsd(tenant.amount) : "Trial"}
+              {tenant.amount ? formatUgx(tenant.amount) : "Trial"}
             </td>
             <td className="px-5 py-4">
               <p className="font-semibold text-slate-800">{tenant.paymentMethod}</p>
@@ -485,7 +485,7 @@ function OwnerQueue({
                   </p>
                 </div>
                 <p className="text-sm font-bold text-slate-950">
-                  {tenant.amount ? formatUsd(tenant.amount) : "Trial"}
+                  {tenant.amount ? formatUgx(tenant.amount) : "Trial"}
                 </p>
               </div>
             </div>

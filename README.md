@@ -79,7 +79,8 @@ If your browser or Windows setup does not resolve `*.localhost`, open Notepad as
 3. Enable Supabase email/password and Google auth providers.
 4. Copy `.env.example` to `.env.local` and fill the Supabase keys.
 5. Add payment provider credentials for Flutterwave, MTN MoMo, Airtel Money, and optionally Stripe.
-6. Deploy to Vercel and copy the same env vars into the Vercel project.
+6. Add Meta WhatsApp Cloud API credentials with `WHATSAPP_CLOUD_API_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` if you want appointment confirmations sent over WhatsApp.
+7. Deploy to Vercel and copy the same env vars into the Vercel project.
 
 ## Multi-tenancy model
 

@@ -17,6 +17,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { HomePricingCycle, type HomePricingPlan } from "@/components/marketing/home-pricing-cycle";
 
 const photos = {
   hero:
@@ -25,6 +26,8 @@ const photos = {
     "https://images.pexels.com/photos/19957218/pexels-photo-19957218.jpeg?auto=compress&cs=tinysrgb&w=1200",
   digitalCare:
     "https://images.pexels.com/photos/19963170/pexels-photo-19963170.jpeg?auto=compress&cs=tinysrgb&w=1200",
+  ownerVisibility:
+    "https://images.pexels.com/photos/5452187/pexels-photo-5452187.jpeg?auto=compress&cs=tinysrgb&w=1200",
   pharmacy:
     "https://images.pexels.com/photos/6129579/pexels-photo-6129579.jpeg?auto=compress&cs=tinysrgb&w=1200",
 } as const;
@@ -74,7 +77,7 @@ const features = [
   },
   {
     title: "Billing and Payments",
-    body: "USD subscriptions, cashier collections, Mastercard, MTN MoMo, and Airtel Money.",
+    body: "UGX subscriptions, cashier collections, Mastercard, MTN MoMo, and Airtel Money.",
     icon: WalletCards,
     tone: "bg-amber-100 text-amber-800",
   },
@@ -96,48 +99,52 @@ const benefits = [
   "Fewer missing files and repeated patient questions",
   "Clear owner visibility across billing, pharmacy, and staff",
   "Cleaner handoff between reception, clinicians, dentists, and dispensary",
-  "Simple monthly plans for clinics, dental practices, hospitals, and pharmacies",
+  "Simple monthly or annual plans for clinics, dental practices, hospitals, and pharmacies",
 ] as const;
 
 const pricing = [
   {
     name: "Starter",
     audience: "Small clinics",
-    price: "$25",
-    period: "/month",
+    monthlyPrice: 50_000,
     body: "For clinics moving from paper records to a simple digital workflow.",
     features: ["Patient records", "Appointments", "Basic billing", "Monthly reports"],
-    href: "/register?intent=demo&plan=starter",
+    href: "/register?intent=demo&plan=starter&kind=clinic",
   },
   {
-    name: "Clinic",
-    audience: "Growing teams",
-    price: "$50",
-    period: "/month",
-    body: "For teams that need staff roles, prescriptions, payments, and stock visibility.",
-    features: ["Staff access control", "Prescription tracking", "Mastercard, MTN and Airtel payments", "Stock alerts"],
-    href: "/register?intent=demo&plan=growth",
-    featured: true,
+    name: "Pharmacy",
+    audience: "Retail pharmacies",
+    monthlyPrice: 50_000,
+    body: "For pharmacies that need stock control, sales, expiry alerts, and receipts.",
+    features: ["Inventory control", "Expiry alerts", "Prescription orders", "Sales receipts"],
+    href: "/register?intent=demo&plan=starter&kind=pharmacy",
   },
   {
     name: "Dentistry",
     audience: "Dental practices",
-    price: "$60",
-    period: "/month",
+    monthlyPrice: 60_000,
     body: "For dentists who need chair scheduling, treatment notes, and payments.",
     features: ["Dental appointments", "Treatment notes", "Patient records", "Billing reminders"],
-    href: "/register?intent=demo&plan=growth",
+    href: "/register?intent=demo&plan=dental&kind=dentistry",
+  },
+  {
+    name: "Clinic",
+    audience: "Growing teams",
+    monthlyPrice: 100_000,
+    body: "For teams that need staff roles, prescriptions, payments, and stock visibility.",
+    features: ["Staff access control", "Prescription tracking", "Mastercard, MTN and Airtel payments", "Stock alerts"],
+    href: "/register?intent=demo&plan=growth&kind=clinic",
+    featured: true,
   },
   {
     name: "Hospital",
     audience: "Large facilities",
-    price: "$100",
-    period: "/month",
+    monthlyPrice: 200_000,
     body: "For hospitals that need departments, admissions, laboratory, pharmacy, and reports.",
     features: ["Admissions", "Laboratory", "Pharmacy operations", "Advanced reporting"],
-    href: "/register?intent=demo&plan=enterprise",
+    href: "/register?intent=demo&plan=enterprise&kind=hospital",
   },
-] as const;
+] as const satisfies readonly HomePricingPlan[];
 
 export function HomePageContent() {
   return (
@@ -242,7 +249,7 @@ export function HomePageContent() {
         title="Everything important stays connected"
         body="MediLink keeps the practical parts of healthcare work in one place."
       >
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
           {features.map((feature) => (
             <FeatureCard key={feature.title} {...feature} />
           ))}
@@ -253,8 +260,8 @@ export function HomePageContent() {
         <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-20">
           <div className="relative min-h-[430px] overflow-hidden rounded-lg">
             <Image
-              src={photos.digitalCare}
-              alt="Black female doctor reviewing notes while coordinating patient care"
+              src={photos.ownerVisibility}
+              alt="Two doctors reviewing patient information on a tablet"
               fill
               sizes="(min-width: 1024px) 48vw, 100vw"
               className="object-cover"
@@ -298,14 +305,10 @@ export function HomePageContent() {
       <SectionShell
         id="pricing"
         eyebrow="Pricing"
-        title="Simple monthly plans"
-        body="Clear USD pricing makes it easy to start small, pay by Mastercard or local options, and expand as the business grows."
+        title="Simple monthly or annual plans"
+        body="Clear UGX pricing makes it easy to start small, choose monthly or annual billing, and expand as the business grows."
       >
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {pricing.map((plan) => (
-            <PricingCard key={plan.name} {...plan} />
-          ))}
-        </div>
+        <HomePricingCycle plans={pricing} />
       </SectionShell>
 
       <section id="contact" className="scroll-mt-24 bg-[#071133] text-white">
@@ -437,65 +440,6 @@ function StepCard({
       </div>
       <h3 className="mt-6 text-2xl font-bold text-[#080833]">{title}</h3>
       <p className="mt-3 text-base font-medium leading-7 text-slate-600">{body}</p>
-    </article>
-  );
-}
-
-function PricingCard({
-  name,
-  audience,
-  price,
-  period,
-  body,
-  features,
-  href,
-  featured = false,
-}: {
-  name: string;
-  audience: string;
-  price: string;
-  period: string;
-  body: string;
-  features: readonly string[];
-  href: string;
-  featured?: boolean;
-}) {
-  return (
-    <article
-      className={`relative rounded-lg border bg-white p-6 shadow-lg transition hover:-translate-y-1 ${
-        featured ? "border-emerald-300 shadow-emerald-100" : "border-slate-200 shadow-slate-100"
-      }`}
-    >
-      {featured ? (
-        <span className="absolute right-5 top-5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
-          Most popular
-        </span>
-      ) : null}
-      <p className="text-sm font-bold uppercase tracking-normal text-slate-500">{audience}</p>
-      <h3 className="mt-3 text-2xl font-bold text-[#080833]">{name}</h3>
-      <div className="mt-5 flex items-end gap-1">
-        <p className="text-4xl font-bold tracking-normal text-[#080833]">{price}</p>
-        <p className="pb-1 text-sm font-bold text-slate-500">{period}</p>
-      </div>
-      <p className="mt-4 min-h-[72px] text-sm font-medium leading-6 text-slate-600">{body}</p>
-      <ul className="mt-6 grid gap-3">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-            <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-            {feature}
-          </li>
-        ))}
-      </ul>
-      <Link
-        href={href}
-        className={`mt-7 inline-flex h-11 w-full items-center justify-center rounded-lg text-sm font-bold transition ${
-          featured
-            ? "bg-emerald-600 text-white hover:bg-emerald-700"
-            : "border border-slate-300 bg-white text-slate-900 hover:border-emerald-300 hover:bg-emerald-50"
-        }`}
-      >
-        Get Started
-      </Link>
     </article>
   );
 }

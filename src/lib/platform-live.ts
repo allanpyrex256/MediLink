@@ -30,7 +30,7 @@ type TenantRow = {
 
 type SubscriptionRow = {
   tenant_id: string;
-  plan: "starter" | "growth" | "enterprise";
+  plan: "starter" | "growth" | "dental" | "enterprise";
   status: "trialing" | "active" | "past_due" | "cancelled";
   amount: number | string;
   current_period_start: string;
@@ -219,6 +219,7 @@ function resolveTenantStatus(
 }
 
 function planLabel(plan?: SubscriptionRow["plan"], kind?: TenantKind): PlatformTenant["plan"] {
+  if (plan === "dental") return "Dental";
   if (kind === "dentistry") return "Dental";
   if (plan === "enterprise") return "Hospital";
   if (plan === "growth") return "Clinic";

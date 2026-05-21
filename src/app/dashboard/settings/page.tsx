@@ -1,15 +1,14 @@
 import {
   CheckCircle2,
   ExternalLink,
-  ImageUp,
   Link2,
   MapPin,
   Paintbrush,
   Settings,
-  Store,
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { BrandingImageUploads } from "@/components/dashboard/branding-image-uploads";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
 import { Select } from "@/components/ui/select";
-import { appConfig, hasSupabaseConfig } from "@/lib/config";
+import { appConfig, hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
 import { getDashboardData } from "@/lib/data/repositories";
 import { brandGradient, tenantBranding, tenantThemeOptions } from "@/lib/tenant-branding";
 import { tenantHostForSubdomain } from "@/lib/tenant-host";
@@ -30,7 +29,7 @@ const checks = [
   ["Flutterwave", "FLUTTERWAVE_CLIENT_ID / FLUTTERWAVE_CLIENT_SECRET", Boolean(appConfig.flutterwave.clientId && appConfig.flutterwave.clientSecret)],
   ["MTN MoMo", "MTN_MOMO_API_USER / MTN_MOMO_API_KEY", Boolean(appConfig.mtn.apiUser && appConfig.mtn.apiKey)],
   ["Airtel Money", "AIRTEL_MONEY_CLIENT_ID / AIRTEL_MONEY_CLIENT_SECRET", Boolean(appConfig.airtel.clientId && appConfig.airtel.clientSecret)],
-  ["WhatsApp", "WHATSAPP_CLOUD_API_TOKEN", Boolean(appConfig.whatsapp.token)],
+  ["WhatsApp", "WHATSAPP_CLOUD_API_TOKEN / WHATSAPP_PHONE_NUMBER_ID", Boolean(appConfig.whatsapp.token && appConfig.whatsapp.phoneNumberId)],
 ] as const;
 
 export default async function SettingsPage() {
@@ -107,11 +106,12 @@ export default async function SettingsPage() {
                 <Input label="Email" defaultValue={brand.email} readOnly />
               </div>
               <Input label="Address" defaultValue={brand.address} readOnly />
-              <div className="grid gap-3 md:grid-cols-3">
-                <UploadSlot label="Logo" value={brand.logoUrl ? "Uploaded" : "Generated initials logo"} icon={ImageUp} />
-                <UploadSlot label="Cover image" value={brand.coverImageUrl ? "Uploaded" : "Brand color cover"} icon={ImageUp} />
-                <UploadSlot label="Profile image" value={brand.profileImageUrl ? "Uploaded" : "Business profile mark"} icon={Store} />
-              </div>
+              <BrandingImageUploads
+                canPersist={hasSupabaseAdminConfig()}
+                coverImageUrl={brand.coverImageUrl}
+                logoUrl={brand.logoUrl}
+                profileImageUrl={brand.profileImageUrl}
+              />
             </CardContent>
           </Card>
 
@@ -275,22 +275,6 @@ function ProfileRow({
       <span className={capitalize ? "font-medium capitalize text-slate-950" : "text-right font-medium text-slate-950"}>
         {value}
       </span>
-    </div>
-  );
-}
-
-function UploadSlot({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-start gap-3">
-        <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-white text-slate-600">
-          <Icon className="size-4" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-slate-950">{label}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">{value}</p>
-        </div>
-      </div>
     </div>
   );
 }

@@ -11,27 +11,45 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
 import { demoAccountOptions, demoWorkspaceBranding } from "@/lib/demo-session";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
-import { formatUsd, slugify } from "@/lib/utils";
+import { formatUgx, slugify } from "@/lib/utils";
 
 const signupPlans = [
   {
     value: "starter",
     label: "Starter",
     description: "Small clinics, dental practices, and pharmacies",
-    amount: 25,
+    amount: 50_000,
+  },
+  {
+    value: "dental",
+    label: "Dentistry",
+    description: "Dental practices with appointments, treatment notes, and billing",
+    amount: 60_000,
   },
   {
     value: "growth",
     label: "Clinic",
     description: "Growing clinics, dental practices, and pharmacies",
-    amount: 50,
+    amount: 100_000,
   },
   {
     value: "enterprise",
     label: "Hospital",
     description: "Hospitals and larger facilities",
-    amount: 100,
+    amount: 200_000,
   },
+] as const;
+
+const billingCycles = [
+  { value: "monthly", label: "Monthly" },
+  { value: "annual", label: "Annual" },
+] as const;
+
+const tenantKinds = [
+  { value: "clinic", label: "Clinic" },
+  { value: "dentistry", label: "Dentistry" },
+  { value: "hospital", label: "Hospital" },
+  { value: "pharmacy", label: "Pharmacy" },
 ] as const;
 
 const paymentMethods = [
@@ -42,6 +60,8 @@ const paymentMethods = [
 ] as const;
 
 type SignupPlan = (typeof signupPlans)[number]["value"];
+type SignupBillingCycle = (typeof billingCycles)[number]["value"];
+type SignupTenantKind = (typeof tenantKinds)[number]["value"];
 type SignupPaymentMethod = (typeof paymentMethods)[number]["value"];
 
 function normalizeSignupPlan(value: FormDataEntryValue | string | null): SignupPlan {
@@ -58,8 +78,45 @@ function normalizePaymentMethod(value: FormDataEntryValue | string | null): Sign
     : "stripe";
 }
 
+function normalizeBillingCycle(value: FormDataEntryValue | string | null): SignupBillingCycle {
+  const normalized = String(value ?? "").toLowerCase();
+  return billingCycles.some((cycle) => cycle.value === normalized)
+    ? (normalized as SignupBillingCycle)
+    : "monthly";
+}
+
+function normalizeTenantKind(value: FormDataEntryValue | string | null, selectedPlan?: SignupPlan): SignupTenantKind {
+  const normalized = String(value ?? "").toLowerCase();
+  if (tenantKinds.some((kind) => kind.value === normalized)) {
+    return normalized as SignupTenantKind;
+  }
+
+  if (selectedPlan === "dental") return "dentistry";
+  if (selectedPlan === "enterprise") return "hospital";
+  return "clinic";
+}
+
 function planDetails(value: SignupPlan) {
-  return signupPlans.find((plan) => plan.value === value) ?? signupPlans[1];
+  return signupPlans.find((plan) => plan.value === value) ?? signupPlans[2];
+}
+
+function paymentDetailsFromForm(form: FormData, paymentMethod: SignupPaymentMethod) {
+  if (paymentMethod === "bank_transfer") {
+    return {
+      bank_name: String(form.get("bankName") ?? ""),
+      account_holder_name: String(form.get("bankAccountName") ?? ""),
+      transfer_reference: String(form.get("bankTransferReference") ?? ""),
+    };
+  }
+
+  if (paymentMethod === "stripe") {
+    return {
+      cardholder_name: String(form.get("cardholderName") ?? ""),
+      card_last_four: String(form.get("cardLastFour") ?? ""),
+    };
+  }
+
+  return {};
 }
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -79,9 +136,20 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
   const [selectedPlan, setSelectedPlan] = useState<SignupPlan>(
     normalizeSignupPlan(searchParams.get("plan")),
   );
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<SignupBillingCycle>(
+    normalizeBillingCycle(searchParams.get("billing")),
+  );
+  const [selectedTenantKind, setSelectedTenantKind] = useState<SignupTenantKind>(
+    normalizeTenantKind(searchParams.get("kind"), selectedPlan),
+  );
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<SignupPaymentMethod>(
+    normalizePaymentMethod(searchParams.get("payment")),
+  );
   const next = searchParams.get("next") ?? "/dashboard";
   const configured = hasSupabaseConfig();
   const selectedPlanDetails = planDetails(selectedPlan);
+  const selectedBillingAmount =
+    selectedBillingCycle === "annual" ? selectedPlanDetails.amount * 12 : selectedPlanDetails.amount;
   const selectedAccount = demoAccountOptions.find((account) => account.email === selectedAccountEmail);
   const selectedBrand = selectedAccount ? demoWorkspaceBranding[selectedAccount.workspaceId] : null;
   const resetComplete = mode === "login" && searchParams.get("reset") === "success";
@@ -158,11 +226,13 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
         }
       } else {
         const tenantName = String(form.get("tenantName"));
-        const tenantKind = String(form.get("tenantKind"));
         const fullName = String(form.get("fullName"));
         const subscriptionPlan = normalizeSignupPlan(form.get("subscriptionPlan"));
+        const tenantKind = normalizeTenantKind(form.get("tenantKind"), subscriptionPlan);
         const signupPlan = planDetails(subscriptionPlan);
+        const billingCycle = normalizeBillingCycle(form.get("billingCycle"));
         const paymentMethod = normalizePaymentMethod(form.get("paymentMethod"));
+        const paymentDetails = paymentDetailsFromForm(form, paymentMethod);
         const billingPhone = String(form.get("billingPhone") ?? "");
         const region = String(form.get("region") ?? "");
         const address = String(form.get("address") ?? "");
@@ -179,7 +249,9 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
               role: "admin",
               subscription_plan: subscriptionPlan,
               subscription_amount: signupPlan.amount,
+              subscription_billing_cycle: billingCycle,
               payment_method: paymentMethod,
+              payment_details: paymentDetails,
               billing_phone: billingPhone,
               phone: billingPhone,
               region,
@@ -262,11 +334,17 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
             ) : null}
             {mode === "register" ? (
               <>
-                <Select label="Workspace type" name="tenantKind" defaultValue="clinic">
-                  <option value="clinic">Clinic</option>
-                  <option value="dentistry">Dentistry</option>
-                  <option value="hospital">Hospital</option>
-                  <option value="pharmacy">Pharmacy</option>
+                <Select
+                  label="Workspace type"
+                  name="tenantKind"
+                  value={selectedTenantKind}
+                  onChange={(event) => setSelectedTenantKind(normalizeTenantKind(event.target.value, selectedPlan))}
+                >
+                  {tenantKinds.map((kind) => (
+                    <option key={kind.value} value={kind.value}>
+                      {kind.label}
+                    </option>
+                  ))}
                 </Select>
                 <Input label="Clinic, dental practice, hospital, or pharmacy name" name="tenantName" placeholder="Pearl Dental Care" required />
                 <Input label="Owner full name" name="fullName" placeholder="Dr. Sarah Namusoke" required />
@@ -279,21 +357,65 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
                   >
                     {signupPlans.map((plan) => (
                       <option key={plan.value} value={plan.value}>
-                        {plan.label} - {formatUsd(plan.amount)} / month
+                        {plan.label} - {formatUgx(plan.amount)} / month
                       </option>
                     ))}
                   </Select>
                   <p className="mt-3 text-xs font-semibold leading-5 text-violet-700">
-                    {selectedPlanDetails.description}. Your 30-day demo starts now, and billing details appear in the MediLink owner dashboard for follow-up.
+                    {selectedPlanDetails.description}. Selected payment: {formatUgx(selectedBillingAmount)} {selectedBillingCycle === "annual" ? "per year" : "per month"}.
                   </p>
                 </div>
-                <Select label="Preferred payment method" name="paymentMethod" defaultValue="stripe" required>
+                <Select
+                  label="Billing cycle"
+                  name="billingCycle"
+                  value={selectedBillingCycle}
+                  onChange={(event) => setSelectedBillingCycle(normalizeBillingCycle(event.target.value))}
+                  required
+                >
+                  {billingCycles.map((cycle) => (
+                    <option key={cycle.value} value={cycle.value}>
+                      {cycle.label}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  label="Preferred payment method"
+                  name="paymentMethod"
+                  value={selectedPaymentMethod}
+                  onChange={(event) => setSelectedPaymentMethod(normalizePaymentMethod(event.target.value))}
+                  required
+                >
                   {paymentMethods.map((method) => (
                     <option key={method.value} value={method.value}>
                       {method.label}
                     </option>
                   ))}
                 </Select>
+                {selectedPaymentMethod === "bank_transfer" ? (
+                  <div className="grid gap-4 rounded-lg border border-sky-200 bg-sky-50 p-3">
+                    <Input label="Bank name" name="bankName" placeholder="Stanbic Bank Uganda" required />
+                    <Input label="Account holder name" name="bankAccountName" placeholder="Pearl Dental Care" required />
+                    <Input label="Transfer reference" name="bankTransferReference" placeholder="Invoice or transaction reference" required />
+                  </div>
+                ) : null}
+                {selectedPaymentMethod === "stripe" ? (
+                  <div className="grid gap-4 rounded-lg border border-sky-200 bg-sky-50 p-3">
+                    <Input label="Cardholder name" name="cardholderName" placeholder="Dr. Sarah Namusoke" required />
+                    <Input
+                      label="Mastercard last 4 digits"
+                      name="cardLastFour"
+                      inputMode="numeric"
+                      maxLength={4}
+                      pattern="[0-9]{4}"
+                      placeholder="1234"
+                      required
+                      title="Enter the last 4 digits only"
+                    />
+                    <p className="text-xs font-semibold leading-5 text-sky-800">
+                      Full card numbers are entered later in the secure payment checkout.
+                    </p>
+                  </div>
+                ) : null}
                 <Input label="Billing contact phone" name="billingPhone" placeholder="+256 7XX XXX XXX" required />
                 <Input label="Region or town" name="region" placeholder="Kampala" required />
                 <Input label="Business address" name="address" placeholder="Plot 14, Kampala Road" required />

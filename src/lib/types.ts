@@ -196,10 +196,11 @@ export interface Notification {
 export interface Subscription {
   id: string;
   tenant_id: string;
-  plan: "starter" | "growth" | "enterprise";
+  plan: "starter" | "growth" | "dental" | "enterprise";
   status: "trialing" | "active" | "past_due" | "cancelled";
   amount: number;
   currency: string;
+  billing_cycle?: "monthly" | "annual";
   current_period_end: string;
 }
 

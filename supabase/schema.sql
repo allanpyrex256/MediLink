@@ -26,6 +26,15 @@ create table public.tenants (
   email text not null,
   status public.tenant_status not null default 'trialing',
   subdomain text unique,
+  logo_url text,
+  cover_image_url text,
+  profile_image_url text,
+  primary_color text,
+  accent_color text,
+  theme text check (theme in ('purple', 'blue', 'green', 'dark')),
+  brand_tagline text,
+  logo_approved_at timestamptz,
+  storage_usage_mb numeric(12, 2) not null default 0,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -306,10 +315,11 @@ create table public.prescription_orders (
   create table public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  plan text not null check (plan in ('starter', 'growth', 'enterprise')),
+  plan text not null check (plan in ('starter', 'growth', 'dental', 'enterprise')),
   status public.subscription_status not null default 'trialing',
   amount numeric(12, 2) not null default 0,
-  currency text not null default 'USD',
+  currency text not null default 'UGX',
+  billing_cycle text not null default 'monthly' check (billing_cycle in ('monthly', 'annual')),
   current_period_start timestamptz not null default now(),
   current_period_end timestamptz not null default (now() + interval '30 days'),
   provider text,
@@ -441,6 +451,7 @@ declare
   user_role public.user_role;
   subscription_plan text;
   subscription_amount numeric(12, 2);
+  subscription_billing_cycle text;
   payment_method text;
   billing_phone text;
 begin
@@ -492,18 +503,24 @@ begin
   tenant_kind := coalesce((new.raw_user_meta_data->>'tenant_kind')::public.tenant_kind, 'clinic');
   user_role := coalesce((new.raw_user_meta_data->>'role')::public.user_role, 'admin');
   subscription_plan := coalesce(new.raw_user_meta_data->>'subscription_plan', 'starter');
+  subscription_billing_cycle := coalesce(new.raw_user_meta_data->>'subscription_billing_cycle', 'monthly');
   payment_method := coalesce(new.raw_user_meta_data->>'payment_method', 'stripe');
   billing_phone := coalesce(new.raw_user_meta_data->>'billing_phone', new.raw_user_meta_data->>'phone', '+256');
 
-  if subscription_plan not in ('starter', 'growth', 'enterprise') then
+  if subscription_plan not in ('starter', 'growth', 'dental', 'enterprise') then
     subscription_plan := 'starter';
   end if;
 
+  if subscription_billing_cycle not in ('monthly', 'annual') then
+    subscription_billing_cycle := 'monthly';
+  end if;
+
   subscription_amount := case subscription_plan
-    when 'starter' then 25
-    when 'growth' then 50
-    when 'enterprise' then 100
-    else 25
+    when 'starter' then 50000
+    when 'growth' then 100000
+    when 'dental' then 60000
+    when 'enterprise' then 200000
+    else 50000
   end;
 
   insert into public.tenants (tenant_kind, name, slug, legal_name, region, address, phone, email, status, subdomain, created_by)
@@ -548,8 +565,16 @@ begin
     (created_tenant_id, 'patient', 'Patient portal access', '{"view_own_records": true}'::jsonb)
   on conflict (tenant_id, name) do nothing;
 
-  insert into public.subscriptions (tenant_id, plan, status, amount, currency, provider)
-  values (created_tenant_id, subscription_plan, 'trialing', subscription_amount, 'USD', payment_method)
+  insert into public.subscriptions (tenant_id, plan, status, amount, currency, billing_cycle, provider)
+  values (
+    created_tenant_id,
+    subscription_plan,
+    'trialing',
+    subscription_amount,
+    'UGX',
+    subscription_billing_cycle,
+    payment_method
+  )
   on conflict do nothing;
 
   return new;
@@ -862,3 +887,16 @@ with check (public.is_platform_admin());
 create policy "tenant admins read audit logs"
 on public.audit_logs for select
 using ((tenant_id = public.current_tenant_id() and public.current_user_role() = 'admin') or public.is_platform_admin());
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'tenant-assets',
+  'tenant-assets',
+  true,
+  5242880,
+  array['image/png', 'image/jpeg', 'image/webp', 'image/avif']
+)
+on conflict (id) do update
+set public = true,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;

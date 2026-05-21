@@ -36,7 +36,7 @@ export const platformTenants: PlatformTenant[] = [
     status: "active",
     lastPayment: "May 2",
     nextDue: "Jun 2",
-    amount: 100,
+    amount: 200_000,
     region: "Kampala",
     users: 42,
     activity: "active",
@@ -53,7 +53,7 @@ export const platformTenants: PlatformTenant[] = [
     status: "past_due",
     lastPayment: "Apr 10",
     nextDue: "May 10",
-    amount: 25,
+    amount: 50_000,
     region: "Kampala",
     users: 9,
     activity: "inactive",
@@ -70,7 +70,7 @@ export const platformTenants: PlatformTenant[] = [
     status: "active",
     lastPayment: "May 6",
     nextDue: "Jun 6",
-    amount: 50,
+    amount: 100_000,
     region: "Mukono",
     users: 18,
     activity: "active",
@@ -87,7 +87,7 @@ export const platformTenants: PlatformTenant[] = [
     status: "active",
     lastPayment: "May 11",
     nextDue: "Jun 11",
-    amount: 60,
+    amount: 60_000,
     region: "Kampala",
     users: 8,
     activity: "active",
@@ -104,7 +104,7 @@ export const platformTenants: PlatformTenant[] = [
     status: "active",
     lastPayment: "May 9",
     nextDue: "Jun 9",
-    amount: 50,
+    amount: 50_000,
     region: "Kampala",
     users: 13,
     activity: "active",
@@ -121,7 +121,7 @@ export const platformTenants: PlatformTenant[] = [
     status: "active",
     lastPayment: "May 1",
     nextDue: "Jun 1",
-    amount: 100,
+    amount: 100_000,
     region: "Kampala",
     users: 24,
     activity: "active",
@@ -167,12 +167,12 @@ export const platformTenants: PlatformTenant[] = [
 ];
 
 export const revenueGrowth = [
-  { month: "Jan", revenue: 560, tenants: 15 },
-  { month: "Feb", revenue: 680, tenants: 18 },
-  { month: "Mar", revenue: 790, tenants: 21 },
-  { month: "Apr", revenue: 930, tenants: 24 },
-  { month: "May", revenue: 1240, tenants: 31 },
-  { month: "Jun", revenue: 1390, tenants: 36 },
+  { month: "Jan", revenue: 560_000, tenants: 15 },
+  { month: "Feb", revenue: 680_000, tenants: 18 },
+  { month: "Mar", revenue: 790_000, tenants: 21 },
+  { month: "Apr", revenue: 930_000, tenants: 24 },
+  { month: "May", revenue: 1_240_000, tenants: 31 },
+  { month: "Jun", revenue: 1_390_000, tenants: 36 },
 ];
 
 export const tenantGrowth = [
@@ -193,43 +193,43 @@ export const subscriptionStatus = [
 export const subscriptionPlans = [
   {
     name: "Starter",
-    price: 25,
+    price: 50_000,
     tenants: 11,
     features: "Appointments, patients, billing, basic reports",
   },
   {
     name: "Clinic",
-    price: 50,
+    price: 100_000,
     tenants: 13,
     features: "Pharmacy, labs, WhatsApp reminders, analytics",
   },
   {
     name: "Hospital",
-    price: 100,
+    price: 200_000,
     tenants: 5,
     features: "Departments, admissions, laboratory, pharmacy, reports",
   },
   {
     name: "Dental Practice",
-    price: 60,
+    price: 60_000,
     tenants: 9,
     features: "Dental bookings, treatment notes, billing, reminders, and reports",
   },
   {
     name: "Basic Pharmacy",
-    price: 50,
+    price: 50_000,
     tenants: 8,
     features: "Sales, receipts, inventory, low stock, expiry alerts",
   },
   {
     name: "Advanced Pharmacy",
-    price: 80,
+    price: 100_000,
     tenants: 6,
     features: "Everything in Basic plus prescription orders and pickup tracking",
   },
   {
     name: "Enterprise",
-    price: 200,
+    price: 200_000,
     tenants: 2,
     features: "Multi-branch, API access, priority support",
   },
@@ -267,7 +267,7 @@ export function platformMetrics() {
   const activeClinics = 18;
   const dentistry = 9;
   const pharmacies = 9;
-  const monthlyRevenue = 1240;
+  const monthlyRevenue = 1_240_000;
   const expiredAccounts = 3;
   const newSignups = 7;
   const activeTenants = 27;
