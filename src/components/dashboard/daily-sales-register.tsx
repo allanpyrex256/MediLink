@@ -67,12 +67,6 @@ type ShiftCloseForm = {
   notes: string;
 };
 
-type TopItem = {
-  name: string;
-  quantity: number;
-  amount: number;
-};
-
 function initialSaleForm(selectedDate: string, tenantKind: TenantKind, shiftId: string): SaleForm {
   return {
     shiftId,
@@ -100,8 +94,6 @@ export function DailySalesRegister({
   user,
   branches,
   inventory,
-  topItems,
-  lowStockItems,
 }: {
   sales: DailySale[];
   selectedDate: string;
@@ -113,8 +105,6 @@ export function DailySalesRegister({
   user: AppUser;
   branches: Branch[];
   inventory: InventoryItem[];
-  topItems: TopItem[];
-  lowStockItems: InventoryItem[];
 }) {
   const router = useRouter();
   const [saleForm, setSaleForm] = useState<SaleForm>(() =>
@@ -509,7 +499,7 @@ export function DailySalesRegister({
         </section>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div>
         <Card>
           <CardHeader className="space-y-4">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -627,49 +617,6 @@ export function DailySalesRegister({
           </CardContent>
         </Card>
 
-        <div className="space-y-5">
-          <section className="rounded-lg border border-slate-300 bg-white shadow-md shadow-slate-300/40">
-            <div className="border-b border-slate-300 bg-sky-50/80 p-5">
-              <h2 className="text-base font-semibold text-slate-950">Top selling items</h2>
-            </div>
-            <div className="divide-y divide-slate-200">
-              {topItems.length ? (
-                topItems.map((item) => (
-                  <div key={item.name} className="grid grid-cols-[1fr_auto] gap-3 p-4">
-                    <div>
-                      <p className="font-semibold text-slate-950">{item.name}</p>
-                      <p className="text-sm text-slate-500">Qty {formatQuantity(item.quantity)}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-950">{formatUgandanCurrency(item.amount)}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="p-4 text-sm font-medium text-slate-500">No top sellers yet.</p>
-              )}
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-slate-300 bg-white shadow-md shadow-slate-300/40">
-            <div className="border-b border-slate-300 bg-amber-50/80 p-5">
-              <h2 className="text-base font-semibold text-slate-950">Low stock alerts</h2>
-            </div>
-            <div className="divide-y divide-slate-200">
-              {lowStockItems.length ? (
-                lowStockItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 p-4">
-                    <div>
-                      <p className="font-semibold text-slate-950">{item.name}</p>
-                      <p className="text-sm text-slate-500">{statusLabel(item.status)}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-950">{formatQuantity(item.stock_on_hand)}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="p-4 text-sm font-medium text-slate-500">Stock levels look fine.</p>
-              )}
-            </div>
-          </section>
-        </div>
       </div>
     </div>
   );
@@ -759,13 +706,6 @@ function getShiftType(shift: { shift_type?: string }): SalesShiftType {
 
 function shiftTypeLabel(type: SalesShiftType) {
   return type === "night" ? "Night Shift" : "Day Shift";
-}
-
-function statusLabel(value: string) {
-  return value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 function formatQuantity(value: number) {

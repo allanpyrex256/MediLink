@@ -14,7 +14,7 @@ import { PageHeading } from "@/components/dashboard/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDashboardData } from "@/lib/data/repositories";
-import type { DailySale, SalesShiftType } from "@/lib/types";
+import type { SalesShiftType } from "@/lib/types";
 import { formatUgandanCurrency } from "@/lib/utils";
 
 export default async function DailySalesPage({
@@ -61,10 +61,6 @@ export default async function DailySalesPage({
   const selectedShiftSales = selectedShift
     ? daySales.filter((sale) => sale.shift_id === selectedShift.id)
     : [];
-  const topItems = topSellingItems(soldSales);
-  const lowStockItems = data.inventory
-    .filter((item) => ["low_stock", "out_of_stock", "expiring"].includes(item.status))
-    .slice(0, 8);
   const reportUrl = `/api/daily-sales/report?date=${selectedDate}`;
 
   return (
@@ -197,8 +193,6 @@ export default async function DailySalesPage({
         user={data.user}
         branches={data.branches}
         inventory={data.inventory}
-        topItems={topItems}
-        lowStockItems={lowStockItems}
       />
     </div>
   );
@@ -229,21 +223,6 @@ function formatQuantity(value: number) {
   return new Intl.NumberFormat("en-UG", {
     maximumFractionDigits: 2,
   }).format(value);
-}
-
-function topSellingItems(sales: DailySale[]) {
-  const rows = new Map<string, { name: string; quantity: number; amount: number }>();
-
-  for (const sale of sales) {
-    const existing = rows.get(sale.item_name) ?? { name: sale.item_name, quantity: 0, amount: 0 };
-    existing.quantity += Number(sale.quantity);
-    existing.amount += Number(sale.total_amount);
-    rows.set(sale.item_name, existing);
-  }
-
-  return Array.from(rows.values())
-    .sort((a, b) => b.quantity - a.quantity)
-    .slice(0, 5);
 }
 
 function shiftDate(shift: { shift_date?: string; opened_at: string }) {
