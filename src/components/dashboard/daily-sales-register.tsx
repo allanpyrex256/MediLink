@@ -110,7 +110,7 @@ export function DailySalesRegister({
   const [saleForm, setSaleForm] = useState<SaleForm>(() =>
     initialSaleForm(selectedDate, tenantKind, activeShift?.id ?? ""),
   );
-  const [shiftForm, setShiftForm] = useState<ShiftOpenForm>(() => ({
+  const shiftForm = useMemo<ShiftOpenForm>(() => ({
     shiftDate: selectedDate,
     shiftType: selectedShiftType,
     sellerName: user.full_name,
@@ -118,7 +118,7 @@ export function DailySalesRegister({
     openingCashBalance: "0",
     deviceName: "Current device",
     notes: "",
-  }));
+  }), [branches, selectedDate, selectedShiftType, user.full_name]);
   const [closeForm, setCloseForm] = useState<ShiftCloseForm>({
     closingCashBalance: "",
     expensesTotal: "0",
@@ -175,12 +175,6 @@ export function DailySalesRegister({
     setMessage("");
     setError("");
     setSaleForm((current) => ({ ...current, [key]: value }));
-  }
-
-  function updateShiftField<Key extends keyof ShiftOpenForm>(key: Key, value: ShiftOpenForm[Key]) {
-    setMessage("");
-    setError("");
-    setShiftForm((current) => ({ ...current, [key]: value }));
   }
 
   function updateCloseField<Key extends keyof ShiftCloseForm>(key: Key, value: ShiftCloseForm[Key]) {
@@ -349,74 +343,14 @@ export function DailySalesRegister({
               </div>
             </div>
           </div>
-          <form onSubmit={handleOpenShift} className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-6">
-            <Field label="Shift date" className="xl:col-span-2">
-              <input
-                className={inputClass}
-                type="date"
-                value={shiftForm.shiftDate}
-                onChange={(event) => updateShiftField("shiftDate", event.target.value)}
-                required
-              />
-            </Field>
-            <Field label="Seller name" className="xl:col-span-2">
-              <input
-                className={inputClass}
-                value={shiftForm.sellerName}
-                onChange={(event) => updateShiftField("sellerName", event.target.value)}
-                required
-              />
-            </Field>
-            <Field label="Shift" className="xl:col-span-2">
-              <div className="flex h-11 items-center rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-800">
-                {shiftTypeLabel(selectedShiftType)}
-              </div>
-            </Field>
-            <Field label="Branch" className="xl:col-span-2">
-              <select
-                className={inputClass}
-                value={shiftForm.branchName}
-                onChange={(event) => updateShiftField("branchName", event.target.value)}
-                required
-              >
-                {(branches.length ? branches : [{ id: "main", name: "Main branch" }]).map((branch) => (
-                  <option key={branch.id} value={branch.name}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Opening cash" className="xl:col-span-2">
-              <input
-                className={inputClass}
-                type="number"
-                min="0"
-                step="1"
-                value={shiftForm.openingCashBalance}
-                onChange={(event) => updateShiftField("openingCashBalance", event.target.value)}
-                required
-              />
-            </Field>
-            <Field label="Device used" className="xl:col-span-2">
-              <input
-                className={inputClass}
-                value={shiftForm.deviceName}
-                onChange={(event) => updateShiftField("deviceName", event.target.value)}
-              />
-            </Field>
-            <Field label="Notes" className="xl:col-span-3">
-              <input
-                className={inputClass}
-                value={shiftForm.notes}
-                onChange={(event) => updateShiftField("notes", event.target.value)}
-              />
-            </Field>
-            <div className="flex items-end xl:col-span-1">
-              <Button type="submit" className="w-full" disabled={shiftLoading}>
-                {shiftLoading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
-                Open {shiftTypeLabel(selectedShiftType)}
-              </Button>
-            </div>
+          <form onSubmit={handleOpenShift} className="flex flex-wrap items-center justify-between gap-3 p-5">
+            <p className="text-sm font-medium text-slate-600">
+              Start this sheet for {selectedDate}.
+            </p>
+            <Button type="submit" disabled={shiftLoading}>
+              {shiftLoading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
+              Open {shiftTypeLabel(selectedShiftType)}
+            </Button>
           </form>
         </section>
       ) : (
