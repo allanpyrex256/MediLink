@@ -22,6 +22,7 @@ import type {
   Appointment,
   Branch,
   ClinicalPrescription,
+  DailySale,
   DashboardData,
   Diagnosis,
   Doctor,
@@ -241,6 +242,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("created_at", { ascending: false })
       .limit(30);
 
+    const { data: dailySales } = await supabase
+      .from("daily_sales")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("sale_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(300);
+
     const { data: notifications } = await supabase
       .from("notifications")
       .select("*")
@@ -306,6 +315,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     const normalizedPatients = (patients ?? []) as Patient[];
     const normalizedAppointments = (appointments ?? []) as Appointment[];
     const normalizedPayments = (payments ?? []) as Payment[];
+    const normalizedDailySales = (dailySales ?? []) as DailySale[];
     const normalizedDiagnoses = (diagnoses ?? []) as Diagnosis[];
     const normalizedClinicalPrescriptions = (clinicalPrescriptions ?? []) as ClinicalPrescription[];
     const normalizedLabResults = (labResults ?? []) as LabResult[];
@@ -378,6 +388,9 @@ export async function getDashboardData(): Promise<DashboardData> {
       payments: normalizedPayments.length
         ? normalizedPayments
         : fallbackData.payments,
+      dailySales: normalizedDailySales.length
+        ? normalizedDailySales
+        : fallbackData.dailySales,
       notifications: notifications?.length
         ? fallbackData.notifications.map((item, index) => ({
             ...item,

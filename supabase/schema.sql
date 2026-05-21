@@ -268,6 +268,22 @@ create table public.inventory_items (
   unique (tenant_id, sku)
 );
 
+create table public.daily_sales (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  sale_date date not null default current_date,
+  item_name text not null,
+  category text not null default 'medicine' check (category in ('medicine', 'tablet', 'clinic_service', 'consultation', 'lab_test', 'medical_supply', 'other')),
+  quantity numeric(12, 2) not null default 1 check (quantity > 0),
+  unit_price numeric(12, 2) not null default 0 check (unit_price >= 0),
+  total_amount numeric(12, 2) generated always as (quantity * unit_price) stored,
+  payment_method text not null default 'cash' check (payment_method in ('cash', 'mtn_momo', 'airtel_money', 'card', 'insurance', 'other')),
+  sold_by uuid references public.users(id) on delete set null,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table public.prescription_orders (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
@@ -358,6 +374,7 @@ create index on public.appointments (tenant_id, scheduled_at);
 create index on public.payments (tenant_id, status, created_at);
 create index on public.invoices (tenant_id, status, created_at);
 create index on public.inventory_items (tenant_id, status);
+create index on public.daily_sales (tenant_id, sale_date, created_at desc);
   create index on public.prescription_orders (tenant_id, status, created_at);
   create index on public.notifications (tenant_id, status, created_at);
   create index on public.document_templates (tenant_id, created_at);
@@ -401,6 +418,8 @@ for each row execute function public.set_updated_at();
 create trigger invoices_set_updated_at before update on public.invoices
 for each row execute function public.set_updated_at();
 create trigger inventory_items_set_updated_at before update on public.inventory_items
+for each row execute function public.set_updated_at();
+create trigger daily_sales_set_updated_at before update on public.daily_sales
 for each row execute function public.set_updated_at();
 create trigger prescription_orders_set_updated_at before update on public.prescription_orders
 for each row execute function public.set_updated_at();
@@ -608,6 +627,7 @@ alter table public.appointments enable row level security;
 alter table public.payments enable row level security;
 alter table public.invoices enable row level security;
 alter table public.inventory_items enable row level security;
+alter table public.daily_sales enable row level security;
   alter table public.prescription_orders enable row level security;
   alter table public.notifications enable row level security;
   alter table public.document_templates enable row level security;
@@ -840,6 +860,18 @@ create policy "pharmacy staff manage inventory"
 on public.inventory_items for all
 using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'pharmacist')) or public.is_platform_admin())
 with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'pharmacist')) or public.is_platform_admin());
+
+create policy "tenant finance staff can read daily sales"
+on public.daily_sales for select
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
+);
+
+create policy "tenant finance staff can manage daily sales"
+on public.daily_sales for all
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist')) or public.is_platform_admin());
 
 create policy "tenant members can read prescription orders"
 on public.prescription_orders for select

@@ -27,6 +27,23 @@ export type PaymentProvider =
   | "airtel_money"
   | "stripe";
 
+export type DailySaleCategory =
+  | "medicine"
+  | "tablet"
+  | "clinic_service"
+  | "consultation"
+  | "lab_test"
+  | "medical_supply"
+  | "other";
+
+export type DailySalePaymentMethod =
+  | "cash"
+  | "mtn_momo"
+  | "airtel_money"
+  | "card"
+  | "insurance"
+  | "other";
+
 export type NotificationChannel = "email" | "whatsapp" | "sms" | "in_app";
 
 export type TenantStatus = "active" | "trialing" | "past_due" | "disabled";
@@ -179,6 +196,22 @@ export interface Payment {
   created_at: string;
 }
 
+export interface DailySale {
+  id: string;
+  tenant_id: string;
+  sale_date: string;
+  item_name: string;
+  category: DailySaleCategory;
+  quantity: number;
+  unit_price: number;
+  total_amount: number;
+  payment_method: DailySalePaymentMethod;
+  sold_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface Notification {
   id: string;
   tenant_id: string;
@@ -327,6 +360,7 @@ export interface DashboardData {
   patients: Patient[];
   appointments: Appointment[];
   payments: Payment[];
+  dailySales: DailySale[];
   notifications: Notification[];
   subscriptions: Subscription[];
   revenue: RevenuePoint[];

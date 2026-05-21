@@ -5,6 +5,7 @@ import type {
   Appointment,
   AppUser,
   Branch,
+  DailySale,
   DashboardData,
   Doctor,
   InventoryItem,
@@ -18,6 +19,7 @@ import type {
 
 type StoredAppointment = Appointment;
 type StoredBranch = Branch;
+type StoredDailySale = DailySale;
 type StoredDoctor = Doctor;
 type StoredInventoryItem = InventoryItem;
 type StoredInvoice = Invoice;
@@ -33,6 +35,7 @@ interface WorkspaceState {
   patients: StoredPatient[];
   appointments: StoredAppointment[];
   branches: StoredBranch[];
+  dailySales: StoredDailySale[];
   doctors: StoredDoctor[];
   inventory: StoredInventoryItem[];
   invoices: StoredInvoice[];
@@ -58,6 +61,7 @@ function emptyWorkspace(): WorkspaceState {
     patients: [],
     appointments: [],
     branches: [],
+    dailySales: [],
     doctors: [],
     inventory: [],
     invoices: [],
@@ -214,6 +218,26 @@ export async function saveLocalDemoInvoice({
   await writeDemoState(state);
 
   return invoice;
+}
+
+export async function saveLocalDemoDailySale({
+  workspaceId,
+  sale,
+}: {
+  workspaceId: DemoWorkspaceId;
+  sale: DailySale;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.dailySales = [
+    sale,
+    ...workspace.dailySales.filter((item) => item.id !== sale.id),
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return sale;
 }
 
 export async function saveLocalDemoNotification({
@@ -403,6 +427,9 @@ export async function hydrateLocalDemoDashboardData(
   const branches = mergeById(data.branches, workspace.branches);
   const inventory = mergeById(data.inventory, workspace.inventory);
   const invoices = mergeById(data.invoices, workspace.invoices);
+  const dailySales = mergeById(data.dailySales, workspace.dailySales).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
   const notifications = mergeById(data.notifications, workspace.notifications).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
@@ -415,6 +442,7 @@ export async function hydrateLocalDemoDashboardData(
     doctors,
     inventory,
     invoices,
+    dailySales,
     notifications,
     metrics: data.metrics.map((metric) =>
       metric.label.toLowerCase().includes("appointment")

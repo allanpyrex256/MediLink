@@ -3,6 +3,7 @@ import type {
   Appointment,
   Branch,
   ClinicalPrescription,
+  DailySale,
   DashboardData,
   Diagnosis,
   Doctor,
@@ -416,6 +417,51 @@ export const demoPayments: Payment[] = [
     phone: "+256786450441",
     metadata: { network: "airtel", charge_id: "chg_demo" },
     created_at: new Date("2026-05-12T08:20:00.000Z").toISOString(),
+  },
+];
+
+export const demoDailySales: DailySale[] = [
+  {
+    id: "sale-1",
+    tenant_id: demoTenant.id,
+    sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
+    item_name: "Consultation fee",
+    category: "consultation",
+    quantity: 1,
+    unit_price: 65000,
+    total_amount: 65000,
+    payment_method: "mtn_momo",
+    sold_by: demoUser.id,
+    notes: "General medicine review",
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 35).toISOString(),
+  },
+  {
+    id: "sale-2",
+    tenant_id: demoTenant.id,
+    sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
+    item_name: "Malaria rapid test",
+    category: "lab_test",
+    quantity: 2,
+    unit_price: 15000,
+    total_amount: 30000,
+    payment_method: "cash",
+    sold_by: demoUser.id,
+    notes: "Walk-in lab desk",
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 10).toISOString(),
+  },
+  {
+    id: "sale-3",
+    tenant_id: demoTenant.id,
+    sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString().slice(0, 10),
+    item_name: "Paracetamol 500mg tablets",
+    category: "tablet",
+    quantity: 12,
+    unit_price: 500,
+    total_amount: 6000,
+    payment_method: "cash",
+    sold_by: demoUser.id,
+    notes: "Previous day outpatient sale",
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 15, 30).toISOString(),
   },
 ];
 
@@ -864,6 +910,51 @@ export const demoPharmacyPayments: Payment[] = [
   },
 ];
 
+export const demoPharmacyDailySales: DailySale[] = [
+  {
+    id: "rx-sale-1",
+    tenant_id: demoPharmacyTenant.id,
+    sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
+    item_name: "Amlodipine 5mg tablets",
+    category: "tablet",
+    quantity: 30,
+    unit_price: 1400,
+    total_amount: 42000,
+    payment_method: "mtn_momo",
+    sold_by: demoPharmacyUser.id,
+    notes: "Prescription refill",
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 24).toISOString(),
+  },
+  {
+    id: "rx-sale-2",
+    tenant_id: demoPharmacyTenant.id,
+    sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
+    item_name: "ORS sachets",
+    category: "medicine",
+    quantity: 6,
+    unit_price: 2500,
+    total_amount: 15000,
+    payment_method: "cash",
+    sold_by: demoPharmacyUser.id,
+    notes: "Counter sale",
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 18).toISOString(),
+  },
+  {
+    id: "rx-sale-3",
+    tenant_id: demoPharmacyTenant.id,
+    sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString().slice(0, 10),
+    item_name: "Paracetamol 500mg tablets",
+    category: "tablet",
+    quantity: 20,
+    unit_price: 450,
+    total_amount: 9000,
+    payment_method: "cash",
+    sold_by: demoPharmacyUser.id,
+    notes: "Previous day pickup",
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 45).toISOString(),
+  },
+];
+
 export const demoPharmacyRevenue: RevenuePoint[] = [
   { month: "Jan", revenue: 2100000, appointments: 190 },
   { month: "Feb", revenue: 2650000, appointments: 224 },
@@ -1049,6 +1140,15 @@ function buildClinicDashboardData(
           patient_id: patients[index % patients.length].id,
           provider_reference: payment.provider_reference.replace("MLK-", variant.prefix),
         }));
+  const dailySales =
+    workspace === "kampala"
+      ? demoDailySales
+      : demoDailySales.map((sale) => ({
+          ...sale,
+          id: `${workspace}-${sale.id}`,
+          tenant_id: tenant.id,
+          sold_by: user.id,
+        }));
   const diagnoses =
     workspace === "kampala"
       ? demoDiagnoses
@@ -1168,6 +1268,7 @@ function buildClinicDashboardData(
     patients,
     appointments: attachAppointmentRelations(appointments, doctors, patients),
     payments,
+    dailySales,
     notifications,
     subscriptions,
     revenue: demoRevenue,
@@ -1225,6 +1326,16 @@ function buildPharmacyDashboardData(
           tenant_id: tenant.id,
           patient_id: patients[index % patients.length].id,
           provider_reference: payment.provider_reference.replace("MLK-RX-", `${prefix}-RX-`),
+        }));
+  const dailySales =
+    workspace === "vine"
+      ? demoPharmacyDailySales
+      : demoPharmacyDailySales.map((sale) => ({
+          ...sale,
+          id: `goodlife-${sale.id}`,
+          tenant_id: tenant.id,
+          sold_by: user.id,
+          item_name: sale.item_name.replace("Amlodipine", "Losartan"),
         }));
   const inventory =
     workspace === "vine"
@@ -1310,6 +1421,7 @@ function buildPharmacyDashboardData(
     patients,
     appointments: attachAppointmentRelations(payableAppointments, demoDoctors, patients),
     payments,
+    dailySales,
     notifications: demoNotifications.map((notification) => ({
       ...notification,
       tenant_id: tenant.id,

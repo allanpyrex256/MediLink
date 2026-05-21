@@ -1,6 +1,6 @@
 import { addDays } from "date-fns";
 import { z } from "zod";
-import type { Branch, Doctor, InventoryItem, Invoice } from "@/lib/types";
+import type { Branch, DailySale, Doctor, InventoryItem, Invoice } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 
 export const inventoryCreateSchema = z.object({
@@ -53,10 +53,41 @@ export const invoiceCreateSchema = z.object({
     .transform((value) => value || undefined),
 });
 
+export const dailySaleCreateSchema = z.object({
+  saleDate: z
+    .string()
+    .date()
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => value || new Date().toISOString().slice(0, 10)),
+  itemName: z.string().trim().min(2).max(160),
+  category: z.enum([
+    "medicine",
+    "tablet",
+    "clinic_service",
+    "consultation",
+    "lab_test",
+    "medical_supply",
+    "other",
+  ]).default("medicine"),
+  quantity: z.coerce.number().positive().max(100000).default(1),
+  unitPrice: z.coerce.number().min(0).max(100000000).default(0),
+  paymentMethod: z.enum([
+    "cash",
+    "mtn_momo",
+    "airtel_money",
+    "card",
+    "insurance",
+    "other",
+  ]).default("cash"),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
 export type InventoryCreateInput = z.infer<typeof inventoryCreateSchema>;
 export type DoctorCreateInput = z.infer<typeof doctorCreateSchema>;
 export type BranchCreateInput = z.infer<typeof branchCreateSchema>;
 export type InvoiceCreateInput = z.infer<typeof invoiceCreateSchema>;
+export type DailySaleCreateInput = z.infer<typeof dailySaleCreateSchema>;
 
 export function buildInventoryInsert(input: InventoryCreateInput, tenantId: string) {
   const sku = input.sku?.trim() || `${slugify(input.name).slice(0, 16).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
@@ -143,6 +174,36 @@ export function buildLocalDemoInvoice(input: InvoiceCreateInput, tenantId: strin
   return {
     ...buildInvoiceInsert(input, tenantId),
     id: `local-invoice-${crypto.randomUUID()}`,
+    created_at: new Date().toISOString(),
+  };
+}
+
+export function buildDailySaleInsert(input: DailySaleCreateInput, tenantId: string, soldBy: string | null) {
+  return {
+    tenant_id: tenantId,
+    sale_date: input.saleDate,
+    item_name: input.itemName,
+    category: input.category,
+    quantity: input.quantity,
+    unit_price: input.unitPrice,
+    payment_method: input.paymentMethod,
+    sold_by: soldBy,
+    notes: input.notes?.trim() || null,
+  };
+}
+
+export function buildLocalDemoDailySale(
+  input: DailySaleCreateInput,
+  tenantId: string,
+  soldBy: string | null,
+): DailySale {
+  const insert = buildDailySaleInsert(input, tenantId, soldBy);
+  const totalAmount = Number(insert.quantity) * Number(insert.unit_price);
+
+  return {
+    ...insert,
+    id: `local-sale-${crypto.randomUUID()}`,
+    total_amount: totalAmount,
     created_at: new Date().toISOString(),
   };
 }

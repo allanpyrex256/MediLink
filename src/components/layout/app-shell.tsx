@@ -51,6 +51,7 @@ const hospitalNavigation: NavigationItem[] = [
   { href: "/dashboard/admissions", label: "Admissions", icon: ClipboardList, roles: ["admin", "doctor", "receptionist"] },
   { href: "/dashboard/labs", label: "Laboratory", icon: FlaskConical, roles: ["admin", "doctor", "receptionist"] },
   { href: "/dashboard/pharmacy", label: "Pharmacy", icon: Pill, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
+  { href: "/dashboard/sales", label: "Daily Sales", icon: ShoppingCart, roles: ["admin", "receptionist", "pharmacist"] },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin", "receptionist", "pharmacist"] },
   { href: "/dashboard/staff", label: "Staff", icon: ShieldCheck, roles: ["admin"] },
   { href: "/dashboard/branches", label: "Branches", icon: Building2, roles: ["admin"] },
@@ -62,6 +63,7 @@ const clinicNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "receptionist"] },
   { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDays, roles: ["admin", "doctor", "receptionist", "patient"] },
+  { href: "/dashboard/sales", label: "Daily Sales", icon: ShoppingCart, roles: ["admin", "receptionist", "pharmacist"] },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin", "receptionist"] },
   { href: "/dashboard/pharmacy", label: "Pharmacy", icon: Pill, roles: ["admin", "doctor", "receptionist", "pharmacist"] },
   { href: "/dashboard/staff", label: "Staff", icon: ShieldCheck, roles: ["admin"] },
@@ -74,6 +76,7 @@ const dentistryNavigation: NavigationItem[] = [
   { href: "/dashboard/patients", label: "Dental Patients", icon: Users, roles: ["admin", "dentist", "receptionist"] },
   { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDays, roles: ["admin", "dentist", "receptionist", "patient"] },
   { href: "/dashboard/emr", label: "Treatment Notes", icon: Stethoscope, roles: ["admin", "dentist"] },
+  { href: "/dashboard/sales", label: "Daily Sales", icon: ShoppingCart, roles: ["admin", "receptionist"] },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin", "receptionist"] },
   { href: "/dashboard/staff", label: "Staff", icon: ShieldCheck, roles: ["admin"] },
   { href: "/dashboard/reports", label: "Reports", icon: ClipboardList, roles: ["admin", "dentist"] },
@@ -82,7 +85,8 @@ const dentistryNavigation: NavigationItem[] = [
 
 const pharmacyNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/dashboard/payments", label: "Sales", icon: ShoppingCart, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/sales", label: "Daily Sales", icon: ShoppingCart, roles: ["admin", "pharmacist"] },
+  { href: "/dashboard/payments", label: "Payments", icon: CreditCard, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/inventory", label: "Inventory", icon: Package, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/prescriptions", label: "Prescriptions", icon: ReceiptText, roles: ["admin", "pharmacist"] },
   { href: "/dashboard/suppliers", label: "Suppliers", icon: Truck, roles: ["admin", "pharmacist"] },
@@ -152,7 +156,7 @@ export function AppShell({
       ]
     : tenant.tenant_kind === "pharmacy"
       ? [
-          { href: "/dashboard/payments", label: "New sale", icon: ShoppingCart },
+          { href: "/dashboard/sales", label: "New sale", icon: ShoppingCart },
           { href: "/dashboard/inventory?action=add-item", label: "Add medicine", icon: Package },
           { href: "/dashboard/expiry-alerts", label: "Expiry alerts", icon: Pill },
           { href: "/dashboard/suppliers", label: "Suppliers", icon: Truck },
@@ -162,20 +166,20 @@ export function AppShell({
             { href: "/dashboard/admissions", label: "New admission", icon: ClipboardList },
             { href: "/dashboard/labs", label: "Lab request", icon: FlaskConical },
             { href: "/dashboard/billing?action=new-invoice", label: "Create invoice", icon: CreditCard },
-            { href: "/dashboard/pharmacy", label: "Pharmacy sales", icon: Pill },
+            { href: "/dashboard/sales", label: "Record sale", icon: ShoppingCart },
           ]
       : tenant.tenant_kind === "dentistry"
         ? [
             { href: "/dashboard/appointments", label: "New dental visit", icon: CalendarDays },
             { href: "/dashboard/patients?action=add-patient", label: "Register patient", icon: Users },
             { href: "/dashboard/emr", label: "Treatment notes", icon: Stethoscope },
-            { href: "/dashboard/billing?action=new-invoice", label: "Create invoice", icon: CreditCard },
+            { href: "/dashboard/sales", label: "Record sale", icon: ShoppingCart },
           ]
       : [
           { href: "/dashboard/appointments", label: "New appointment", icon: CalendarDays },
           { href: "/dashboard/patients?action=add-patient", label: "Register patient", icon: Users },
           { href: "/dashboard/billing?action=new-invoice", label: "Create invoice", icon: CreditCard },
-          { href: "/dashboard/pharmacy", label: "View pharmacy", icon: Pill },
+          { href: "/dashboard/sales", label: "Record sale", icon: ShoppingCart },
         ];
   const footerLink = user.is_platform_admin
     ? { href: "/super-admin/analytics", label: "Platform Analytics" }
