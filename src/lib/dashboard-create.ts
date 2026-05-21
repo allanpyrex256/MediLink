@@ -1,6 +1,6 @@
 import { addDays } from "date-fns";
 import { z } from "zod";
-import type { Branch, DailySale, Doctor, InventoryItem, Invoice } from "@/lib/types";
+import type { Branch, DailySale, Doctor, InventoryItem, Invoice, SalesShift } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 
 export const inventoryCreateSchema = z.object({
@@ -10,6 +10,7 @@ export const inventoryCreateSchema = z.object({
   stockOnHand: z.coerce.number().int().min(0).default(0),
   reorderLevel: z.coerce.number().int().min(0).default(0),
   unitPrice: z.coerce.number().min(0).default(0),
+  unitCost: z.coerce.number().min(0).default(0),
   expiryDate: z
     .string()
     .date()
@@ -54,6 +55,8 @@ export const invoiceCreateSchema = z.object({
 });
 
 export const dailySaleCreateSchema = z.object({
+  shiftId: z.string().trim().min(1),
+  inventoryItemId: z.string().trim().optional().or(z.literal("")),
   saleDate: z
     .string()
     .date()
@@ -72,6 +75,7 @@ export const dailySaleCreateSchema = z.object({
   ]).default("medicine"),
   quantity: z.coerce.number().positive().max(100000).default(1),
   unitPrice: z.coerce.number().min(0).max(100000000).default(0),
+  unitCost: z.coerce.number().min(0).max(100000000).default(0),
   paymentMethod: z.enum([
     "cash",
     "mtn_momo",
@@ -80,6 +84,21 @@ export const dailySaleCreateSchema = z.object({
     "insurance",
     "other",
   ]).default("cash"),
+  customerName: z.string().trim().max(140).optional().or(z.literal("")),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const salesShiftOpenSchema = z.object({
+  sellerName: z.string().trim().min(2).max(120),
+  branchName: z.string().trim().min(2).max(120),
+  openingCashBalance: z.coerce.number().min(0).max(100000000).default(0),
+  deviceName: z.string().trim().max(120).optional().or(z.literal("")),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const salesShiftCloseSchema = z.object({
+  closingCashBalance: z.coerce.number().min(0).max(100000000),
+  expensesTotal: z.coerce.number().min(0).max(100000000).default(0),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
@@ -88,6 +107,8 @@ export type DoctorCreateInput = z.infer<typeof doctorCreateSchema>;
 export type BranchCreateInput = z.infer<typeof branchCreateSchema>;
 export type InvoiceCreateInput = z.infer<typeof invoiceCreateSchema>;
 export type DailySaleCreateInput = z.infer<typeof dailySaleCreateSchema>;
+export type SalesShiftOpenInput = z.infer<typeof salesShiftOpenSchema>;
+export type SalesShiftCloseInput = z.infer<typeof salesShiftCloseSchema>;
 
 export function buildInventoryInsert(input: InventoryCreateInput, tenantId: string) {
   const sku = input.sku?.trim() || `${slugify(input.name).slice(0, 16).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
@@ -100,6 +121,7 @@ export function buildInventoryInsert(input: InventoryCreateInput, tenantId: stri
     stock_on_hand: input.stockOnHand,
     reorder_level: input.reorderLevel,
     unit_price: input.unitPrice,
+    unit_cost: input.unitCost,
     expiry_date: input.expiryDate ?? null,
     status: inventoryStatus(input.stockOnHand, input.reorderLevel, input.expiryDate),
   };
@@ -181,12 +203,16 @@ export function buildLocalDemoInvoice(input: InvoiceCreateInput, tenantId: strin
 export function buildDailySaleInsert(input: DailySaleCreateInput, tenantId: string, soldBy: string | null) {
   return {
     tenant_id: tenantId,
+    shift_id: input.shiftId,
+    inventory_item_id: input.inventoryItemId || null,
     sale_date: input.saleDate,
     item_name: input.itemName,
     category: input.category,
     quantity: input.quantity,
     unit_price: input.unitPrice,
+    unit_cost: input.unitCost,
     payment_method: input.paymentMethod,
+    customer_name: input.customerName?.trim() || null,
     sold_by: soldBy,
     notes: input.notes?.trim() || null,
   };
@@ -199,16 +225,55 @@ export function buildLocalDemoDailySale(
 ): DailySale {
   const insert = buildDailySaleInsert(input, tenantId, soldBy);
   const totalAmount = Number(insert.quantity) * Number(insert.unit_price);
+  const profitAmount = (Number(insert.unit_price) - Number(insert.unit_cost)) * Number(insert.quantity);
 
   return {
     ...insert,
     id: `local-sale-${crypto.randomUUID()}`,
     total_amount: totalAmount,
+    profit_amount: profitAmount,
+    stock_remaining_after: null,
+    status: "sold",
     created_at: new Date().toISOString(),
   };
 }
 
-function inventoryStatus(stockOnHand: number, reorderLevel: number, expiryDate?: string): InventoryItem["status"] {
+export function buildSalesShiftOpenInsert(input: SalesShiftOpenInput, tenantId: string, sellerId: string | null) {
+  return {
+    tenant_id: tenantId,
+    shift_code: buildShiftCode(),
+    seller_id: sellerId,
+    seller_name: input.sellerName,
+    branch_name: input.branchName,
+    opening_cash_balance: input.openingCashBalance,
+    device_name: input.deviceName?.trim() || null,
+    notes: input.notes?.trim() || null,
+    status: "open" as const,
+  };
+}
+
+export function buildLocalDemoSalesShift(
+  input: SalesShiftOpenInput,
+  tenantId: string,
+  sellerId: string | null,
+): SalesShift {
+  const now = new Date().toISOString();
+
+  return {
+    ...buildSalesShiftOpenInsert(input, tenantId, sellerId),
+    id: `local-shift-${crypto.randomUUID()}`,
+    closing_cash_balance: null,
+    expenses_total: 0,
+    expected_cash: null,
+    cash_difference: null,
+    closing_notes: null,
+    opened_at: now,
+    closed_at: null,
+    created_at: now,
+  };
+}
+
+export function inventoryStatus(stockOnHand: number, reorderLevel: number, expiryDate?: string | null): InventoryItem["status"] {
   if (stockOnHand <= 0) return "out_of_stock";
   if (expiryDate) {
     const daysToExpiry = Math.ceil((new Date(expiryDate).getTime() - Date.now()) / 86_400_000);
@@ -216,4 +281,9 @@ function inventoryStatus(stockOnHand: number, reorderLevel: number, expiryDate?:
   }
   if (stockOnHand <= reorderLevel) return "low_stock";
   return "in_stock";
+}
+
+function buildShiftCode() {
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  return `SHIFT-${date}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
 }

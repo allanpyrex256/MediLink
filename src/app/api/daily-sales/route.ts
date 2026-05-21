@@ -5,11 +5,17 @@ import {
   buildDailySaleInsert,
   buildLocalDemoDailySale,
   dailySaleCreateSchema,
+  inventoryStatus,
 } from "@/lib/dashboard-create";
 import { buildDemoDashboardData } from "@/lib/demo-data";
 import { DEMO_WORKSPACE_COOKIE, normalizeDemoWorkspaceId } from "@/lib/demo-session";
-import { saveLocalDemoDailySale } from "@/lib/local-demo-store";
+import {
+  getLocalDemoWorkspaceState,
+  saveLocalDemoDailySale,
+  saveLocalDemoInventoryItem,
+} from "@/lib/local-demo-store";
 import { rateLimit } from "@/lib/security/rate-limit";
+import type { DailySaleCategory, InventoryItem } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   const ip =
@@ -32,9 +38,56 @@ export async function POST(request: NextRequest) {
   if (!hasSupabaseConfig()) {
     const workspaceId = normalizeDemoWorkspaceId(request.cookies.get(DEMO_WORKSPACE_COOKIE)?.value);
     const demo = buildDemoDashboardData(workspaceId);
+    const local = await getLocalDemoWorkspaceState(workspaceId);
+    const shifts = mergeById(demo.salesShifts, local.salesShifts);
+    const inventory = mergeById(demo.inventory, local.inventory);
+    const shift = shifts.find(
+      (item) => item.id === parsed.data.shiftId && item.status === "open",
+    );
+
+    if (!shift) {
+      return NextResponse.json({ error: "Open a shift before recording sales." }, { status: 409 });
+    }
+
+    let stockRemaining: number | null = null;
+    let unitCost = parsed.data.unitCost;
+    let saleInput = parsed.data;
+
+    if (parsed.data.inventoryItemId) {
+      const item = inventory.find((inventoryItem) => inventoryItem.id === parsed.data.inventoryItemId);
+      if (!item) return NextResponse.json({ error: "Inventory item not found." }, { status: 404 });
+      if (Number(item.stock_on_hand) < parsed.data.quantity) {
+        return NextResponse.json({ error: "Not enough stock remaining for this sale." }, { status: 409 });
+      }
+
+      stockRemaining = Number(item.stock_on_hand) - parsed.data.quantity;
+      unitCost = Number(item.unit_cost ?? parsed.data.unitCost ?? 0);
+      saleInput = {
+        ...parsed.data,
+        itemName: item.name,
+        category: categoryFromInventory(item.category),
+        unitPrice: Number(item.unit_price),
+        unitCost,
+      };
+
+      await saveLocalDemoInventoryItem({
+        workspaceId,
+        item: {
+          ...item,
+          stock_on_hand: Math.max(0, Math.floor(stockRemaining)),
+          status: inventoryStatus(Math.max(0, Math.floor(stockRemaining)), item.reorder_level, item.expiry_date),
+        },
+      });
+    }
+
+    const localSale = buildLocalDemoDailySale(saleInput, demo.tenant.id, demo.user.id);
     const sale = await saveLocalDemoDailySale({
       workspaceId,
-      sale: buildLocalDemoDailySale(parsed.data, demo.tenant.id, demo.user.id),
+      sale: {
+        ...localSale,
+        unit_cost: unitCost,
+        stock_remaining_after: stockRemaining,
+      },
     });
 
     return NextResponse.json({ data: sale, demo: true }, { status: 201 });
@@ -47,13 +100,91 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Only administrators, receptionists, and pharmacists can record sales." }, { status: 403 });
   }
 
+  const { data: shift } = await supabase
+    .from("sales_shifts")
+    .select("*")
+    .eq("id", parsed.data.shiftId)
+    .eq("tenant_id", profile.tenant_id)
+    .eq("status", "open")
+    .single();
+
+  if (!shift) {
+    return NextResponse.json({ error: "Open a shift before recording sales." }, { status: 409 });
+  }
+
+  let stockRemaining: number | null = null;
+  let saleInput = parsed.data;
+
+  if (parsed.data.inventoryItemId) {
+    const { data: item, error: itemError } = await supabase
+      .from("inventory_items")
+      .select("*")
+      .eq("id", parsed.data.inventoryItemId)
+      .eq("tenant_id", profile.tenant_id)
+      .single();
+
+    if (itemError || !item) return NextResponse.json({ error: "Inventory item not found." }, { status: 404 });
+
+    const inventoryItem = item as InventoryItem;
+    if (Number(inventoryItem.stock_on_hand) < parsed.data.quantity) {
+      return NextResponse.json({ error: "Not enough stock remaining for this sale." }, { status: 409 });
+    }
+
+    stockRemaining = Number(inventoryItem.stock_on_hand) - parsed.data.quantity;
+    saleInput = {
+      ...parsed.data,
+      itemName: inventoryItem.name,
+      category: categoryFromInventory(inventoryItem.category),
+      unitPrice: Number(inventoryItem.unit_price),
+      unitCost: Number(inventoryItem.unit_cost ?? parsed.data.unitCost ?? 0),
+    };
+  }
+
   const { data, error } = await supabase
     .from("daily_sales")
-    .insert(buildDailySaleInsert(parsed.data, profile.tenant_id, profile.id))
+    .insert({
+      ...buildDailySaleInsert(saleInput, profile.tenant_id, profile.id),
+      stock_remaining_after: stockRemaining,
+    })
     .select("*")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  if (parsed.data.inventoryItemId && stockRemaining !== null) {
+    const { data: currentItem } = await supabase
+      .from("inventory_items")
+      .select("*")
+      .eq("id", parsed.data.inventoryItemId)
+      .eq("tenant_id", profile.tenant_id)
+      .single();
+
+    if (currentItem) {
+      const item = currentItem as InventoryItem;
+      await supabase
+        .from("inventory_items")
+        .update({
+          stock_on_hand: Math.max(0, Math.floor(stockRemaining)),
+          status: inventoryStatus(Math.max(0, Math.floor(stockRemaining)), item.reorder_level, item.expiry_date),
+        })
+        .eq("id", parsed.data.inventoryItemId)
+        .eq("tenant_id", profile.tenant_id);
+    }
+  }
+
   return NextResponse.json({ data }, { status: 201 });
+}
+
+function categoryFromInventory(category: string): DailySaleCategory {
+  const normalized = category.toLowerCase();
+  if (normalized.includes("tablet")) return "tablet";
+  if (normalized.includes("lab")) return "lab_test";
+  if (normalized.includes("supply")) return "medical_supply";
+  return "medicine";
+}
+
+function mergeById<T extends { id: string }>(base: T[], overrides: T[]) {
+  const rows = new Map(base.map((item) => [item.id, item]));
+  for (const item of overrides) rows.set(item.id, item);
+  return Array.from(rows.values());
 }

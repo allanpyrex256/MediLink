@@ -15,6 +15,8 @@ import type {
   Payment,
   PrescriptionOrder,
   RevenuePoint,
+  SalesShift,
+  ShiftExpense,
   Subscription,
   Tenant,
   VisitRecord,
@@ -424,13 +426,20 @@ export const demoDailySales: DailySale[] = [
   {
     id: "sale-1",
     tenant_id: demoTenant.id,
+    shift_id: "shift-1",
+    inventory_item_id: null,
     sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
     item_name: "Consultation fee",
     category: "consultation",
     quantity: 1,
     unit_price: 65000,
+    unit_cost: 0,
     total_amount: 65000,
+    profit_amount: 65000,
     payment_method: "mtn_momo",
+    customer_name: "Brian Kato",
+    stock_remaining_after: null,
+    status: "sold",
     sold_by: demoUser.id,
     notes: "General medicine review",
     created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 35).toISOString(),
@@ -438,13 +447,20 @@ export const demoDailySales: DailySale[] = [
   {
     id: "sale-2",
     tenant_id: demoTenant.id,
+    shift_id: "shift-1",
+    inventory_item_id: null,
     sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
     item_name: "Malaria rapid test",
     category: "lab_test",
     quantity: 2,
     unit_price: 15000,
+    unit_cost: 5000,
     total_amount: 30000,
+    profit_amount: 20000,
     payment_method: "cash",
+    customer_name: "Walk-in customer",
+    stock_remaining_after: null,
+    status: "sold",
     sold_by: demoUser.id,
     notes: "Walk-in lab desk",
     created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 10).toISOString(),
@@ -452,18 +468,50 @@ export const demoDailySales: DailySale[] = [
   {
     id: "sale-3",
     tenant_id: demoTenant.id,
+    shift_id: "shift-closed-1",
+    inventory_item_id: "kampala-inv-2",
     sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString().slice(0, 10),
     item_name: "Paracetamol 500mg tablets",
     category: "tablet",
     quantity: 12,
     unit_price: 500,
+    unit_cost: 240,
     total_amount: 6000,
+    profit_amount: 3120,
     payment_method: "cash",
+    customer_name: null,
+    stock_remaining_after: 338,
+    status: "sold",
     sold_by: demoUser.id,
     notes: "Previous day outpatient sale",
     created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 15, 30).toISOString(),
   },
 ];
+
+export const demoSalesShifts: SalesShift[] = [
+  {
+    id: "shift-1",
+    tenant_id: demoTenant.id,
+    shift_code: `SHIFT-${new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10).replaceAll("-", "")}-001`,
+    seller_id: demoUser.id,
+    seller_name: demoUser.full_name,
+    branch_name: "Main branch",
+    opening_cash_balance: 150000,
+    closing_cash_balance: null,
+    expenses_total: 0,
+    expected_cash: null,
+    cash_difference: null,
+    device_name: "Front desk laptop",
+    notes: "Morning shift",
+    closing_notes: null,
+    status: "open",
+    opened_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0).toISOString(),
+    closed_at: null,
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0).toISOString(),
+  },
+];
+
+export const demoShiftExpenses: ShiftExpense[] = [];
 
 export const demoNotifications: Notification[] = [
   {
@@ -748,6 +796,7 @@ export const demoPharmacyInventory: InventoryItem[] = [
     stock_on_hand: 42,
     reorder_level: 60,
     unit_price: 12000,
+    unit_cost: 7600,
     expiry_date: "2026-09-30",
     status: "low_stock",
   },
@@ -760,6 +809,7 @@ export const demoPharmacyInventory: InventoryItem[] = [
     stock_on_hand: 360,
     reorder_level: 120,
     unit_price: 4500,
+    unit_cost: 2200,
     expiry_date: "2027-01-12",
     status: "in_stock",
   },
@@ -772,6 +822,7 @@ export const demoPharmacyInventory: InventoryItem[] = [
     stock_on_hand: 18,
     reorder_level: 50,
     unit_price: 2500,
+    unit_cost: 1300,
     expiry_date: "2026-06-18",
     status: "expiring",
   },
@@ -784,6 +835,7 @@ export const demoPharmacyInventory: InventoryItem[] = [
     stock_on_hand: 0,
     reorder_level: 20,
     unit_price: 32000,
+    unit_cost: 21000,
     expiry_date: "2027-03-01",
     status: "out_of_stock",
   },
@@ -914,13 +966,20 @@ export const demoPharmacyDailySales: DailySale[] = [
   {
     id: "rx-sale-1",
     tenant_id: demoPharmacyTenant.id,
+    shift_id: "rx-shift-1",
+    inventory_item_id: "inv-1",
     sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
     item_name: "Amlodipine 5mg tablets",
     category: "tablet",
     quantity: 30,
     unit_price: 1400,
+    unit_cost: 850,
     total_amount: 42000,
+    profit_amount: 16500,
     payment_method: "mtn_momo",
+    customer_name: "Turyasingura Byaruhanga",
+    stock_remaining_after: 12,
+    status: "sold",
     sold_by: demoPharmacyUser.id,
     notes: "Prescription refill",
     created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 24).toISOString(),
@@ -928,13 +987,20 @@ export const demoPharmacyDailySales: DailySale[] = [
   {
     id: "rx-sale-2",
     tenant_id: demoPharmacyTenant.id,
+    shift_id: "rx-shift-1",
+    inventory_item_id: "inv-3",
     sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10),
     item_name: "ORS sachets",
     category: "medicine",
     quantity: 6,
     unit_price: 2500,
+    unit_cost: 1300,
     total_amount: 15000,
+    profit_amount: 7200,
     payment_method: "cash",
+    customer_name: null,
+    stock_remaining_after: 12,
+    status: "sold",
     sold_by: demoPharmacyUser.id,
     notes: "Counter sale",
     created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 18).toISOString(),
@@ -942,18 +1008,50 @@ export const demoPharmacyDailySales: DailySale[] = [
   {
     id: "rx-sale-3",
     tenant_id: demoPharmacyTenant.id,
+    shift_id: "rx-shift-closed-1",
+    inventory_item_id: "inv-2",
     sale_date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString().slice(0, 10),
     item_name: "Paracetamol 500mg tablets",
     category: "tablet",
     quantity: 20,
     unit_price: 450,
+    unit_cost: 220,
     total_amount: 9000,
+    profit_amount: 4600,
     payment_method: "cash",
+    customer_name: "Namusoke Achan",
+    stock_remaining_after: 340,
+    status: "sold",
     sold_by: demoPharmacyUser.id,
     notes: "Previous day pickup",
     created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 45).toISOString(),
   },
 ];
+
+export const demoPharmacySalesShifts: SalesShift[] = [
+  {
+    id: "rx-shift-1",
+    tenant_id: demoPharmacyTenant.id,
+    shift_code: `SHIFT-${new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10).replaceAll("-", "")}-RX1`,
+    seller_id: demoPharmacyUser.id,
+    seller_name: demoPharmacyUser.full_name,
+    branch_name: "Main counter",
+    opening_cash_balance: 80000,
+    closing_cash_balance: null,
+    expenses_total: 0,
+    expected_cash: null,
+    cash_difference: null,
+    device_name: "Counter tablet",
+    notes: "Pharmacy morning shift",
+    closing_notes: null,
+    status: "open",
+    opened_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 10).toISOString(),
+    closed_at: null,
+    created_at: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 10).toISOString(),
+  },
+];
+
+export const demoPharmacyShiftExpenses: ShiftExpense[] = [];
 
 export const demoPharmacyRevenue: RevenuePoint[] = [
   { month: "Jan", revenue: 2100000, appointments: 190 },
@@ -1147,7 +1245,28 @@ function buildClinicDashboardData(
           ...sale,
           id: `${workspace}-${sale.id}`,
           tenant_id: tenant.id,
+          shift_id: sale.shift_id ? `${workspace}-${sale.shift_id}` : null,
           sold_by: user.id,
+        }));
+  const salesShifts =
+    workspace === "kampala"
+      ? demoSalesShifts
+      : demoSalesShifts.map((shift) => ({
+          ...shift,
+          id: `${workspace}-${shift.id}`,
+          tenant_id: tenant.id,
+          seller_id: user.id,
+          seller_name: user.full_name,
+          branch_name: `${tenant.name} Main Desk`,
+        }));
+  const shiftExpenses =
+    workspace === "kampala"
+      ? demoShiftExpenses
+      : demoShiftExpenses.map((expense) => ({
+          ...expense,
+          id: `${workspace}-${expense.id}`,
+          tenant_id: tenant.id,
+          shift_id: `${workspace}-${expense.shift_id}`,
         }));
   const diagnoses =
     workspace === "kampala"
@@ -1269,6 +1388,8 @@ function buildClinicDashboardData(
     appointments: attachAppointmentRelations(appointments, doctors, patients),
     payments,
     dailySales,
+    salesShifts,
+    shiftExpenses,
     notifications,
     subscriptions,
     revenue: demoRevenue,
@@ -1334,8 +1455,30 @@ function buildPharmacyDashboardData(
           ...sale,
           id: `goodlife-${sale.id}`,
           tenant_id: tenant.id,
+          shift_id: sale.shift_id ? `goodlife-${sale.shift_id}` : null,
+          inventory_item_id: sale.inventory_item_id ? `goodlife-${sale.inventory_item_id}` : null,
           sold_by: user.id,
           item_name: sale.item_name.replace("Amlodipine", "Losartan"),
+        }));
+  const salesShifts =
+    workspace === "vine"
+      ? demoPharmacySalesShifts
+      : demoPharmacySalesShifts.map((shift) => ({
+          ...shift,
+          id: `goodlife-${shift.id}`,
+          tenant_id: tenant.id,
+          seller_id: user.id,
+          seller_name: user.full_name,
+          branch_name: "Garden City counter",
+        }));
+  const shiftExpenses =
+    workspace === "vine"
+      ? demoPharmacyShiftExpenses
+      : demoPharmacyShiftExpenses.map((expense) => ({
+          ...expense,
+          id: `goodlife-${expense.id}`,
+          tenant_id: tenant.id,
+          shift_id: `goodlife-${expense.shift_id}`,
         }));
   const inventory =
     workspace === "vine"
@@ -1422,6 +1565,8 @@ function buildPharmacyDashboardData(
     appointments: attachAppointmentRelations(payableAppointments, demoDoctors, patients),
     payments,
     dailySales,
+    salesShifts,
+    shiftExpenses,
     notifications: demoNotifications.map((notification) => ({
       ...notification,
       tenant_id: tenant.id,

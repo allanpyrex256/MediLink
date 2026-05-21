@@ -44,6 +44,9 @@ export type DailySalePaymentMethod =
   | "insurance"
   | "other";
 
+export type DailySaleStatus = "sold" | "refunded" | "void";
+export type SalesShiftStatus = "open" | "closed";
+
 export type NotificationChannel = "email" | "whatsapp" | "sms" | "in_app";
 
 export type TenantStatus = "active" | "trialing" | "past_due" | "disabled";
@@ -199,17 +202,57 @@ export interface Payment {
 export interface DailySale {
   id: string;
   tenant_id: string;
+  shift_id: string | null;
+  inventory_item_id: string | null;
   sale_date: string;
   item_name: string;
   category: DailySaleCategory;
   quantity: number;
   unit_price: number;
+  unit_cost: number;
   total_amount: number;
+  profit_amount: number;
   payment_method: DailySalePaymentMethod;
+  customer_name: string | null;
+  stock_remaining_after: number | null;
+  status: DailySaleStatus;
   sold_by: string | null;
   notes: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+export interface SalesShift {
+  id: string;
+  tenant_id: string;
+  shift_code: string;
+  seller_id: string | null;
+  seller_name: string;
+  branch_name: string;
+  opening_cash_balance: number;
+  closing_cash_balance: number | null;
+  expenses_total: number;
+  expected_cash: number | null;
+  cash_difference: number | null;
+  device_name: string | null;
+  notes: string | null;
+  closing_notes: string | null;
+  status: SalesShiftStatus;
+  opened_at: string;
+  closed_at: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ShiftExpense {
+  id: string;
+  tenant_id: string;
+  shift_id: string;
+  description: string;
+  amount: number;
+  category: "transport" | "lunch" | "emergency_purchase" | "utilities" | "other";
+  spent_by: string | null;
+  created_at: string;
 }
 
 export interface Notification {
@@ -329,6 +372,7 @@ export interface InventoryItem {
   stock_on_hand: number;
   reorder_level: number;
   unit_price: number;
+  unit_cost?: number | null;
   expiry_date: string | null;
   status: "in_stock" | "low_stock" | "out_of_stock" | "expiring";
 }
@@ -361,6 +405,8 @@ export interface DashboardData {
   appointments: Appointment[];
   payments: Payment[];
   dailySales: DailySale[];
+  salesShifts: SalesShift[];
+  shiftExpenses: ShiftExpense[];
   notifications: Notification[];
   subscriptions: Subscription[];
   revenue: RevenuePoint[];

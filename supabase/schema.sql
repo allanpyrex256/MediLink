@@ -261,6 +261,7 @@ create table public.inventory_items (
   stock_on_hand int not null default 0 check (stock_on_hand >= 0),
   reorder_level int not null default 0 check (reorder_level >= 0),
   unit_price numeric(12, 2) not null default 0,
+  unit_cost numeric(12, 2) not null default 0 check (unit_cost >= 0),
   expiry_date date,
   status text not null default 'in_stock' check (status in ('in_stock', 'low_stock', 'out_of_stock', 'expiring')),
   created_at timestamptz not null default now(),
@@ -268,16 +269,57 @@ create table public.inventory_items (
   unique (tenant_id, sku)
 );
 
+create table public.sales_shifts (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  shift_code text not null,
+  seller_id uuid references public.users(id) on delete set null,
+  seller_name text not null,
+  branch_name text not null default 'Main branch',
+  opening_cash_balance numeric(12, 2) not null default 0 check (opening_cash_balance >= 0),
+  closing_cash_balance numeric(12, 2) check (closing_cash_balance >= 0),
+  expenses_total numeric(12, 2) not null default 0 check (expenses_total >= 0),
+  expected_cash numeric(12, 2),
+  cash_difference numeric(12, 2),
+  device_name text,
+  notes text,
+  closing_notes text,
+  status text not null default 'open' check (status in ('open', 'closed')),
+  opened_at timestamptz not null default now(),
+  closed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (tenant_id, shift_code)
+);
+
+create table public.shift_expenses (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  shift_id uuid not null references public.sales_shifts(id) on delete restrict,
+  description text not null,
+  amount numeric(12, 2) not null check (amount >= 0),
+  category text not null default 'other' check (category in ('transport', 'lunch', 'emergency_purchase', 'utilities', 'other')),
+  spent_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
 create table public.daily_sales (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
+  shift_id uuid references public.sales_shifts(id) on delete restrict,
+  inventory_item_id uuid references public.inventory_items(id) on delete set null,
   sale_date date not null default current_date,
   item_name text not null,
   category text not null default 'medicine' check (category in ('medicine', 'tablet', 'clinic_service', 'consultation', 'lab_test', 'medical_supply', 'other')),
   quantity numeric(12, 2) not null default 1 check (quantity > 0),
   unit_price numeric(12, 2) not null default 0 check (unit_price >= 0),
+  unit_cost numeric(12, 2) not null default 0 check (unit_cost >= 0),
   total_amount numeric(12, 2) generated always as (quantity * unit_price) stored,
+  profit_amount numeric(12, 2) generated always as ((unit_price - unit_cost) * quantity) stored,
   payment_method text not null default 'cash' check (payment_method in ('cash', 'mtn_momo', 'airtel_money', 'card', 'insurance', 'other')),
+  customer_name text,
+  stock_remaining_after numeric(12, 2),
+  status text not null default 'sold' check (status in ('sold', 'refunded', 'void')),
   sold_by uuid references public.users(id) on delete set null,
   notes text,
   created_at timestamptz not null default now(),
@@ -374,7 +416,13 @@ create index on public.appointments (tenant_id, scheduled_at);
 create index on public.payments (tenant_id, status, created_at);
 create index on public.invoices (tenant_id, status, created_at);
 create index on public.inventory_items (tenant_id, status);
+create unique index sales_shifts_one_open_shift_per_seller_idx
+  on public.sales_shifts (tenant_id, seller_id)
+  where status = 'open' and seller_id is not null;
+create index on public.sales_shifts (tenant_id, status, opened_at desc);
+create index on public.shift_expenses (tenant_id, shift_id, created_at desc);
 create index on public.daily_sales (tenant_id, sale_date, created_at desc);
+create index on public.daily_sales (tenant_id, shift_id, created_at desc);
   create index on public.prescription_orders (tenant_id, status, created_at);
   create index on public.notifications (tenant_id, status, created_at);
   create index on public.document_templates (tenant_id, created_at);
@@ -418,6 +466,8 @@ for each row execute function public.set_updated_at();
 create trigger invoices_set_updated_at before update on public.invoices
 for each row execute function public.set_updated_at();
 create trigger inventory_items_set_updated_at before update on public.inventory_items
+for each row execute function public.set_updated_at();
+create trigger sales_shifts_set_updated_at before update on public.sales_shifts
 for each row execute function public.set_updated_at();
 create trigger daily_sales_set_updated_at before update on public.daily_sales
 for each row execute function public.set_updated_at();
@@ -627,6 +677,8 @@ alter table public.appointments enable row level security;
 alter table public.payments enable row level security;
 alter table public.invoices enable row level security;
 alter table public.inventory_items enable row level security;
+alter table public.sales_shifts enable row level security;
+alter table public.shift_expenses enable row level security;
 alter table public.daily_sales enable row level security;
   alter table public.prescription_orders enable row level security;
   alter table public.notifications enable row level security;
@@ -861,6 +913,39 @@ on public.inventory_items for all
 using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'pharmacist')) or public.is_platform_admin())
 with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'pharmacist')) or public.is_platform_admin());
 
+create policy "tenant finance staff can read sales shifts"
+on public.sales_shifts for select
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
+);
+
+create policy "tenant finance staff can insert sales shifts"
+on public.sales_shifts for insert
+with check (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
+);
+
+create policy "tenant finance staff can close sales shifts"
+on public.sales_shifts for update
+using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist')) or public.is_platform_admin())
+with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist')) or public.is_platform_admin());
+
+create policy "tenant finance staff can read shift expenses"
+on public.shift_expenses for select
+using (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
+);
+
+create policy "tenant finance staff can insert shift expenses"
+on public.shift_expenses for insert
+with check (
+  public.is_platform_admin()
+  or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
+);
+
 create policy "tenant finance staff can read daily sales"
 on public.daily_sales for select
 using (
@@ -868,9 +953,8 @@ using (
   or (tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist'))
 );
 
-create policy "tenant finance staff can manage daily sales"
-on public.daily_sales for all
-using ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist')) or public.is_platform_admin())
+create policy "tenant finance staff can insert daily sales"
+on public.daily_sales for insert
 with check ((tenant_id = public.current_tenant_id() and public.current_user_role() in ('admin', 'receptionist', 'pharmacist')) or public.is_platform_admin());
 
 create policy "tenant members can read prescription orders"

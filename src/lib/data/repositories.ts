@@ -32,6 +32,8 @@ import type {
   Patient,
   Payment,
   PrescriptionOrder,
+  SalesShift,
+  ShiftExpense,
   StaffInvitation,
   Tenant,
   TenantDocumentTemplate,
@@ -250,6 +252,20 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("created_at", { ascending: false })
       .limit(300);
 
+    const { data: salesShifts } = await supabase
+      .from("sales_shifts")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("opened_at", { ascending: false })
+      .limit(60);
+
+    const { data: shiftExpenses } = await supabase
+      .from("shift_expenses")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(120);
+
     const { data: notifications } = await supabase
       .from("notifications")
       .select("*")
@@ -316,6 +332,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     const normalizedAppointments = (appointments ?? []) as Appointment[];
     const normalizedPayments = (payments ?? []) as Payment[];
     const normalizedDailySales = (dailySales ?? []) as DailySale[];
+    const normalizedSalesShifts = (salesShifts ?? []) as SalesShift[];
+    const normalizedShiftExpenses = (shiftExpenses ?? []) as ShiftExpense[];
     const normalizedDiagnoses = (diagnoses ?? []) as Diagnosis[];
     const normalizedClinicalPrescriptions = (clinicalPrescriptions ?? []) as ClinicalPrescription[];
     const normalizedLabResults = (labResults ?? []) as LabResult[];
@@ -391,6 +409,12 @@ export async function getDashboardData(): Promise<DashboardData> {
       dailySales: normalizedDailySales.length
         ? normalizedDailySales
         : fallbackData.dailySales,
+      salesShifts: normalizedSalesShifts.length
+        ? normalizedSalesShifts
+        : fallbackData.salesShifts,
+      shiftExpenses: normalizedShiftExpenses.length
+        ? normalizedShiftExpenses
+        : fallbackData.shiftExpenses,
       notifications: notifications?.length
         ? fallbackData.notifications.map((item, index) => ({
             ...item,

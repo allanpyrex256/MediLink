@@ -12,6 +12,8 @@ import type {
   Invoice,
   Notification,
   Patient,
+  SalesShift,
+  ShiftExpense,
   StaffInvitation,
   Tenant,
   TenantDocumentTemplate,
@@ -25,6 +27,8 @@ type StoredInventoryItem = InventoryItem;
 type StoredInvoice = Invoice;
 type StoredNotification = Notification;
 type StoredPatient = Patient;
+type StoredSalesShift = SalesShift;
+type StoredShiftExpense = ShiftExpense;
 type StoredStaffInvitation = StaffInvitation;
 type StoredStaffUser = AppUser;
 type StoredDocumentTemplate = TenantDocumentTemplate & {
@@ -39,6 +43,8 @@ interface WorkspaceState {
   doctors: StoredDoctor[];
   inventory: StoredInventoryItem[];
   invoices: StoredInvoice[];
+  salesShifts: StoredSalesShift[];
+  shiftExpenses: StoredShiftExpense[];
   notifications: StoredNotification[];
   staffInvitations: StoredStaffInvitation[];
   staffUsers: StoredStaffUser[];
@@ -65,6 +71,8 @@ function emptyWorkspace(): WorkspaceState {
     doctors: [],
     inventory: [],
     invoices: [],
+    salesShifts: [],
+    shiftExpenses: [],
     notifications: [],
     staffInvitations: [],
     staffUsers: [],
@@ -238,6 +246,50 @@ export async function saveLocalDemoDailySale({
   await writeDemoState(state);
 
   return sale;
+}
+
+export async function saveLocalDemoSalesShift({
+  workspaceId,
+  shift,
+}: {
+  workspaceId: DemoWorkspaceId;
+  shift: SalesShift;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+
+  workspace.salesShifts = [
+    shift,
+    ...workspace.salesShifts.filter((item) => item.id !== shift.id),
+  ];
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return shift;
+}
+
+export async function updateLocalDemoSalesShift({
+  workspaceId,
+  shiftId,
+  patch,
+}: {
+  workspaceId: DemoWorkspaceId;
+  shiftId: string;
+  patch: Partial<SalesShift>;
+}) {
+  const state = await readDemoState();
+  const workspace = normalizeWorkspace(state.workspaces[workspaceId]);
+  const existing = workspace.salesShifts.find((shift) => shift.id === shiftId);
+  if (!existing) return null;
+  const updated = { ...existing, ...patch, updated_at: new Date().toISOString() };
+
+  workspace.salesShifts = workspace.salesShifts.map((shift) =>
+    shift.id === shiftId ? updated : shift,
+  );
+  state.workspaces[workspaceId] = workspace;
+  await writeDemoState(state);
+
+  return updated;
 }
 
 export async function saveLocalDemoNotification({
@@ -427,6 +479,12 @@ export async function hydrateLocalDemoDashboardData(
   const branches = mergeById(data.branches, workspace.branches);
   const inventory = mergeById(data.inventory, workspace.inventory);
   const invoices = mergeById(data.invoices, workspace.invoices);
+  const salesShifts = mergeById(data.salesShifts, workspace.salesShifts).sort(
+    (a, b) => new Date(b.opened_at).getTime() - new Date(a.opened_at).getTime(),
+  );
+  const shiftExpenses = mergeById(data.shiftExpenses, workspace.shiftExpenses).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
   const dailySales = mergeById(data.dailySales, workspace.dailySales).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
@@ -442,6 +500,8 @@ export async function hydrateLocalDemoDashboardData(
     doctors,
     inventory,
     invoices,
+    salesShifts,
+    shiftExpenses,
     dailySales,
     notifications,
     metrics: data.metrics.map((metric) =>
