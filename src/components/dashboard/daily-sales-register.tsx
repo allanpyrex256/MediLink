@@ -35,43 +35,6 @@ import type {
 } from "@/lib/types";
 import { cn, formatUgandanCurrency } from "@/lib/utils";
 
-const categoryOptions: Array<{ value: DailySaleCategory; label: string }> = [
-  { value: "medicine", label: "Medicine" },
-  { value: "tablet", label: "Tablet" },
-  { value: "clinic_service", label: "Clinic service" },
-  { value: "consultation", label: "Consultation" },
-  { value: "lab_test", label: "Lab / test" },
-  { value: "medical_supply", label: "Medical supply" },
-  { value: "other", label: "Other" },
-];
-
-const paymentOptions: Array<{ value: DailySalePaymentMethod; label: string }> = [
-  { value: "cash", label: "Cash" },
-  { value: "mtn_momo", label: "MTN MoMo" },
-  { value: "airtel_money", label: "Airtel Money" },
-  { value: "card", label: "Card" },
-  { value: "insurance", label: "Insurance" },
-  { value: "other", label: "Other" },
-];
-
-const categoryTone: Record<DailySaleCategory, "blue" | "green" | "amber" | "rose" | "slate"> = {
-  medicine: "green",
-  tablet: "blue",
-  clinic_service: "amber",
-  consultation: "blue",
-  lab_test: "rose",
-  medical_supply: "green",
-  other: "slate",
-};
-
-const categoryLabel = Object.fromEntries(
-  categoryOptions.map((option) => [option.value, option.label]),
-) as Record<DailySaleCategory, string>;
-
-const paymentLabel = Object.fromEntries(
-  paymentOptions.map((option) => [option.value, option.label]),
-) as Record<DailySalePaymentMethod, string>;
-
 type SaleForm = {
   shiftId: string;
   saleDate: string;
@@ -129,7 +92,6 @@ export function DailySalesRegister({
   tenantKind,
   activeShift,
   shifts,
-  inventory,
   user,
   branches,
   topItems,
@@ -140,7 +102,6 @@ export function DailySalesRegister({
   tenantKind: TenantKind;
   activeShift: SalesShift | null;
   shifts: SalesShift[];
-  inventory: InventoryItem[];
   user: AppUser;
   branches: Branch[];
   topItems: TopItem[];
@@ -164,8 +125,6 @@ export function DailySalesRegister({
     notes: "",
   });
   const [query, setQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | DailySaleCategory>("all");
-  const [paymentFilter, setPaymentFilter] = useState<"all" | DailySalePaymentMethod>("all");
   const [showSaleRow, setShowSaleRow] = useState(Boolean(activeShift));
   const [showCloseForm, setShowCloseForm] = useState(false);
   const [saleLoading, setSaleLoading] = useState(false);
@@ -181,40 +140,17 @@ export function DailySalesRegister({
       null,
     [selectedDate, shifts, user.id],
   );
-  const shiftLookup = useMemo(() => new Map(shifts.map((shift) => [shift.id, shift])), [shifts]);
-  const inventoryLookup = useMemo(
-    () => new Map(inventory.map((item) => [item.id, item])),
-    [inventory],
-  );
-  const selectedInventoryItem = saleForm.inventoryItemId
-    ? inventoryLookup.get(saleForm.inventoryItemId) ?? null
-    : null;
-  const quantity = Number(saleForm.quantity || 0);
-  const unitPrice = Number(saleForm.unitPrice || 0);
-  const unitCost = Number(saleForm.unitCost || 0);
-  const lineTotal = Number.isFinite(quantity * unitPrice) ? quantity * unitPrice : 0;
-  const lineProfit = Number.isFinite((unitPrice - unitCost) * quantity)
-    ? (unitPrice - unitCost) * quantity
-    : 0;
-  const stockAfter =
-    selectedInventoryItem && Number.isFinite(quantity)
-      ? Number(selectedInventoryItem.stock_on_hand) - quantity
-      : null;
   const visibleSales = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return sales.filter((sale) => {
       const matchesQuery =
         !normalizedQuery ||
-        sale.item_name.toLowerCase().includes(normalizedQuery) ||
-        sale.customer_name?.toLowerCase().includes(normalizedQuery) ||
-        shiftLookup.get(sale.shift_id ?? "")?.seller_name.toLowerCase().includes(normalizedQuery);
-      const matchesCategory = categoryFilter === "all" || sale.category === categoryFilter;
-      const matchesPayment = paymentFilter === "all" || sale.payment_method === paymentFilter;
+        sale.item_name.toLowerCase().includes(normalizedQuery);
 
-      return matchesQuery && matchesCategory && matchesPayment;
+      return matchesQuery;
     });
-  }, [categoryFilter, paymentFilter, query, sales, shiftLookup]);
+  }, [query, sales]);
 
   const activeShiftSales = activeShift
     ? sales.filter((sale) => sale.shift_id === activeShift.id && sale.status === "sold")
@@ -262,29 +198,6 @@ export function DailySalesRegister({
       paymentMethod: current.paymentMethod,
     }));
     setShowSaleRow(true);
-  }
-
-  function handleInventoryChange(value: string) {
-    const item = inventoryLookup.get(value);
-    setMessage("");
-    setError("");
-    setSaleForm((current) => {
-      if (!item) {
-        return {
-          ...current,
-          inventoryItemId: "",
-        };
-      }
-
-      return {
-        ...current,
-        inventoryItemId: item.id,
-        itemName: item.name,
-        category: categoryFromInventory(item.category),
-        unitPrice: String(Number(item.unit_price ?? 0)),
-        unitCost: String(Number(item.unit_cost ?? 0)),
-      };
-    });
   }
 
   async function handleOpenShift(event: FormEvent<HTMLFormElement>) {
@@ -606,30 +519,6 @@ export function DailySalesRegister({
                     onChange={(event) => setQuery(event.target.value)}
                   />
                 </label>
-                <select
-                  className="h-10 rounded-lg border border-slate-400 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-sky-600 focus:ring-4 focus:ring-sky-100"
-                  value={categoryFilter}
-                  onChange={(event) => setCategoryFilter(event.target.value as "all" | DailySaleCategory)}
-                >
-                  <option value="all">All categories</option>
-                  {categoryOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="h-10 rounded-lg border border-slate-400 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-sky-600 focus:ring-4 focus:ring-sky-100"
-                  value={paymentFilter}
-                  onChange={(event) => setPaymentFilter(event.target.value as "all" | DailySalePaymentMethod)}
-                >
-                  <option value="all">All payments</option>
-                  {paymentOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
                 <Button type="button" variant="secondary" disabled={!activeShift} onClick={startNewSaleRow}>
                   <Plus className="size-4" />
                   Add item
@@ -640,26 +529,12 @@ export function DailySalesRegister({
           <CardContent className="p-0">
             <form onSubmit={handleSaleSubmit}>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1900px] border-collapse text-left text-sm">
+                <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                   <thead className="bg-slate-100 text-xs uppercase tracking-normal text-slate-600">
                     <tr>
-                      <SheetHead className="w-[145px]">Date</SheetHead>
-                      <SheetHead className="w-[84px]">Time</SheetHead>
-                      <SheetHead className="w-[230px]">Drug / item name</SheetHead>
-                      <SheetHead className="w-[90px]">Qty</SheetHead>
-                      <SheetHead className="w-[130px]">Unit price</SheetHead>
-                      <SheetHead className="w-[140px]">Total</SheetHead>
-                      <SheetHead className="w-[150px]">Payment</SheetHead>
-                      <SheetHead className="w-[150px]">Seller</SheetHead>
-                      <SheetHead className="w-[150px]">Shift ID</SheetHead>
-                      <SheetHead className="w-[160px]">Customer</SheetHead>
-                      <SheetHead className="w-[160px]">Category</SheetHead>
-                      <SheetHead className="w-[120px]">Cost</SheetHead>
-                      <SheetHead className="w-[130px]">Profit</SheetHead>
-                      <SheetHead className="w-[120px]">Stock</SheetHead>
-                      <SheetHead className="w-[230px]">Inventory link</SheetHead>
-                      <SheetHead className="w-[220px]">Notes</SheetHead>
-                      <SheetHead className="w-[130px]">Status</SheetHead>
+                      <SheetHead>Item name</SheetHead>
+                      <SheetHead className="w-[150px]">Quantity</SheetHead>
+                      <SheetHead className="w-[180px]">Sell price</SheetHead>
                     </tr>
                   </thead>
                   <tbody>
@@ -667,18 +542,7 @@ export function DailySalesRegister({
                       <tr className="bg-sky-50/80">
                         <SheetCell>
                           <input
-                            aria-label="Sale date"
-                            className={cellInputClass}
-                            type="date"
-                            value={saleForm.saleDate}
-                            readOnly
-                            required
-                          />
-                        </SheetCell>
-                        <SheetCell className="font-semibold text-sky-700">New</SheetCell>
-                        <SheetCell>
-                          <input
-                            aria-label="Item sold"
+                            aria-label="Item name"
                             className={cellInputClass}
                             placeholder={tenantKind === "pharmacy" ? "Paracetamol 500mg" : "Consultation fee"}
                             value={saleForm.itemName}
@@ -700,7 +564,7 @@ export function DailySalesRegister({
                         </SheetCell>
                         <SheetCell>
                           <input
-                            aria-label="Unit amount"
+                            aria-label="Sell price"
                             className={cn(cellInputClass, "text-right")}
                             type="number"
                             min="0"
@@ -710,142 +574,23 @@ export function DailySalesRegister({
                             required
                           />
                         </SheetCell>
-                        <SheetCell className="text-right font-bold text-slate-950">
-                          {formatUgandanCurrency(lineTotal)}
-                        </SheetCell>
-                        <SheetCell>
-                          <select
-                            aria-label="Payment method"
-                            className={cellInputClass}
-                            value={saleForm.paymentMethod}
-                            onChange={(event) => updateSaleField("paymentMethod", event.target.value as DailySalePaymentMethod)}
-                          >
-                            {paymentOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </SheetCell>
-                        <SheetCell className="font-semibold text-slate-950">{activeShift.seller_name}</SheetCell>
-                        <SheetCell className="text-xs font-semibold text-slate-600">{shortShiftCode(activeShift.shift_code)}</SheetCell>
-                        <SheetCell>
-                          <input
-                            aria-label="Customer"
-                            className={cellInputClass}
-                            placeholder="Optional"
-                            value={saleForm.customerName}
-                            onChange={(event) => updateSaleField("customerName", event.target.value)}
-                          />
-                        </SheetCell>
-                        <SheetCell>
-                          <select
-                            aria-label="Category"
-                            className={cellInputClass}
-                            value={saleForm.category}
-                            onChange={(event) => updateSaleField("category", event.target.value as DailySaleCategory)}
-                          >
-                            {categoryOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </SheetCell>
-                        <SheetCell>
-                          <input
-                            aria-label="Unit cost"
-                            className={cn(cellInputClass, "text-right")}
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={saleForm.unitCost}
-                            onChange={(event) => updateSaleField("unitCost", event.target.value)}
-                          />
-                        </SheetCell>
-                        <SheetCell className={cn("text-right font-bold", lineProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>
-                          {formatUgandanCurrency(lineProfit)}
-                        </SheetCell>
-                        <SheetCell className={cn("text-right font-semibold", stockAfter !== null && stockAfter < 0 ? "text-rose-700" : "text-slate-700")}>
-                          {stockAfter === null ? "" : formatQuantity(stockAfter)}
-                        </SheetCell>
-                        <SheetCell>
-                          <select
-                            aria-label="Optional inventory link"
-                            className={cellInputClass}
-                            value={saleForm.inventoryItemId}
-                            onChange={(event) => handleInventoryChange(event.target.value)}
-                          >
-                            <option value="">Manual entry</option>
-                            {inventory.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name} ({formatQuantity(item.stock_on_hand)})
-                              </option>
-                            ))}
-                          </select>
-                        </SheetCell>
-                        <SheetCell>
-                          <input
-                            aria-label="Notes"
-                            className={cellInputClass}
-                            placeholder="Receipt note"
-                            value={saleForm.notes}
-                            onChange={(event) => updateSaleField("notes", event.target.value)}
-                          />
-                        </SheetCell>
-                        <SheetCell>
-                          <Button type="submit" size="sm" disabled={saleLoading || (stockAfter !== null && stockAfter < 0)} className="w-full">
-                            {saleLoading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                            Save
-                          </Button>
-                        </SheetCell>
                       </tr>
                     ) : null}
 
                     {visibleSales.length ? (
-                      visibleSales.map((sale, index) => {
-                        const shift = sale.shift_id ? shiftLookup.get(sale.shift_id) : null;
-
-                        return (
-                          <tr
-                            key={sale.id}
-                            className={cn(index % 2 === 0 ? "bg-white" : "bg-slate-50/60", "hover:bg-sky-50/50")}
-                          >
-                            <SheetCell>{sale.sale_date}</SheetCell>
-                            <SheetCell>{formatTime(sale.created_at)}</SheetCell>
-                            <SheetCell className="font-medium text-slate-950">{sale.item_name}</SheetCell>
-                            <SheetCell className="text-right font-medium text-slate-950">{formatQuantity(sale.quantity)}</SheetCell>
-                            <SheetCell className="text-right text-slate-700">{formatUgandanCurrency(Number(sale.unit_price))}</SheetCell>
-                            <SheetCell className="text-right font-semibold text-slate-950">
-                              {formatUgandanCurrency(Number(sale.total_amount))}
-                            </SheetCell>
-                            <SheetCell>{paymentLabel[sale.payment_method]}</SheetCell>
-                            <SheetCell className="font-medium text-slate-950">{shift?.seller_name ?? sale.sold_by ?? "Seller"}</SheetCell>
-                            <SheetCell className="text-xs font-semibold text-slate-600">
-                              {shift ? shortShiftCode(shift.shift_code) : sale.shift_id ?? ""}
-                            </SheetCell>
-                            <SheetCell className="text-slate-700">{sale.customer_name ?? ""}</SheetCell>
-                            <SheetCell>
-                              <Badge tone={categoryTone[sale.category]}>{categoryLabel[sale.category]}</Badge>
-                            </SheetCell>
-                            <SheetCell className="text-right text-slate-700">{formatUgandanCurrency(Number(sale.unit_cost))}</SheetCell>
-                            <SheetCell className={cn("text-right font-semibold", Number(sale.profit_amount) >= 0 ? "text-emerald-700" : "text-rose-700")}>
-                              {formatUgandanCurrency(Number(sale.profit_amount))}
-                            </SheetCell>
-                            <SheetCell className="text-right text-slate-700">
-                              {sale.stock_remaining_after === null ? "" : formatQuantity(sale.stock_remaining_after)}
-                            </SheetCell>
-                            <SheetCell className="text-slate-600">{sale.inventory_item_id ? "Inventory" : "Manual"}</SheetCell>
-                            <SheetCell className="max-w-[260px] truncate text-slate-600">{sale.notes ?? ""}</SheetCell>
-                            <SheetCell>
-                              <Badge tone={statusTone(sale.status)}>{statusLabel(sale.status)}</Badge>
-                            </SheetCell>
-                          </tr>
-                        );
-                      })
+                      visibleSales.map((sale, index) => (
+                        <tr
+                          key={sale.id}
+                          className={cn(index % 2 === 0 ? "bg-white" : "bg-slate-50/60", "hover:bg-sky-50/50")}
+                        >
+                          <SheetCell className="font-medium text-slate-950">{sale.item_name}</SheetCell>
+                          <SheetCell className="text-right font-medium text-slate-950">{formatQuantity(sale.quantity)}</SheetCell>
+                          <SheetCell className="text-right text-slate-700">{formatUgandanCurrency(Number(sale.unit_price))}</SheetCell>
+                        </tr>
+                      ))
                     ) : (
                       <tr>
-                        <SheetCell colSpan={17} className="py-10 text-center text-sm font-medium text-slate-500">
+                        <SheetCell colSpan={3} className="py-10 text-center text-sm font-medium text-slate-500">
                           No saved rows for this view.
                         </SheetCell>
                       </tr>
@@ -853,6 +598,14 @@ export function DailySalesRegister({
                   </tbody>
                 </table>
               </div>
+              {showSaleRow && activeShift ? (
+                <div className="flex justify-end border-t border-slate-200 bg-white px-5 py-4">
+                  <Button type="submit" size="sm" disabled={saleLoading}>
+                    {saleLoading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                    Save item
+                  </Button>
+                </div>
+              ) : null}
             </form>
           </CardContent>
         </Card>
@@ -961,29 +714,8 @@ function SheetCell({
   );
 }
 
-function categoryFromInventory(category: string): DailySaleCategory {
-  const normalized = category.toLowerCase();
-  if (normalized.includes("tablet")) return "tablet";
-  if (normalized.includes("lab")) return "lab_test";
-  if (normalized.includes("supply")) return "medical_supply";
-  if (normalized.includes("service")) return "clinic_service";
-  return "medicine";
-}
-
-function shortShiftCode(value: string) {
-  const parts = value.split("-");
-  return parts.length >= 3 ? `${parts[0]}-${parts.at(-1)}` : value;
-}
-
 function getShiftDate(shift: { shift_date?: string; opened_at: string }) {
   return shift.shift_date ?? shift.opened_at.slice(0, 10);
-}
-
-function statusTone(value: DailySale["status"] | InventoryItem["status"]): "blue" | "green" | "amber" | "rose" | "slate" {
-  if (value === "sold" || value === "in_stock") return "green";
-  if (value === "refunded" || value === "low_stock" || value === "expiring") return "amber";
-  if (value === "void" || value === "out_of_stock") return "rose";
-  return "slate";
 }
 
 function statusLabel(value: string) {
@@ -991,13 +723,6 @@ function statusLabel(value: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("en-UG", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
 }
 
 function formatQuantity(value: number) {

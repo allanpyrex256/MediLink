@@ -180,7 +180,6 @@ export default async function DailySalesPage({
         tenantKind={data.tenant.tenant_kind}
         activeShift={activeShift}
         shifts={data.salesShifts}
-        inventory={data.inventory}
         user={data.user}
         branches={data.branches}
         topItems={topItems}
