@@ -2,6 +2,7 @@
 
 import {
   useMemo,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -111,6 +112,7 @@ export function DailySalesRegister({
     initialSaleForm(selectedDate, tenantKind, activeShift?.id ?? ""),
   );
   const [optimisticSales, setOptimisticSales] = useState<DailySale[]>([]);
+  const saleItemNameRef = useRef<HTMLInputElement>(null);
   const shiftForm = useMemo<ShiftOpenForm>(() => ({
     shiftDate: selectedDate,
     shiftType: selectedShiftType,
@@ -278,8 +280,9 @@ export function DailySalesRegister({
         category: current.category,
         paymentMethod: current.paymentMethod,
       }));
-      setShowSaleRow(false);
-      setMessage(payload.demo ? "Sale recorded in local demo mode." : "Sale recorded.");
+      setShowSaleRow(true);
+      requestAnimationFrame(() => saleItemNameRef.current?.focus());
+      setMessage(payload.demo ? "Sale recorded in local demo mode. Add another item." : "Sale recorded. Add another item.");
       router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to record this sale.");
@@ -503,6 +506,7 @@ export function DailySalesRegister({
                       <tr className="bg-sky-50/80">
                         <SheetCell>
                           <input
+                            ref={saleItemNameRef}
                             aria-label="Item name"
                             list="sales-stock-items"
                             className={cellInputClass}
