@@ -19,6 +19,10 @@ const tenantKinds = [
   { value: "clinic", label: "Clinic" },
 ] as const;
 
+function isEmailIdentifier(value: string) {
+  return value.includes("@");
+}
+
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   return (
     <Suspense fallback={<AuthFormFallback />}>
@@ -90,10 +94,15 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
       return;
     }
 
-    const phone = phoneLoginIdentifier(String(form.get("phone") ?? ""));
+    const identifier = String(form.get("identifier") ?? "").trim();
     const password = String(form.get("password") ?? "");
+    if (!identifier) throw new Error("Enter your phone number or email.");
+
     const supabase = createSupabaseBrowserClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({ phone, password });
+    const credentials = isEmailIdentifier(identifier)
+      ? { email: identifier.toLowerCase(), password }
+      : { phone: phoneLoginIdentifier(identifier), password };
+    const { error: authError } = await supabase.auth.signInWithPassword(credentials);
 
     if (authError) throw authError;
 
@@ -150,11 +159,11 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
         <CardHeader>
           <Logo label={authLabel} tagline={authTagline} initials={authInitials} color={authColor} />
           <CardTitle className="mt-6">
-            {mode === "login" ? "Sign in with phone" : "Create owner account"}
+            {mode === "login" ? "Sign in with phone or email" : "Create owner account"}
           </CardTitle>
           <CardDescription>
             {mode === "login"
-              ? "Use the phone number and password assigned to your MediLink account."
+              ? "Use the phone number or email and password assigned to your MediLink account."
               : "The first account becomes the owner. Staff accounts are added later by the owner."}
           </CardDescription>
         </CardHeader>
@@ -182,19 +191,26 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
               </>
             ) : !configured ? (
               <Select
-                label="Demo phone account"
+                label="Demo account"
                 name="accountPhone"
                 value={selectedDemoPhone}
                 onChange={(event) => setSelectedDemoPhone(event.target.value)}
               >
                 {demoAccounts.map((account) => (
                   <option key={account.phone} value={account.phone}>
-                    {account.phone} - {dashboardRoleLabel(account.role)} - {account.fullName}
+                    {account.phone} / {account.email} - {dashboardRoleLabel(account.role)} - {account.fullName}
                   </option>
                 ))}
               </Select>
             ) : (
-              <Input label="Phone number" name="phone" type="tel" placeholder="+256 700 000 000" required />
+              <Input
+                label="Phone number or email"
+                name="identifier"
+                type="text"
+                placeholder="+256 700 000 000 or admin@clinic.ug"
+                autoComplete="username"
+                required
+              />
             )}
 
             {mode === "register" ? (
