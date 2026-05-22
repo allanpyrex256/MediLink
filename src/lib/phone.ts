@@ -16,3 +16,10 @@ export function phoneLoginIdentifier(value: string) {
 
   return normalized || value.trim();
 }
+
+export function phoneAuthEmail(value: string) {
+  const normalized = normalizeUgandanPhone(value);
+  const digits = normalized.replace(/\D/g, "");
+
+  return digits ? `${digits}@phone.medilink.local` : "";
+}

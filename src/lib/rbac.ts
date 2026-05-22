@@ -10,6 +10,7 @@ const pharmacistPaths = [
   "/dashboard/prescriptions",
   "/dashboard/pharmacy",
 ];
+const sharedDashboardPaths = ["/dashboard/notifications"];
 
 export function dashboardRole(role: UserRole | string | null | undefined): DashboardRole {
   if (role === "owner" || role === "admin") return "owner";
@@ -52,6 +53,7 @@ export function canAccessDashboardPath(
   const normalized = dashboardRole(role);
 
   if (normalized === "owner") return true;
+  if (matchesAny(pathname, sharedDashboardPaths)) return true;
   if (normalized === "seller") return matchesAny(pathname, sellerPaths);
   if (normalized === "pharmacist") return matchesAny(pathname, pharmacistPaths);
 

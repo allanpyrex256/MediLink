@@ -5,7 +5,7 @@ import { z } from "zod";
 import { hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
 import { getCurrentDemoWorkspaceId, getDashboardData } from "@/lib/data/repositories";
 import { saveLocalDemoStaffMember } from "@/lib/local-demo-store";
-import { normalizeUgandanPhone } from "@/lib/phone";
+import { normalizeUgandanPhone, phoneAuthEmail } from "@/lib/phone";
 import { canManageStaff, dashboardRoleLabel } from "@/lib/rbac";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -81,10 +81,11 @@ export async function inviteStaffMember(
   }
 
   const admin = createSupabaseAdminClient();
+  const authEmail = phoneAuthEmail(phone);
   const { error } = await admin.auth.admin.createUser({
-    phone,
+    email: authEmail,
     password: parsed.data.password,
-    phone_confirm: true,
+    email_confirm: true,
     user_metadata: {
       full_name: parsed.data.fullName,
       phone,

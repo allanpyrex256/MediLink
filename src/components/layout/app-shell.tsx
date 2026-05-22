@@ -138,6 +138,7 @@ export function AppShell({
       : normalizedRole === "pharmacist"
         ? { href: "/dashboard/inventory", label: "Stock Control" }
         : { href: "/dashboard/reports", label: "Owner Reports" };
+  const notificationHref = user.is_platform_admin ? "/super-admin/activity" : "/dashboard/notifications";
 
   async function signOut() {
     if (hasSupabaseConfig()) {
@@ -300,16 +301,20 @@ export function AppShell({
                   ) : null}
                 </AnimatePresence>
               </div>
-              <button
-                type="button"
-                  className="relative grid size-11 place-items-center rounded-lg border border-slate-200 bg-white text-slate-900 shadow-sm shadow-slate-100 transition hover:border-sky-300 hover:bg-sky-50"
+              <Link
+                href={notificationHref}
+                onClick={() => {
+                  setQuickActionsOpen(false);
+                  setUserMenuOpen(false);
+                }}
+                className="relative grid size-11 place-items-center rounded-lg border border-slate-200 bg-white text-slate-900 shadow-sm shadow-slate-100 transition hover:border-sky-300 hover:bg-sky-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
                 aria-label="Notifications"
               >
                 <Bell className="size-5" />
                 <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-violet-600 text-[11px] font-bold text-white">
                   3
                 </span>
-              </button>
+              </Link>
               <div className="relative">
                 <button
                   type="button"

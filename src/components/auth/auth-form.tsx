@@ -10,7 +10,7 @@ import { Logo } from "@/components/ui/logo";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
 import { demoAccountOptions, demoWorkspaceBranding } from "@/lib/demo-session";
-import { normalizeUgandanPhone, phoneLoginIdentifier } from "@/lib/phone";
+import { normalizeUgandanPhone, phoneAuthEmail, phoneLoginIdentifier } from "@/lib/phone";
 import { dashboardRoleLabel, defaultDashboardPath } from "@/lib/rbac";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
@@ -99,10 +99,21 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
     if (!identifier) throw new Error("Enter your phone number or email.");
 
     const supabase = createSupabaseBrowserClient();
-    const credentials = isEmailIdentifier(identifier)
+    const isEmail = isEmailIdentifier(identifier);
+    const phone = isEmail ? "" : phoneLoginIdentifier(identifier);
+    const authEmail = phoneAuthEmail(phone);
+    if (!isEmail && !authEmail) throw new Error("Enter a valid phone number.");
+    const credentials = isEmail
       ? { email: identifier.toLowerCase(), password }
-      : { phone: phoneLoginIdentifier(identifier), password };
-    const { error: authError } = await supabase.auth.signInWithPassword(credentials);
+      : { email: authEmail, password };
+    let { error: authError } = await supabase.auth.signInWithPassword(credentials);
+
+    if (authError && phone) {
+      const upgraded = await upgradePhoneLogin(phone);
+      if (upgraded) {
+        ({ error: authError } = await supabase.auth.signInWithPassword(credentials));
+      }
+    }
 
     if (authError) throw authError;
 
@@ -128,6 +139,7 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
 
     const phone = normalizeUgandanPhone(String(form.get("phone") ?? ""));
     const password = String(form.get("password") ?? "");
+    const authEmail = phoneAuthEmail(phone);
     const response = await fetch("/api/auth/owner-register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -146,7 +158,7 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
     if (!response.ok) throw new Error(payload.error ?? "Unable to create owner account");
 
     const supabase = createSupabaseBrowserClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ phone, password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: authEmail, password });
     if (signInError) throw signInError;
 
     router.push("/dashboard");
@@ -245,6 +257,19 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
       </Card>
     </div>
   );
+}
+
+async function upgradePhoneLogin(phone: string) {
+  const response = await fetch("/api/auth/phone-login-upgrade", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone }),
+  }).catch(() => null);
+
+  if (!response?.ok) return false;
+
+  const payload = await response.json().catch(() => ({}));
+  return Boolean(payload.data?.ready);
 }
 
 function AuthFormFallback() {

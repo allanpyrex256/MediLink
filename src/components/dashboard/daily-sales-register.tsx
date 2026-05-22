@@ -110,6 +110,7 @@ export function DailySalesRegister({
   const [saleForm, setSaleForm] = useState<SaleForm>(() =>
     initialSaleForm(selectedDate, tenantKind, activeShift?.id ?? ""),
   );
+  const [optimisticSales, setOptimisticSales] = useState<DailySale[]>([]);
   const shiftForm = useMemo<ShiftOpenForm>(() => ({
     shiftDate: selectedDate,
     shiftType: selectedShiftType,
@@ -147,23 +148,37 @@ export function DailySalesRegister({
       null,
     [selectedDate, selectedShiftType, shifts, user.id],
   );
+  const sheetSales = useMemo(() => {
+    if (!optimisticSales.length) return sales;
+
+    const rows = new Map(sales.map((sale) => [sale.id, sale]));
+    for (const sale of optimisticSales) rows.set(sale.id, sale);
+
+    return Array.from(rows.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+  }, [optimisticSales, sales]);
   const visibleSales = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return sales.filter((sale) => {
+    return sheetSales.filter((sale) => {
       const matchesQuery =
         !normalizedQuery ||
         sale.item_name.toLowerCase().includes(normalizedQuery);
 
       return matchesQuery;
     });
-  }, [query, sales]);
-  const shiftTotal = sales
+  }, [query, sheetSales]);
+  const serverShiftTotal = sales
     .filter((sale) => sale.status === "sold")
     .reduce((sum, sale) => sum + Number(sale.total_amount), 0);
+  const shiftTotal = sheetSales
+    .filter((sale) => sale.status === "sold")
+    .reduce((sum, sale) => sum + Number(sale.total_amount), 0);
+  const displayedDailyTotal = dailyTotal + (shiftTotal - serverShiftTotal);
 
   const activeShiftSales = activeShift
-    ? sales.filter((sale) => sale.shift_id === activeShift.id && sale.status === "sold")
+    ? sheetSales.filter((sale) => sale.shift_id === activeShift.id && sale.status === "sold")
     : [];
   const activeShiftCash = activeShiftSales
     .filter((sale) => sale.payment_method === "cash")
@@ -251,11 +266,19 @@ export function DailySalesRegister({
 
       if (!response.ok) throw new Error(payload.error ?? "Unable to record this sale.");
 
+      if (payload.data) {
+        const savedSale = payload.data as DailySale;
+        setOptimisticSales((current) => [
+          savedSale,
+          ...current.filter((sale) => sale.id !== savedSale.id),
+        ]);
+      }
       setSaleForm((current) => ({
         ...initialSaleForm(current.saleDate, tenantKind, activeShift.id),
         category: current.category,
         paymentMethod: current.paymentMethod,
       }));
+      setShowSaleRow(false);
       setMessage(payload.demo ? "Sale recorded in local demo mode." : "Sale recorded.");
       router.refresh();
     } catch (caught) {
@@ -443,7 +466,7 @@ export function DailySalesRegister({
               <div>
                 <CardTitle>{shiftTypeLabel(selectedShiftType)} sales sheet</CardTitle>
                 <CardDescription>
-                  {selectedDate} - Daily total {formatUgandanCurrency(dailyTotal)}
+                  {selectedDate} - Daily total {formatUgandanCurrency(displayedDailyTotal)}
                 </CardDescription>
               </div>
               <div className="flex flex-wrap items-center gap-2">

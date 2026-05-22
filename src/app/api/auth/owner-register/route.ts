@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hasSupabaseAdminConfig } from "@/lib/config";
-import { normalizeUgandanPhone } from "@/lib/phone";
+import { normalizeUgandanPhone, phoneAuthEmail } from "@/lib/phone";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
 
@@ -37,12 +37,13 @@ export async function POST(request: NextRequest) {
   if (!phone) {
     return NextResponse.json({ error: "Enter a valid phone number." }, { status: 400 });
   }
+  const authEmail = phoneAuthEmail(phone);
 
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin.auth.admin.createUser({
-    phone,
+    email: authEmail,
     password: parsed.data.password,
-    phone_confirm: true,
+    email_confirm: true,
     user_metadata: {
       full_name: parsed.data.ownerName,
       phone,
