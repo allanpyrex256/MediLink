@@ -224,7 +224,7 @@ export async function sendTenantAdminPasswordResetOtp(
 
     return {
       status: "success",
-      message: `MediLink reset OTP sent to ${recipient.email}.`,
+      message: `MediLink reset instructions sent to ${recipient.email}.`,
     };
   } catch (caught) {
     return {

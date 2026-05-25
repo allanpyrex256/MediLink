@@ -62,7 +62,10 @@ export function PasswordResetForm() {
 
       if (!response.ok) throw new Error(payload.error ?? "Unable to send reset OTP.");
 
-      setMessage(payload.data?.message ?? "If this is an owner or admin account, a MediLink reset OTP has been sent.");
+      setMessage(
+        payload.data?.message ??
+          "If this is an owner or admin account, MediLink password reset instructions have been sent.",
+      );
       setStep("verify");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to send reset OTP.");
@@ -110,7 +113,7 @@ export function PasswordResetForm() {
         const { error: verifyError } = await supabase.auth.verifyOtp({
           email: email.trim().toLowerCase(),
           token: cleanOtp,
-          type: "email",
+          type: "recovery",
         });
 
         if (verifyError) throw verifyError;
@@ -140,7 +143,7 @@ export function PasswordResetForm() {
           </div>
           <CardTitle className="mt-6">Reset admin password</CardTitle>
           <CardDescription>
-            Use the owner or admin email for the MediLink workspace, then enter the MediLink OTP sent to that inbox.
+            Use the owner or admin email for the MediLink workspace, then enter the MediLink OTP or open the reset link sent to that inbox.
           </CardDescription>
         </CardHeader>
         <CardContent>

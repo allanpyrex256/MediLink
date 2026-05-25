@@ -7,7 +7,7 @@ const tenantResetRoles: UserRole[] = ["owner", "admin"];
 const phoneAuthEmailSuffix = "@phone.medilink.local";
 
 export const passwordResetOtpMessage =
-  "If this is an owner or admin account, a MediLink reset OTP has been sent.";
+  "If this is an owner or admin account, MediLink password reset instructions have been sent.";
 
 export type PasswordResetAccount = {
   id: string;
@@ -86,7 +86,7 @@ export async function sendPasswordResetOtp(
 
   if (appConfig.email.resendApiKey) {
     const { data, error } = await supabase.auth.admin.generateLink({
-      type: "magiclink",
+      type: "recovery",
       email: normalizedEmail,
       options: {
         redirectTo,
@@ -110,12 +110,8 @@ export async function sendPasswordResetOtp(
     return;
   }
 
-  const { error } = await supabase.auth.signInWithOtp({
-    email: normalizedEmail,
-    options: {
-      emailRedirectTo: redirectTo,
-      shouldCreateUser: false,
-    },
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo,
   });
 
   if (error) throw new Error(error.message);
