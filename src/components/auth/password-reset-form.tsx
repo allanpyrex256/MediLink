@@ -92,27 +92,33 @@ export function PasswordResetForm() {
 
       const supabase = createSupabaseBrowserClient();
 
-      if (!recoverySessionReady) {
+      if (recoverySessionReady) {
+        const { error: updateError } = await supabase.auth.updateUser({ password });
+        if (updateError) throw updateError;
+      } else {
         const cleanEmail = email.trim().toLowerCase();
         const cleanOtp = otp.replace(/\D/g, "");
 
         if (!cleanEmail) throw new Error("Enter the email that received the OTP.");
         if (cleanOtp.length !== 6) throw new Error("Enter the 6-digit OTP from the MediLink email.");
 
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          email: cleanEmail,
-          token: cleanOtp,
-          type: "recovery",
+        const response = await fetch("/api/auth/password-reset-confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: cleanEmail,
+            otp: cleanOtp,
+            password,
+          }),
         });
+        const payload = await response.json().catch(() => ({}));
 
-        if (verifyError) throw verifyError;
+        if (!response.ok) {
+          throw new Error(payload.error ?? "The reset OTP is invalid or expired.");
+        }
       }
 
-      const { error: updateError } = await supabase.auth.updateUser({ password });
-      if (updateError) throw updateError;
-
-      const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
-      if (signOutError) throw signOutError;
+      await supabase.auth.signOut({ scope: "global" }).catch(() => null);
 
       showToast(
         "success",

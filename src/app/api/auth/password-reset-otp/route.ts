@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
   try {
     await sendPasswordResetOtp(supabase, email, passwordResetRedirectUrl);
   } catch (caught) {
-    const message =
-      caught instanceof Error && caught.message.includes("RESEND_API_KEY")
-        ? "MediLink email delivery is not configured."
-        : "Unable to send the reset OTP right now. Please try again.";
+    const message = caught instanceof Error
+      ? caught.message
+      : "Unable to send the reset OTP right now. Please try again.";
+    const status = message.includes("not configured") ? 503 : 500;
 
     return NextResponse.json(
       { error: message },
-      { status: message.includes("RESEND_API_KEY") ? 503 : 500 },
+      { status },
     );
   }
 
