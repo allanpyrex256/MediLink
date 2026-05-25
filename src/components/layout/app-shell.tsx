@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, ElementType } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   Bell,
@@ -32,6 +32,7 @@ import { AuthTabScope } from "@/components/auth/auth-tab-scope";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
+import { getOrCreateAuthTabId, withAuthTabParam } from "@/lib/supabase/session-scope";
 import { dashboardRole, dashboardRoleLabel } from "@/lib/rbac";
 import { tenantBranding } from "@/lib/tenant-branding";
 import type { AppUser, Tenant } from "@/lib/types";
@@ -94,6 +95,7 @@ export function AppShell({
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [authTabId, setAuthTabId] = useState<string | null>(null);
   const brand = tenantBranding(tenant);
   const shellColor = user.is_platform_admin ? "#7c3aed" : brand.primaryColor;
   const normalizedRole = dashboardRole(user.role);
@@ -140,6 +142,15 @@ export function AppShell({
         ? { href: "/dashboard/inventory", label: "Stock Control" }
         : { href: "/dashboard/reports", label: "Owner Reports" };
   const notificationHref = user.is_platform_admin ? "/super-admin/activity" : "/dashboard/notifications";
+  const scopedHref = (href: string) => authTabId ? withAuthTabParam(href, authTabId) : href;
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setAuthTabId(getOrCreateAuthTabId());
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   async function signOut() {
     if (hasSupabaseConfig()) {
@@ -175,6 +186,7 @@ export function AppShell({
           tenant={tenant}
           brand={brand}
           navigation={navigation}
+          scopedHref={scopedHref}
           onSignOut={signOut}
           platformMode={user.is_platform_admin}
           footerLink={footerLink}
@@ -219,6 +231,7 @@ export function AppShell({
                   tenant={tenant}
                   brand={brand}
                   navigation={navigation}
+                  scopedHref={scopedHref}
                   onNavigate={() => setMobileOpen(false)}
                   onSignOut={signOut}
                   platformMode={user.is_platform_admin}
@@ -290,7 +303,7 @@ export function AppShell({
                         return (
                           <Link
                             key={action.href}
-                            href={action.href}
+                            href={scopedHref(action.href)}
                             onClick={() => setQuickActionsOpen(false)}
                             className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                           >
@@ -304,7 +317,7 @@ export function AppShell({
                 </AnimatePresence>
               </div>
               <Link
-                href={notificationHref}
+                href={scopedHref(notificationHref)}
                 onClick={() => {
                   setQuickActionsOpen(false);
                   setUserMenuOpen(false);
@@ -362,6 +375,7 @@ function SidebarContent({
   tenant,
   brand,
   navigation,
+  scopedHref,
   onNavigate,
   onSignOut,
   compact = false,
@@ -372,6 +386,7 @@ function SidebarContent({
   tenant: Tenant;
   brand: ReturnType<typeof tenantBranding>;
   navigation: NavigationItem[];
+  scopedHref: (href: string) => string;
   onNavigate?: () => void;
   onSignOut: () => void;
   compact?: boolean;
@@ -398,6 +413,7 @@ function SidebarContent({
             item={item}
             pathname={pathname}
             brandColor={platformMode ? "#7c3aed" : brand.primaryColor}
+            href={scopedHref(item.href)}
             onNavigate={onNavigate}
           />
         ))}
@@ -417,7 +433,7 @@ function SidebarContent({
             </p>
           </div>
           <Link
-            href={footerLink.href}
+            href={scopedHref(footerLink.href)}
             onClick={onNavigate}
             className="flex h-12 w-full items-center justify-between border-t border-violet-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-violet-50"
           >
@@ -440,11 +456,13 @@ function SidebarContent({
 
 function NavItem({
   item,
+  href,
   pathname,
   brandColor,
   onNavigate,
 }: {
   item: NavigationItem;
+  href: string;
   pathname: string;
   brandColor: string;
   onNavigate?: () => void;
@@ -457,7 +475,7 @@ function NavItem({
 
   return (
     <Link
-      href={item.href}
+      href={href}
       onClick={onNavigate}
       className={cn(
         "flex h-12 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold transition",
