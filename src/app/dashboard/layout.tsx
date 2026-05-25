@@ -22,7 +22,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <AppShell tenant={data.tenant} user={data.user}>
+    <AppShell
+      tenant={data.tenant}
+      user={data.user}
+      notificationCount={data.notifications.length}
+    >
       {children}
     </AppShell>
   );

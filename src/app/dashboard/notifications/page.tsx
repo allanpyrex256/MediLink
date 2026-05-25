@@ -1,4 +1,5 @@
 import { BellRing, Mail, MessageCircle, Send, Smartphone } from "lucide-react";
+import { format } from "date-fns";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { WorkflowActionButton } from "@/components/dashboard/workflow-action-button";
 import { Badge } from "@/components/ui/badge";
@@ -62,10 +63,14 @@ export default async function NotificationsPage() {
       <Card className="mt-5">
         <CardHeader>
           <CardTitle>Notification log</CardTitle>
-          <CardDescription>Delivery state for tenant-scoped patient messages.</CardDescription>
+          <CardDescription>
+            {data.notifications.length
+              ? "Latest tenant-scoped customer and patient messages."
+              : "No notifications have been received yet."}
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
-          {data.notifications.map((notification) => {
+          {data.notifications.length ? data.notifications.map((notification) => {
             const Icon = channelIcon[notification.channel];
             return (
               <div
@@ -79,6 +84,9 @@ export default async function NotificationsPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-950">{notification.subject}</p>
                     <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">{notification.body}</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-400">
+                      {format(new Date(notification.created_at), "MMM d, yyyy HH:mm")}
+                    </p>
                   </div>
                 </div>
                 <Badge tone={notification.status === "sent" ? "green" : notification.status === "failed" ? "rose" : "amber"} className="capitalize">
@@ -86,7 +94,11 @@ export default async function NotificationsPage() {
                 </Badge>
               </div>
             );
-          })}
+          }) : (
+            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-sm font-medium leading-6 text-slate-500">
+              New medicine requests, WhatsApp sends, and reminder events will appear here.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

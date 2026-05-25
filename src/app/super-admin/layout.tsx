@@ -14,7 +14,11 @@ export default async function SuperAdminLayout({
   }
 
   return (
-    <AppShell tenant={data.tenant} user={data.user}>
+    <AppShell
+      tenant={data.tenant}
+      user={data.user}
+      notificationCount={data.notifications.length}
+    >
       {children}
     </AppShell>
   );

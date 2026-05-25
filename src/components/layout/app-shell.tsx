@@ -83,10 +83,12 @@ const platformNavigation: NavigationItem[] = [
 export function AppShell({
   tenant,
   user,
+  notificationCount = 0,
   children,
 }: {
   tenant: Tenant;
   user: AppUser;
+  notificationCount?: number;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -326,9 +328,11 @@ export function AppShell({
                 aria-label="Notifications"
               >
                 <Bell className="size-5" />
-                <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-violet-600 text-[11px] font-bold text-white">
-                  3
-                </span>
+                {notificationCount > 0 ? (
+                  <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-violet-600 text-[11px] font-bold text-white">
+                    {notificationCount > 9 ? "9+" : notificationCount}
+                  </span>
+                ) : null}
               </Link>
               <div className="relative">
                 <button

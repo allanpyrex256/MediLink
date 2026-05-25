@@ -29,6 +29,7 @@ import type {
   Invoice,
   InventoryItem,
   LabResult,
+  Notification as AppNotification,
   Patient,
   Payment,
   PrescriptionOrder,
@@ -420,12 +421,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       shiftExpenses: normalizedShiftExpenses.length
         ? normalizedShiftExpenses
         : fallbackData.shiftExpenses,
-      notifications: notifications?.length
-        ? fallbackData.notifications.map((item, index) => ({
-            ...item,
-            ...(notifications[index] ?? {}),
-          }))
-        : fallbackData.notifications,
+      notifications: notifications?.length ? notifications as AppNotification[] : fallbackData.notifications,
       subscriptions: normalizedSubscriptions.length
         ? normalizedSubscriptions
         : fallbackData.subscriptions,
