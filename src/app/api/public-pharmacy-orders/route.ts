@@ -6,6 +6,7 @@ import {
   publicFulfillmentDate,
   publicReference,
 } from "@/lib/public-directory";
+import { normalizeUgandanMobilePhone, ugandanMobilePhoneError } from "@/lib/phone";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -38,10 +39,18 @@ export async function POST(request: NextRequest) {
   }
 
   const deliveryAddress = parsed.data.deliveryAddress?.trim() ?? "";
+  const customerPhone = normalizeUgandanMobilePhone(parsed.data.phone);
 
   if (parsed.data.pickupOption === "delivery" && !deliveryAddress) {
     return NextResponse.json(
       { error: "Delivery address is required for medicine delivery requests." },
+      { status: 400 },
+    );
+  }
+
+  if (!customerPhone) {
+    return NextResponse.json(
+      { error: ugandanMobilePhoneError(parsed.data.phone) },
       { status: 400 },
     );
   }
@@ -75,6 +84,7 @@ export async function POST(request: NextRequest) {
           reference,
           status: "received",
           demo: true,
+          customerPhone,
           fulfillmentMethod: parsed.data.pickupOption,
           deliveryAddress: parsed.data.pickupOption === "delivery" ? deliveryAddress : null,
         },
@@ -89,7 +99,7 @@ export async function POST(request: NextRequest) {
     .insert({
       tenant_id: profile.tenant.id,
       patient_name: parsed.data.customerName,
-      customer_phone: parsed.data.phone,
+      customer_phone: customerPhone,
       prescriber: parsed.data.prescriber || "Customer request",
       medicine: parsed.data.medicine,
       quantity: parsed.data.quantity,
@@ -114,8 +124,8 @@ export async function POST(request: NextRequest) {
     channel: "in_app",
     destination: profile.tenant.email,
     subject: "Public medicine request received",
-    body: `${parsed.data.customerName} requested ${parsed.data.quantity} x ${parsed.data.medicine}. Phone: ${parsed.data.phone}. ${fulfillmentSummary(parsed.data.pickupOption, deliveryAddress)} Payment: ${paymentLabel(parsed.data.paymentMethod)}. Notes: ${parsed.data.notes || "None"}. Reference: ${reference}.`,
-    status: "queued",
+    body: `${parsed.data.customerName} requested ${parsed.data.quantity} x ${parsed.data.medicine}. Phone: ${customerPhone}. ${fulfillmentSummary(parsed.data.pickupOption, deliveryAddress)} Payment: ${paymentLabel(parsed.data.paymentMethod)}. Notes: ${parsed.data.notes || "None"}. Reference: ${reference}. Reply from the prescription queue by WhatsApp or phone.`,
+    status: "sent",
   });
 
   return NextResponse.json(

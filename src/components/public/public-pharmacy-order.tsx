@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { normalizeUgandanMobilePhone, ugandanMobilePhoneError } from "@/lib/phone";
 import type { Tenant } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,12 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
       return;
     }
 
+    const customerPhone = normalizeUgandanMobilePhone(phone);
+    if (!customerPhone) {
+      setStatus({ kind: "error", message: ugandanMobilePhoneError(phone) });
+      return;
+    }
+
     if (pickupOption === "delivery" && !deliveryAddress.trim()) {
       setStatus({ kind: "error", message: "Please enter the delivery address so the pharmacy knows where to send the medicine." });
       return;
@@ -43,7 +50,7 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
         body: JSON.stringify({
           tenantSlug: tenant.slug,
           customerName,
-          phone,
+          phone: customerPhone,
           medicine,
           quantity: Number(quantity),
           prescriber,
@@ -59,9 +66,10 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
 
       setStatus({
         kind: "success",
-        message: `${tenant.name} has received your medicine request. Pharmacy staff will confirm stock and notify you when it is ready for ${pickupOption === "delivery" ? "delivery" : "pickup"}.`,
+        message: `${tenant.name} has received your medicine request for ${customerPhone}. Pharmacy staff can reply by WhatsApp or phone and notify you when it is ready for ${pickupOption === "delivery" ? "delivery" : "pickup"}.`,
         reference: payload.data?.reference,
       });
+      setPhone(customerPhone);
       setMedicine("");
       setDeliveryAddress("");
       setNotes("");
@@ -92,7 +100,12 @@ export function PublicPharmacyOrder({ tenant }: { tenant: Tenant }) {
       <div className="mt-5 grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="Full name" placeholder="Brian Kato" value={customerName} onChange={(event) => setCustomerName(event.target.value)} />
-          <Input label="Phone number" placeholder="+256 700 000 000" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          <div>
+            <Input label="WhatsApp phone number" placeholder="+256 700 123 456" value={phone} onChange={(event) => setPhone(event.target.value)} />
+            <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
+              Use a real customer WhatsApp number so the pharmacy can reply.
+            </p>
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-[1fr_140px]">
           <Input label="Medicine request" placeholder="Amoxicillin 500mg, BP refill, inhaler..." value={medicine} onChange={(event) => setMedicine(event.target.value)} />
