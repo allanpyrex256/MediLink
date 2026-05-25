@@ -20,6 +20,7 @@ export async function sendEmail(message: EmailMessage) {
     headers: {
       Authorization: `Bearer ${appConfig.email.resendApiKey}`,
       "Content-Type": "application/json",
+      "User-Agent": "medilink/1.0",
     },
     body: JSON.stringify({
       from: appConfig.email.from,
@@ -28,8 +29,34 @@ export async function sendEmail(message: EmailMessage) {
   });
 
   if (!response.ok) {
-    throw new Error(`Email send failed with ${response.status}`);
+    const providerMessage = await response
+      .json()
+      .then((payload) => providerErrorMessage(payload))
+      .catch(() => "");
+
+    throw new Error(friendlyEmailProviderError(response.status, providerMessage));
   }
 
   return response.json();
+}
+
+function providerErrorMessage(payload: unknown) {
+  if (!payload || typeof payload !== "object") return "";
+
+  const record = payload as Record<string, unknown>;
+  const message = record.message ?? record.error;
+
+  return typeof message === "string" ? message : "";
+}
+
+function friendlyEmailProviderError(status: number, providerMessage: string) {
+  if (status === 403) {
+    const details = providerMessage ? ` ${providerMessage}` : "";
+
+    return `Email provider rejected the sender or recipient.${details} Verify the sending domain in Resend, then set EMAIL_FROM to an address on that verified domain.`;
+  }
+
+  return providerMessage
+    ? `Email provider failed with ${status}: ${providerMessage}`
+    : `Email provider failed with ${status}.`;
 }

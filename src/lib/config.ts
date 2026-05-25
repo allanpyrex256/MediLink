@@ -1,3 +1,13 @@
+function envText(value: string | undefined, fallback = "") {
+  const trimmed = value?.trim();
+
+  if (!trimmed || trimmed === "\"\"" || trimmed === "''") {
+    return fallback;
+  }
+
+  return trimmed;
+}
+
 export const appConfig = {
   name: "MediLink",
   tagline: "Hospital management for Uganda and East Africa",
@@ -57,8 +67,11 @@ export const appConfig = {
     graphApiVersion: process.env.WHATSAPP_GRAPH_API_VERSION ?? "v25.0",
   },
   email: {
-    resendApiKey: process.env.RESEND_API_KEY,
-    from: process.env.EMAIL_FROM ?? "MediLink <notifications@medilink.ug>",
+    resendApiKey: envText(process.env.RESEND_API_KEY),
+    from: envText(
+      process.env.EMAIL_FROM,
+      "MediLink <notifications@medilink.ug>",
+    ),
   },
 };
 
