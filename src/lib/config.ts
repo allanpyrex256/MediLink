@@ -72,6 +72,14 @@ export const appConfig = {
       process.env.EMAIL_FROM,
       "MediLink <notifications@medilink.ug>",
     ),
+    smtp: {
+      host: envText(process.env.SMTP_HOST),
+      port: Number(envText(process.env.SMTP_PORT, "465")),
+      secure: envText(process.env.SMTP_SECURE, "true") !== "false",
+      user: envText(process.env.SMTP_USER),
+      pass: envText(process.env.SMTP_PASS),
+      from: envText(process.env.SMTP_FROM),
+    },
   },
 };
 

@@ -80,7 +80,7 @@ If your browser or Windows setup does not resolve `*.localhost`, open Notepad as
 4. Copy `.env.example` to `.env.local` and fill the Supabase keys.
 5. New owner/admin signups automatically receive a 7-day free trial with the subscription marked `trialing` until `trial_ends_at`.
 6. Add payment provider credentials for Flutterwave, MTN MoMo, Airtel Money, and optionally Stripe.
-7. Add `RESEND_API_KEY` and `EMAIL_FROM` so MediLink password reset emails show the OTP inside the email instead of using Supabase's link-only sender.
+7. Add email delivery credentials so MediLink password reset emails show the OTP inside the email instead of using Supabase's link-only sender. Use `RESEND_API_KEY` plus a verified-domain `EMAIL_FROM` for production, or configure `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` as a temporary sender before you own a domain.
 8. Add Meta WhatsApp Cloud API credentials with `WHATSAPP_CLOUD_API_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` if you want appointment confirmations sent over WhatsApp.
 9. Set `ENABLE_DEMO_MODE=false` and `ALLOW_DEMO_PAYMENTS=false` for real production.
 10. Add webhook verification secrets: `FLUTTERWAVE_WEBHOOK_SECRET_HASH`, `MTN_MOMO_WEBHOOK_SECRET`, `AIRTEL_MONEY_WEBHOOK_SECRET`, and `STRIPE_WEBHOOK_SECRET` where those providers are enabled.
