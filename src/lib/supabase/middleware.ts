@@ -22,6 +22,7 @@ import {
 } from "@/lib/tenant-host";
 
 const protectedPrefixes = ["/dashboard", "/super-admin"];
+const authPagePaths = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 function requestWithPathHeader(request: NextRequest, authTabId: string | null) {
   const headers = new Headers(request.headers);
@@ -41,6 +42,13 @@ export async function updateSession(request: NextRequest) {
   const isProtected = protectedPrefixes.some((prefix) =>
     pathname.startsWith(prefix),
   );
+  const isAuthPage = authPagePaths.includes(pathname);
+  const isPasswordRecoveryRequest =
+    pathname === "/reset-password" &&
+    (request.nextUrl.searchParams.has("code") ||
+      request.nextUrl.searchParams.has("token") ||
+      request.nextUrl.searchParams.has("token_hash") ||
+      request.nextUrl.searchParams.get("type") === "recovery");
   const demoAllowed = isDemoModeAllowed();
   const hostWorkspaceId = demoAllowed
     ? demoWorkspaceIdForSlug(tenantSlugFromHost(request.headers.get("host")))
@@ -76,7 +84,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if ((pathname === "/login" || pathname === "/register") && isDemoWorkspaceId(effectiveWorkspaceId)) {
+    if (isAuthPage && !isPasswordRecoveryRequest && isDemoWorkspaceId(effectiveWorkspaceId)) {
       const url = request.nextUrl.clone();
       url.pathname = defaultDashboardPath(demoAccount?.role, demoAccount?.isPlatformAdmin);
       return NextResponse.redirect(url);
@@ -187,7 +195,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if ((pathname === "/login" || pathname === "/register") && user) {
+  if (isAuthPage && user && !isPasswordRecoveryRequest) {
     const url = request.nextUrl.clone();
     url.pathname = defaultDashboardPath(profile?.role, profile?.is_platform_admin);
     setAuthTabSearchParam(url, authTabId);

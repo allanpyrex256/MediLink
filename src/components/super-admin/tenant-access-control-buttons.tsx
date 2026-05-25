@@ -17,12 +17,15 @@ export function TenantAccessControlButtons({
   status: TenantStatus;
   disabled?: boolean;
 }) {
+  const canAccept = status === "disabled" || status === "past_due";
+  const canEndTrial = status === "trialing";
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {status !== "active" ? (
+      {canAccept ? (
         <form action={updateTenantAccessStatus}>
           <input type="hidden" name="tenantId" value={tenantId} />
-          <input type="hidden" name="status" value="active" />
+          <input type="hidden" name="status" value="trialing" />
           <AccessSubmitButton
             disabled={disabled}
             icon="accept"
@@ -32,12 +35,12 @@ export function TenantAccessControlButtons({
           />
         </form>
       ) : null}
-      {status !== "disabled" ? (
+      {canEndTrial ? (
         <form
           action={updateTenantAccessStatus}
           onSubmit={(event) => {
             const confirmed = window.confirm(
-              `Disable ${business}? Their users will not access the dashboard until the account is accepted again.`,
+              `End the free trial for ${business}? Their admins will be asked to pay their plan before continuing.`,
             );
 
             if (!confirmed) {
@@ -46,12 +49,12 @@ export function TenantAccessControlButtons({
           }}
         >
           <input type="hidden" name="tenantId" value={tenantId} />
-          <input type="hidden" name="status" value="disabled" />
+          <input type="hidden" name="status" value="past_due" />
           <AccessSubmitButton
             disabled={disabled}
             icon="disable"
-            label="Disable"
-            pendingLabel="Disabling"
+            label="End trial"
+            pendingLabel="Ending"
             variant="secondary"
           />
         </form>

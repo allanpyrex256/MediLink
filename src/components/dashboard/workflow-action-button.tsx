@@ -50,7 +50,7 @@ export function WorkflowActionButton({
                 <span>{description}</span>
               </div>
               <p className="mt-4 text-sm leading-6 text-slate-600">
-                This button is now connected to a visible workflow instead of doing nothing. The next product step is to store this workflow in Supabase the same way patients, stock, doctors, branches, and invoices are saved.
+                This button is now connected to a visible workflow. The next product step is to store this workflow alongside patients, stock, doctors, branches, and invoices.
               </p>
               <div className="mt-5 flex justify-end">
                 <Button onClick={() => setOpen(false)}>Done</Button>

@@ -5,9 +5,10 @@ import type { UserRole } from "@/lib/types";
 
 const tenantResetRoles: UserRole[] = ["owner", "admin"];
 const phoneAuthEmailSuffix = "@phone.medilink.local";
+export const passwordResetRedirectUrl = "https://medi-link-drab.vercel.app/reset-password";
 
 export const passwordResetOtpMessage =
-  "If this is an owner or admin account, MediLink password reset instructions have been sent.";
+  "If this is an owner or admin account, a MediLink reset OTP has been sent.";
 
 export type PasswordResetAccount = {
   id: string;
@@ -84,48 +85,42 @@ export async function sendPasswordResetOtp(
 ) {
   const normalizedEmail = email.trim().toLowerCase();
 
-  if (appConfig.email.resendApiKey) {
-    const { data, error } = await supabase.auth.admin.generateLink({
-      type: "recovery",
-      email: normalizedEmail,
-      options: {
-        redirectTo,
-      },
-    });
-
-    if (error) throw new Error(error.message);
-
-    const otp = data.properties.email_otp;
-    if (!otp) throw new Error("Supabase did not return a reset OTP.");
-
-    await sendEmail({
-      to: normalizedEmail,
-      subject: "MediLink password reset OTP",
-      html: passwordResetEmailHtml({
-        actionLink: data.properties.action_link,
-        otp,
-      }),
-    });
-
-    return;
+  if (!appConfig.email.resendApiKey) {
+    throw new Error("MediLink OTP emails need RESEND_API_KEY configured.");
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-    redirectTo,
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "recovery",
+    email: normalizedEmail,
+    options: {
+      redirectTo,
+    },
   });
 
   if (error) throw new Error(error.message);
+
+  const otp = data.properties.email_otp;
+  if (!otp) throw new Error("Unable to generate a reset OTP.");
+
+  await sendEmail({
+    to: normalizedEmail,
+    subject: "MediLink password reset OTP",
+    html: passwordResetEmailHtml({
+      otp,
+      resetUrl: redirectTo,
+    }),
+  });
 }
 
 function passwordResetEmailHtml({
-  actionLink,
   otp,
+  resetUrl,
 }: {
-  actionLink: string;
   otp: string;
+  resetUrl: string;
 }) {
   const escapedOtp = escapeHtml(otp);
-  const escapedActionLink = escapeHtml(actionLink);
+  const escapedResetUrl = escapeHtml(resetUrl);
 
   return `
     <div style="margin:0;padding:24px;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;">
@@ -151,8 +146,8 @@ function passwordResetEmailHtml({
         </tr>
         <tr>
           <td style="padding:0 28px 28px;">
-            <a href="${escapedActionLink}" style="display:inline-block;border-radius:8px;background:#0284c7;padding:12px 18px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">
-              Reset password
+            <a href="${escapedResetUrl}" style="display:inline-block;border-radius:8px;background:#0284c7;padding:12px 18px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">
+              Open MediLink reset page
             </a>
           </td>
         </tr>

@@ -23,9 +23,9 @@ import { tenantHostForSubdomain } from "@/lib/tenant-host";
 import { formatUgandanCurrency } from "@/lib/utils";
 
 const checks = [
-  ["Supabase URL", "NEXT_PUBLIC_SUPABASE_URL", Boolean(appConfig.supabaseUrl)],
-  ["Supabase anon key", "NEXT_PUBLIC_SUPABASE_ANON_KEY", Boolean(appConfig.supabaseAnonKey)],
-  ["Service role key", "SUPABASE_SERVICE_ROLE_KEY", Boolean(appConfig.supabaseServiceRoleKey)],
+  ["Data service URL", "Production connection", Boolean(appConfig.supabaseUrl)],
+  ["Public data key", "Browser access key", Boolean(appConfig.supabaseAnonKey)],
+  ["Service role key", "Server access key", Boolean(appConfig.supabaseServiceRoleKey)],
   ["Flutterwave", "FLUTTERWAVE_CLIENT_ID / FLUTTERWAVE_CLIENT_SECRET", Boolean(appConfig.flutterwave.clientId && appConfig.flutterwave.clientSecret)],
   ["MTN MoMo", "MTN_MOMO_API_USER / MTN_MOMO_API_KEY", Boolean(appConfig.mtn.apiUser && appConfig.mtn.apiKey)],
   ["Airtel Money", "AIRTEL_MONEY_CLIENT_ID / AIRTEL_MONEY_CLIENT_SECRET", Boolean(appConfig.airtel.clientId && appConfig.airtel.clientSecret)],
@@ -49,11 +49,11 @@ export default async function SettingsPage() {
         actions={
           <WorkflowActionButton
             variant="secondary"
-            title="Open Supabase"
-            description="Supabase project links should open from your owner/admin environment once the production project URL is configured."
+            title="Open data service"
+            description="Production project links should open from your owner/admin environment once the project URL is configured."
           >
             <ExternalLink className="size-4" />
-            Open Supabase
+            Open data service
           </WorkflowActionButton>
         }
       />

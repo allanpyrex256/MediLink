@@ -57,8 +57,8 @@ export function AddPatientDialog() {
       setForm(initialForm);
       setMessage(
         payload.demo
-          ? "Patient saved in the local demo store. Add Supabase keys for permanent production storage."
-          : "Patient saved to Supabase. The registry will stay updated after refresh.",
+          ? "Patient saved in the local demo store. Add production data keys for permanent storage."
+          : "Patient saved. The registry will stay updated after refresh.",
       );
       router.refresh();
     } catch (caught) {

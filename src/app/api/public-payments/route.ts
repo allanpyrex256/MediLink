@@ -15,6 +15,7 @@ const publicPaymentSchema = z.object({
   amount: z.number().positive(),
   reason: z.string().min(3),
   provider: z.enum(["mtn_momo", "airtel_money"]),
+  purpose: z.enum(["public", "subscription"]).default("public"),
 });
 
 export async function POST(request: NextRequest) {
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
   }
 
   const reference = publicReference("MLK-PAY");
+  const isSubscriptionPayment = parsed.data.purpose === "subscription";
 
   if (!hasSupabaseAdminConfig()) {
     if (!isDemoModeAllowed()) {
@@ -79,11 +81,13 @@ export async function POST(request: NextRequest) {
     status: "pending",
     phone: parsed.data.phone,
     metadata: {
-      source: "public_payment_page",
+      source: isSubscriptionPayment ? "subscription_payment_page" : "public_payment_page",
       customer_name: parsed.data.customerName,
       reason: parsed.data.reason,
       instructions:
-        "Public customer payment request captured. Staff should reconcile or trigger provider collection.",
+        isSubscriptionPayment
+          ? "MediLink subscription payment request captured. Platform owner should confirm payment before restoring access."
+          : "Public customer payment request captured. Staff should reconcile or trigger provider collection.",
     },
   });
 
@@ -95,7 +99,9 @@ export async function POST(request: NextRequest) {
     tenant_id: profile.tenant.id,
     channel: "in_app",
     destination: profile.tenant.email,
-    subject: "Public payment request received",
+    subject: isSubscriptionPayment
+      ? "Subscription payment request received"
+      : "Public payment request received",
     body: `${parsed.data.customerName} requested to pay UGX ${parsed.data.amount.toLocaleString("en-UG")} for ${parsed.data.reason}. Phone: ${parsed.data.phone}. Reference: ${reference}.`,
     status: "queued",
   });

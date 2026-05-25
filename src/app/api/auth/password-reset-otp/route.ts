@@ -6,6 +6,7 @@ import {
   getPasswordResetAccountByEmail,
   isDeliverablePasswordResetEmail,
   passwordResetOtpMessage,
+  passwordResetRedirectUrl,
   sendPasswordResetOtp,
 } from "@/lib/password-reset";
 import { rateLimit } from "@/lib/security/rate-limit";
@@ -31,14 +32,14 @@ export async function POST(request: NextRequest) {
 
   if (!hasSupabaseConfig()) {
     return NextResponse.json(
-      { error: "Password reset needs Supabase to be configured." },
+      { error: "Password reset is not configured for this deployment." },
       { status: 503 },
     );
   }
 
   if (!hasSupabaseAdminConfig()) {
     return NextResponse.json(
-      { error: "Password reset needs SUPABASE_SERVICE_ROLE_KEY so owner/admin emails can be verified." },
+      { error: "Admin password reset email delivery is not configured." },
       { status: 503 },
     );
   }
@@ -59,11 +60,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await sendPasswordResetOtp(supabase, email, `${request.nextUrl.origin}/reset-password`);
-  } catch {
+    await sendPasswordResetOtp(supabase, email, passwordResetRedirectUrl);
+  } catch (caught) {
+    const message =
+      caught instanceof Error && caught.message.includes("RESEND_API_KEY")
+        ? "MediLink email delivery is not configured."
+        : "Unable to send the reset OTP right now. Please try again.";
+
     return NextResponse.json(
-      { error: "Unable to send the reset OTP right now. Please try again." },
-      { status: 500 },
+      { error: message },
+      { status: message.includes("RESEND_API_KEY") ? 503 : 500 },
     );
   }
 

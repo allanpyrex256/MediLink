@@ -71,7 +71,7 @@ export function BrandingImageUploads({
       return {
         ...current,
         [type]: {
-          error: canPersist ? undefined : "Preview only. Add Supabase storage settings to save it permanently.",
+          error: canPersist ? undefined : "Preview only. Add production storage settings to save it permanently.",
           fileName: file.name,
           previewUrl: objectUrl,
           saved: false,

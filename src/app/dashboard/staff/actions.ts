@@ -100,7 +100,7 @@ export async function inviteStaffMember(
     return {
       status: "error",
       message: needsMigration
-        ? "Database is not ready for phone staff accounts. Run the Supabase migration 20260521170000_three_role_phone_auth.sql, then try again."
+        ? "Database is not ready for phone staff accounts. Run the latest staff-account migration, then try again."
         : error.message,
     };
   }

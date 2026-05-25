@@ -1,18 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { appConfig, hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
+import { hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
 import {
   getTenantPasswordResetAccount,
   isDeliverablePasswordResetEmail,
+  passwordResetRedirectUrl,
   sendPasswordResetOtp,
 } from "@/lib/password-reset";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TenantStatus } from "@/lib/types";
 
-type TenantAccessStatus = Extract<TenantStatus, "active" | "disabled">;
+type TenantAccessStatus = Extract<TenantStatus, "trialing" | "past_due">;
 export type TenantAdminPasswordResetState = {
   message: string;
   status: "idle" | "success" | "error";
@@ -25,8 +25,10 @@ const platformPaths = [
   "/super-admin/dentistry",
   "/super-admin/pharmacies",
   "/super-admin/subscriptions",
+  "/super-admin/activity",
   "/super-admin/billing",
   "/super-admin/payments",
+  "/super-admin/revenue",
   "/super-admin/analytics",
 ];
 
@@ -38,7 +40,7 @@ export async function deleteTenantAccount(formData: FormData) {
   }
 
   if (!hasSupabaseConfig() || !hasSupabaseAdminConfig()) {
-    throw new Error("Supabase admin access is required to delete tenant accounts.");
+    throw new Error("Platform admin access is required to delete tenant accounts.");
   }
 
   const { user, profile } = await requirePlatformOwner("delete tenant accounts");
@@ -89,17 +91,17 @@ export async function updateTenantAccessStatus(formData: FormData) {
     throw new Error("Missing tenant account.");
   }
 
-  if (status !== "active" && status !== "disabled") {
+  if (status !== "trialing" && status !== "past_due") {
     throw new Error("Choose a valid tenant access status.");
   }
 
   if (!hasSupabaseConfig() || !hasSupabaseAdminConfig()) {
-    throw new Error("Supabase admin access is required to manage tenant access.");
+    throw new Error("Platform admin access is required to manage tenant access.");
   }
 
   const { profile } = await requirePlatformOwner("manage tenant access");
 
-  if (profile.tenant_id === tenantId && status === "disabled") {
+  if (profile.tenant_id === tenantId && status === "past_due") {
     throw new Error("You cannot disable your own platform owner workspace.");
   }
 
@@ -126,23 +128,26 @@ export async function updateTenantAccessStatus(formData: FormData) {
 
   const { data: subscriptions } = await admin
     .from("subscriptions")
-    .select("id, billing_cycle")
+    .select("id")
     .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false })
     .limit(1);
   const subscription = subscriptions?.[0];
 
   if (subscription) {
+    const graceEndsAt = nextGraceReviewDate(now).toISOString();
     const subscriptionPatch =
-      status === "active"
+      status === "trialing"
         ? {
-            status: "active",
+            status: "trialing",
             current_period_start: now.toISOString(),
-            current_period_end: nextBillingDate(now, subscription.billing_cycle).toISOString(),
-            trial_ends_at: null,
+            current_period_end: graceEndsAt,
+            trial_ends_at: graceEndsAt,
           }
         : {
-            status: "cancelled",
+            status: "past_due",
+            current_period_end: now.toISOString(),
+            trial_ends_at: now.toISOString(),
           };
     const { error: subscriptionUpdateError } = await admin
       .from("subscriptions")
@@ -170,7 +175,7 @@ export async function sendTenantAdminPasswordResetOtp(
   if (!hasSupabaseConfig() || !hasSupabaseAdminConfig()) {
     return {
       status: "error",
-      message: "Supabase admin access is required to send password reset OTPs.",
+      message: "Platform admin email access is required to send password reset OTPs.",
     };
   }
 
@@ -207,7 +212,7 @@ export async function sendTenantAdminPasswordResetOtp(
     await sendPasswordResetOtp(
       admin,
       recipient.email,
-      `${await requestOrigin()}/reset-password`,
+      passwordResetRedirectUrl,
     );
 
     await admin.from("audit_logs").insert({
@@ -224,7 +229,7 @@ export async function sendTenantAdminPasswordResetOtp(
 
     return {
       status: "success",
-      message: `MediLink reset instructions sent to ${recipient.email}.`,
+      message: `MediLink reset OTP sent to ${recipient.email}.`,
     };
   } catch (caught) {
     return {
@@ -260,33 +265,15 @@ async function requirePlatformOwner(action: string) {
   };
 }
 
-async function requestOrigin() {
-  const headerStore = await headers();
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-
-  if (!host) return appConfig.siteUrl;
-
-  const protocol =
-    headerStore.get("x-forwarded-proto") ??
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
-
-  return `${protocol}://${host}`;
-}
-
 function revalidatePlatformPaths() {
   for (const path of platformPaths) {
     revalidatePath(path);
   }
 }
 
-function nextBillingDate(from: Date, billingCycle: unknown) {
+function nextGraceReviewDate(from: Date) {
   const next = new Date(from);
-
-  if (billingCycle === "annual") {
-    next.setFullYear(next.getFullYear() + 1);
-  } else {
-    next.setMonth(next.getMonth() + 1);
-  }
+  next.setDate(next.getDate() + 7);
 
   return next;
 }

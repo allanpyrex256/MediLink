@@ -9,11 +9,23 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Tenant } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function PublicPaymentRequest({ tenant }: { tenant: Tenant }) {
-  const [customerName, setCustomerName] = useState("");
+export function PublicPaymentRequest({
+  tenant,
+  initialAmount,
+  mode = "public",
+  plan = "Starter",
+}: {
+  tenant: Tenant;
+  initialAmount?: number;
+  mode?: "public" | "subscription";
+  plan?: string;
+}) {
+  const isSubscriptionPayment = mode === "subscription";
+  const subscriptionReason = `MediLink ${plan} subscription for ${tenant.name}`;
+  const [customerName, setCustomerName] = useState(isSubscriptionPayment ? tenant.name : "");
   const [phone, setPhone] = useState("");
-  const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("");
+  const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : "");
+  const [reason, setReason] = useState(isSubscriptionPayment ? subscriptionReason : "");
   const [provider, setProvider] = useState<"mtn_momo" | "airtel_money">("mtn_momo");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ kind: "success" | "error"; message: string; reference?: string } | null>(null);
@@ -38,6 +50,7 @@ export function PublicPaymentRequest({ tenant }: { tenant: Tenant }) {
           amount: Number(amount),
           reason,
           provider,
+          purpose: isSubscriptionPayment ? "subscription" : "public",
         }),
       });
 
@@ -46,11 +59,15 @@ export function PublicPaymentRequest({ tenant }: { tenant: Tenant }) {
 
       setStatus({
         kind: "success",
-        message: `${tenant.name} has received your payment request. Staff will reconcile it with your visit, order, or invoice.`,
+        message: isSubscriptionPayment
+          ? "MediLink has received your subscription payment request. Access will continue after the payment is confirmed."
+          : `${tenant.name} has received your payment request. Staff will reconcile it with your visit, order, or invoice.`,
         reference: payload.data?.reference,
       });
-      setReason("");
-      setAmount("");
+      if (!isSubscriptionPayment) {
+        setReason("");
+        setAmount("");
+      }
     } catch (caught) {
       setStatus({
         kind: "error",
@@ -68,28 +85,46 @@ export function PublicPaymentRequest({ tenant }: { tenant: Tenant }) {
           <Banknote className="size-6" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-[#080833]">Pay {tenant.name}</h1>
+          <h1 className="text-2xl font-bold text-[#080833]">
+            {isSubscriptionPayment ? `Pay MediLink ${plan} plan` : `Pay ${tenant.name}`}
+          </h1>
           <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
-            Send a payment request for appointments, medicines, invoices, or clinic services.
+            {isSubscriptionPayment
+              ? `Pay ${tenant.name}'s subscription to continue using the system.`
+              : "Send a payment request for appointments, medicines, invoices, or clinic services."}
           </p>
         </div>
       </div>
 
       <div className="mt-5 grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <Input label="Full name" placeholder="Sarah Nakato" value={customerName} onChange={(event) => setCustomerName(event.target.value)} />
+          <Input
+            label={isSubscriptionPayment ? "Business name" : "Full name"}
+            placeholder={isSubscriptionPayment ? tenant.name : "Sarah Nakato"}
+            value={customerName}
+            onChange={(event) => setCustomerName(event.target.value)}
+          />
           <Input label="Phone number" placeholder="+256 700 000 000" value={phone} onChange={(event) => setPhone(event.target.value)} />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <Input label="Amount in UGX" type="number" min="1000" placeholder="50000" value={amount} onChange={(event) => setAmount(event.target.value)} />
+          <Input
+            label="Amount in UGX"
+            type="number"
+            min="1000"
+            placeholder="50000"
+            readOnly={isSubscriptionPayment && Boolean(initialAmount)}
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+          />
           <Select label="Payment method" value={provider} onChange={(event) => setProvider(event.target.value as typeof provider)}>
             <option value="mtn_momo">MTN MoMo</option>
             <option value="airtel_money">Airtel Money</option>
           </Select>
         </div>
         <Textarea
-          label="What are you paying for?"
-          placeholder="Consultation, invoice number, lab test, medicine order, or clinic service"
+          label={isSubscriptionPayment ? "Subscription plan" : "What are you paying for?"}
+          placeholder={isSubscriptionPayment ? subscriptionReason : "Consultation, invoice number, lab test, medicine order, or clinic service"}
+          readOnly={isSubscriptionPayment}
           value={reason}
           onChange={(event) => setReason(event.target.value)}
         />
@@ -113,7 +148,7 @@ export function PublicPaymentRequest({ tenant }: { tenant: Tenant }) {
 
         <Button onClick={submitPaymentRequest} disabled={loading} className="h-12 bg-emerald-600 text-base font-bold hover:bg-emerald-700 focus-visible:outline-emerald-600">
           {loading ? <Loader2 className="size-5 animate-spin" /> : <Smartphone className="size-5" />}
-          Send payment request
+          {isSubscriptionPayment ? "Send subscription payment request" : "Send payment request"}
         </Button>
       </div>
     </div>

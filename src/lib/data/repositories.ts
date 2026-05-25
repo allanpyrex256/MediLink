@@ -454,7 +454,7 @@ export async function getDashboardData(): Promise<DashboardData> {
             {
               label: "Open medicine orders",
               value: String(effectivePrescriptions.filter((item) => item.status !== "collected").length),
-              change: "Live from Supabase",
+              change: "Live production data",
               tone: "blue",
             },
             {
@@ -490,7 +490,7 @@ export async function getDashboardData(): Promise<DashboardData> {
             {
               label: "Appointments today",
               value: String(normalizedAppointments.length || 0),
-              change: "Live from Supabase",
+              change: "Live production data",
               tone: "green",
             },
             {

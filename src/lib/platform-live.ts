@@ -114,6 +114,7 @@ function buildPlatformOverview({
   const platformTenants = tenants.map((tenant) => {
     const subscription = subscriptionsByTenant.get(tenant.id);
     const status = resolveTenantStatus(tenant.status, subscription);
+    const hasRecordedPayment = hasPaidSubscription(subscription);
 
     return {
       id: tenant.id,
@@ -121,7 +122,7 @@ function buildPlatformOverview({
       kind: tenant.tenant_kind,
       plan: planLabel(subscription?.plan, tenant.tenant_kind),
       status,
-      lastPayment: subscription?.status === "active" ? formatShortDate(subscription.current_period_start) : "Trial",
+      lastPayment: hasRecordedPayment ? formatShortDate(subscription?.current_period_start) : "Trial",
       nextDue: formatShortDate(subscription?.trial_ends_at ?? subscription?.current_period_end),
       amount: Number(subscription?.amount ?? 0),
       region: tenant.region,
@@ -211,13 +212,14 @@ function buildSubscriptionStatus(tenants: PlatformTenant[]): SubscriptionStatusP
 
 function resolveTenantStatus(
   tenantStatus: TenantStatus,
-  subscription?: Pick<SubscriptionRow, "status" | "current_period_end" | "trial_ends_at">,
+  subscription?: Pick<SubscriptionRow, "status" | "amount" | "current_period_end" | "trial_ends_at">,
 ): TenantStatus {
   const subscriptionStatus = subscription?.status;
 
   if (tenantStatus === "disabled" || subscriptionStatus === "cancelled") return "disabled";
   if (tenantStatus === "past_due" || subscriptionStatus === "past_due") return "past_due";
-  if (tenantStatus === "active" || subscriptionStatus === "active") return "active";
+  if (subscriptionStatus === "active" && isPastDate(subscription?.current_period_end)) return "past_due";
+  if (hasPaidSubscription(subscription)) return "active";
   if (
     subscriptionStatus === "trialing" &&
     isPastDate(subscription?.trial_ends_at ?? subscription?.current_period_end)
@@ -226,6 +228,12 @@ function resolveTenantStatus(
   }
 
   return "trialing";
+}
+
+function hasPaidSubscription(
+  subscription?: Pick<SubscriptionRow, "status" | "amount">,
+) {
+  return subscription?.status === "active" && Number(subscription.amount ?? 0) > 0;
 }
 
 function planLabel(plan?: SubscriptionRow["plan"], kind?: TenantKind): PlatformTenant["plan"] {

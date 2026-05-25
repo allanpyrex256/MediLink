@@ -89,7 +89,10 @@ export async function getPublicTenantDirectory(): Promise<PublicTenantListing[]>
   );
 }
 
-export async function getPublicTenantProfile(slug: string): Promise<PublicTenantProfile | null> {
+export async function getPublicTenantProfile(
+  slug: string,
+  options: { includeDisabled?: boolean } = {},
+): Promise<PublicTenantProfile | null> {
   const normalized = normalizePublicSlug(slug);
 
   if (!hasSupabaseAdminConfig()) {
@@ -123,12 +126,16 @@ export async function getPublicTenantProfile(slug: string): Promise<PublicTenant
   }
 
   const supabase = createSupabaseAdminClient();
-  const { data: tenants } = await supabase
+  let tenantsQuery = supabase
     .from("tenants")
     .select("*")
-    .neq("status", "disabled")
-    .or(`slug.eq.${normalized},subdomain.eq.${normalized}`)
-    .limit(1);
+    .or(`slug.eq.${normalized},subdomain.eq.${normalized}`);
+
+  if (!options.includeDisabled) {
+    tenantsQuery = tenantsQuery.neq("status", "disabled");
+  }
+
+  const { data: tenants } = await tenantsQuery.limit(1);
 
   if (!tenants?.[0]) return null;
 
