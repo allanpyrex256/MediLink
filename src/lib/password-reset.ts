@@ -92,8 +92,8 @@ export async function sendPasswordResetOtp(
     return;
   }
 
-  const authUser = await getPasswordResetAuthUser(supabase, account.id);
-  const otp = createPasswordResetOtp(account, authUser.updated_at ?? authUser.created_at ?? null);
+  await getPasswordResetAuthUser(supabase, account.id);
+  const otp = createPasswordResetOtp(account);
 
   const delivery = await sendEmail({
     to: normalizedEmail,
@@ -124,11 +124,7 @@ export async function resetPasswordWithOtp(
   }
 
   const authUser = await getPasswordResetAuthUser(supabase, account.id);
-  const otpValid = verifyPasswordResetOtp(
-    account,
-    authUser.updated_at ?? authUser.created_at ?? null,
-    cleanOtp,
-  );
+  const otpValid = verifyPasswordResetOtp(account, cleanOtp);
 
   if (!otpValid) {
     throw new Error("The reset OTP is invalid or expired. Request a new OTP and try again.");
@@ -160,11 +156,10 @@ async function getPasswordResetAuthUser(
 
 function createPasswordResetOtp(
   account: Pick<PasswordResetAccount, "id" | "email" | "created_at">,
-  authUpdatedAt: string | null,
   window = currentOtpWindow(),
 ) {
   const digest = createHmac("sha256", passwordResetOtpSecret())
-    .update(passwordResetOtpPayload(account, authUpdatedAt, window))
+    .update(passwordResetOtpPayload(account, window))
     .digest();
   const value = digest.readUInt32BE(0) % 1_000_000;
 
@@ -173,15 +168,14 @@ function createPasswordResetOtp(
 
 function verifyPasswordResetOtp(
   account: Pick<PasswordResetAccount, "id" | "email" | "created_at">,
-  authUpdatedAt: string | null,
   otp: string,
 ) {
   if (!/^\d{6}$/.test(otp)) return false;
 
   const window = currentOtpWindow();
   const candidates = [
-    createPasswordResetOtp(account, authUpdatedAt, window),
-    createPasswordResetOtp(account, authUpdatedAt, window - 1),
+    createPasswordResetOtp(account, window),
+    createPasswordResetOtp(account, window - 1),
   ];
 
   return candidates.some((candidate) => secureEqual(candidate, otp));
@@ -193,14 +187,13 @@ function currentOtpWindow() {
 
 function passwordResetOtpPayload(
   account: Pick<PasswordResetAccount, "id" | "email" | "created_at">,
-  authUpdatedAt: string | null,
   window: number,
 ) {
   return [
     "medilink-password-reset",
     account.id,
     account.email.trim().toLowerCase(),
-    authUpdatedAt ?? account.created_at ?? "",
+    account.created_at ?? "",
     window,
   ].join(":");
 }
