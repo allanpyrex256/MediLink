@@ -26,6 +26,7 @@ export const appConfig = {
     subscriptionKey: process.env.MTN_MOMO_SUBSCRIPTION_KEY,
     apiUser: process.env.MTN_MOMO_API_USER,
     apiKey: process.env.MTN_MOMO_API_KEY,
+    webhookSecret: process.env.MTN_MOMO_WEBHOOK_SECRET,
     targetEnvironment: process.env.MTN_MOMO_TARGET_ENVIRONMENT ?? "sandbox",
     baseUrl:
       process.env.MTN_MOMO_BASE_URL ??
@@ -35,6 +36,7 @@ export const appConfig = {
     clientId: process.env.AIRTEL_MONEY_CLIENT_ID,
     clientSecret: process.env.AIRTEL_MONEY_CLIENT_SECRET,
     publicKey: process.env.AIRTEL_MONEY_PUBLIC_KEY,
+    webhookSecret: process.env.AIRTEL_MONEY_WEBHOOK_SECRET,
     country: process.env.AIRTEL_MONEY_COUNTRY ?? "UG",
     currency: process.env.AIRTEL_MONEY_CURRENCY ?? "UGX",
     baseUrl:
@@ -73,13 +75,25 @@ export function hasSupabaseAdminConfig() {
 }
 
 export function isDemoMode() {
-  return !hasSupabaseConfig();
+  return !hasSupabaseConfig() && isDemoModeAllowed();
+}
+
+export function isProduction() {
+  return process.env.NODE_ENV === "production";
+}
+
+export function isDemoModeAllowed() {
+  return (
+    process.env.ENABLE_DEMO_MODE === "true" ||
+    (process.env.ENABLE_DEMO_MODE !== "false" && !isProduction())
+  );
 }
 
 export function isLocalDemoPaymentAllowed() {
+  if (isProduction()) return false;
+
   return (
     process.env.ALLOW_DEMO_PAYMENTS === "true" ||
-    (process.env.ALLOW_DEMO_PAYMENTS !== "false" &&
-      process.env.NODE_ENV !== "production")
+    process.env.ALLOW_DEMO_PAYMENTS !== "false"
   );
 }

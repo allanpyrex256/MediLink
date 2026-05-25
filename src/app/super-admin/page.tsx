@@ -21,6 +21,7 @@ import {
   TenantGrowthChart,
 } from "@/components/super-admin/platform-charts";
 import { DeleteTenantAccountButton } from "@/components/super-admin/delete-tenant-account-button";
+import { TenantAdminPasswordResetButton } from "@/components/super-admin/tenant-admin-password-reset-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supportTickets } from "@/lib/platform-demo";
@@ -399,7 +400,7 @@ function BusinessTable({
   allowDelete: boolean;
 }) {
   return (
-    <table className="w-full min-w-[980px] text-left text-sm">
+    <table className="w-full min-w-[1120px] text-left text-sm">
       <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
         <tr>
           <th className="px-5 py-3 font-semibold">Business</th>
@@ -442,11 +443,18 @@ function BusinessTable({
               </Badge>
             </td>
             <td className="px-5 py-4">
-              <DeleteTenantAccountButton
-                tenantId={tenant.id}
-                business={tenant.business}
-                disabled={!allowDelete}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <TenantAdminPasswordResetButton
+                  tenantId={tenant.id}
+                  business={tenant.business}
+                  disabled={!allowDelete}
+                />
+                <DeleteTenantAccountButton
+                  tenantId={tenant.id}
+                  business={tenant.business}
+                  disabled={!allowDelete}
+                />
+              </div>
             </td>
           </tr>
         ))}

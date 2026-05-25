@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasSupabaseAdminConfig } from "@/lib/config";
+import { appConfig, hasSupabaseAdminConfig } from "@/lib/config";
+import { requireWebhookSecret } from "@/lib/security/webhooks";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
+  const invalidWebhook = requireWebhookSecret(request, {
+    provider: "Airtel Money",
+    secret: appConfig.airtel.webhookSecret,
+  });
+  if (invalidWebhook) return invalidWebhook;
+
   const payload = await request.json().catch(() => null);
   const transaction = payload?.data?.transaction ?? payload?.transaction ?? {};
   const reference = transaction.id ?? transaction.reference ?? payload?.reference;

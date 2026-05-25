@@ -62,7 +62,7 @@ export function PasswordResetForm() {
 
       if (!response.ok) throw new Error(payload.error ?? "Unable to send reset OTP.");
 
-      setMessage(payload.data?.message ?? "If this is the account creator email, a reset OTP has been sent.");
+      setMessage(payload.data?.message ?? "If this is an owner or admin account, a MediLink reset OTP has been sent.");
       setStep("verify");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to send reset OTP.");
@@ -93,7 +93,7 @@ export function PasswordResetForm() {
 
       const cleanOtp = otp.replace(/\D/g, "");
       if (verifyOtp && cleanOtp.length < 6) {
-        throw new Error("Enter the 6-digit OTP from the account creator email.");
+        throw new Error("Enter the 6-digit OTP from the owner/admin email.");
       }
 
       if (password.length < 8) {
@@ -119,7 +119,7 @@ export function PasswordResetForm() {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
 
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: "local" });
       router.push("/login?reset=success");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to reset password.");
@@ -138,9 +138,9 @@ export function PasswordResetForm() {
           <div className="grid size-12 place-items-center rounded-lg bg-sky-100 text-sky-700">
             {isVerifyStep ? <Mail className="size-6" /> : <KeyRound className="size-6" />}
           </div>
-          <CardTitle className="mt-6">Reset creator password</CardTitle>
+          <CardTitle className="mt-6">Reset admin password</CardTitle>
           <CardDescription>
-            Use the email that created the MediLink workspace, then enter the OTP sent to that inbox.
+            Use the owner or admin email for the MediLink workspace, then enter the MediLink OTP sent to that inbox.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -157,7 +157,7 @@ export function PasswordResetForm() {
           {step === "request" ? (
             <form className="grid gap-4" onSubmit={requestOtp}>
               <Input
-                label="Account creator email"
+                label="Owner/admin email"
                 name="email"
                 type="email"
                 placeholder="owner@clinic.ug"
@@ -175,7 +175,7 @@ export function PasswordResetForm() {
           {isVerifyStep ? (
             <form className="grid gap-4" onSubmit={verifyOtpAndReset}>
               <Input
-                label="Account creator email"
+                label="Owner/admin email"
                 name="email"
                 type="email"
                 value={email}

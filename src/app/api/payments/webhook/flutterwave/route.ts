@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appConfig } from "@/lib/config";
 import { hasSupabaseAdminConfig } from "@/lib/config";
+import { requireWebhookSecret } from "@/lib/security/webhooks";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
-  const signature = request.headers.get("verif-hash");
-
-  if (appConfig.flutterwave.webhookHash && signature !== appConfig.flutterwave.webhookHash) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
+  const invalidWebhook = requireWebhookSecret(request, {
+    provider: "Flutterwave",
+    secret: appConfig.flutterwave.webhookHash,
+    headers: ["verif-hash"],
+    queryParams: [],
+  });
+  if (invalidWebhook) return invalidWebhook;
 
   const payload = await request.json().catch(() => null);
   const reference =

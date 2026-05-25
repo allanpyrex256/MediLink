@@ -90,6 +90,7 @@ export function DailySalesRegister({
   selectedShiftType,
   dailyTotal,
   tenantKind,
+  tenantName,
   activeShift,
   shifts,
   user,
@@ -101,6 +102,7 @@ export function DailySalesRegister({
   selectedShiftType: SalesShiftType;
   dailyTotal: number;
   tenantKind: TenantKind;
+  tenantName: string;
   activeShift: SalesShift | null;
   shifts: SalesShift[];
   user: AppUser;
@@ -112,16 +114,18 @@ export function DailySalesRegister({
     initialSaleForm(selectedDate, tenantKind, activeShift?.id ?? ""),
   );
   const [optimisticSales, setOptimisticSales] = useState<DailySale[]>([]);
+  const saleFormRef = useRef<HTMLFormElement>(null);
   const saleItemNameRef = useRef<HTMLInputElement>(null);
+  const shiftLocationName = tenantKind === "pharmacy" ? tenantName : branches[0]?.name ?? tenantName;
   const shiftForm = useMemo<ShiftOpenForm>(() => ({
     shiftDate: selectedDate,
     shiftType: selectedShiftType,
     sellerName: user.full_name,
-    branchName: branches[0]?.name ?? "Main branch",
+    branchName: shiftLocationName,
     openingCashBalance: "0",
     deviceName: "Current device",
     notes: "",
-  }), [branches, selectedDate, selectedShiftType, user.full_name]);
+  }), [selectedDate, selectedShiftType, shiftLocationName, user.full_name]);
   const [closeForm, setCloseForm] = useState<ShiftCloseForm>({
     closingCashBalance: "",
     expensesTotal: "0",
@@ -190,6 +194,7 @@ export function DailySalesRegister({
     activeShiftCash -
     Number(closeForm.expensesTotal || 0);
   const cashDifference = Number(closeForm.closingCashBalance || 0) - expectedCash;
+  const saleDraftHasContent = hasSaleDraft(saleForm);
 
   function updateSaleField<Key extends keyof SaleForm>(key: Key, value: SaleForm[Key]) {
     setMessage("");
@@ -203,20 +208,32 @@ export function DailySalesRegister({
     setCloseForm((current) => ({ ...current, [key]: value }));
   }
 
-  function startNewSaleRow() {
-    if (!activeShift) {
-      setError("Open a shift before adding items.");
-      return;
-    }
+  function prepareNextSaleRow() {
+    if (!activeShift) return;
 
-    setMessage("");
-    setError("");
     setSaleForm((current) => ({
       ...initialSaleForm(selectedDate, tenantKind, activeShift.id),
       category: current.category,
       paymentMethod: current.paymentMethod,
     }));
     setShowSaleRow(true);
+    requestAnimationFrame(() => saleItemNameRef.current?.focus());
+  }
+
+  function startNewSaleRow() {
+    if (!activeShift) {
+      setError("Open a shift before adding items.");
+      return;
+    }
+
+    if (showSaleRow && saleDraftHasContent) {
+      saleFormRef.current?.requestSubmit();
+      return;
+    }
+
+    setMessage("");
+    setError("");
+    prepareNextSaleRow();
   }
 
   async function handleOpenShift(event: FormEvent<HTMLFormElement>) {
@@ -275,13 +292,7 @@ export function DailySalesRegister({
           ...current.filter((sale) => sale.id !== savedSale.id),
         ]);
       }
-      setSaleForm((current) => ({
-        ...initialSaleForm(current.saleDate, tenantKind, activeShift.id),
-        category: current.category,
-        paymentMethod: current.paymentMethod,
-      }));
-      setShowSaleRow(true);
-      requestAnimationFrame(() => saleItemNameRef.current?.focus());
+      prepareNextSaleRow();
       setMessage(payload.demo ? "Sale recorded in local demo mode. Add another item." : "Sale recorded. Add another item.");
       router.refresh();
     } catch (caught) {
@@ -326,6 +337,10 @@ export function DailySalesRegister({
     setShowCloseForm(true);
   }
 
+  function shiftDisplayLocation(shift: SalesShift) {
+    return tenantKind === "pharmacy" ? tenantName : shift.branch_name;
+  }
+
   return (
     <div className="space-y-5">
       {(message || error) ? (
@@ -353,7 +368,7 @@ export function DailySalesRegister({
                 <Badge tone="slate">Closed</Badge>
                 <span className="text-sm font-semibold text-slate-950">{dayShift.shift_code}</span>
                 <Badge tone="blue">{shiftTypeLabel(getShiftType(dayShift))}</Badge>
-                <span className="text-sm text-slate-500">{dayShift.branch_name}</span>
+                <span className="text-sm text-slate-500">{shiftDisplayLocation(dayShift)}</span>
                 <span className="text-sm text-slate-500">{getShiftDate(dayShift)}</span>
               </div>
             </div>
@@ -390,12 +405,12 @@ export function DailySalesRegister({
                 <Badge tone="green">Open</Badge>
                 <span className="text-sm font-semibold text-slate-950">{activeShift.shift_code}</span>
                 <Badge tone="blue">{shiftTypeLabel(getShiftType(activeShift))}</Badge>
-                <span className="text-sm text-slate-500">{activeShift.branch_name}</span>
+                <span className="text-sm text-slate-500">{shiftDisplayLocation(activeShift)}</span>
                 <span className="text-sm text-slate-500">{getShiftDate(activeShift)}</span>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <Button type="button" variant="secondary" onClick={startNewSaleRow}>
+              <Button type="button" variant="secondary" disabled={saleLoading} onClick={startNewSaleRow}>
                 <Plus className="size-4" />
                 Add item
               </Button>
@@ -483,7 +498,7 @@ export function DailySalesRegister({
                     onChange={(event) => setQuery(event.target.value)}
                   />
                 </label>
-                <Button type="button" variant="secondary" disabled={!activeShift} onClick={startNewSaleRow}>
+                <Button type="button" variant="secondary" disabled={!activeShift || saleLoading} onClick={startNewSaleRow}>
                   <Plus className="size-4" />
                   Add item
                 </Button>
@@ -491,7 +506,7 @@ export function DailySalesRegister({
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <form onSubmit={handleSaleSubmit}>
+            <form ref={saleFormRef} onSubmit={handleSaleSubmit}>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                   <thead className="bg-slate-100 text-xs uppercase tracking-normal text-slate-600">
@@ -686,4 +701,16 @@ function formatQuantity(value: number) {
   return new Intl.NumberFormat("en-UG", {
     maximumFractionDigits: 2,
   }).format(Number(value));
+}
+
+function hasSaleDraft(form: SaleForm) {
+  return Boolean(
+    form.inventoryItemId ||
+      form.itemName.trim() ||
+      form.unitPrice.trim() ||
+      form.unitCost.trim() ||
+      form.customerName.trim() ||
+      form.notes.trim() ||
+      form.quantity.trim() !== "1",
+  );
 }

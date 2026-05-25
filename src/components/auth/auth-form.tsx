@@ -13,6 +13,7 @@ import { demoAccountOptions, demoWorkspaceBranding } from "@/lib/demo-session";
 import { normalizeUgandanPhone, phoneAuthEmail, phoneLoginIdentifier } from "@/lib/phone";
 import { dashboardRoleLabel, defaultDashboardPath } from "@/lib/rbac";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
+import { getOrCreateAuthTabId, withAuthTabParam } from "@/lib/supabase/session-scope";
 
 const tenantKinds = [
   { value: "pharmacy", label: "Pharmacy / drug shop" },
@@ -98,6 +99,7 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
     const password = String(form.get("password") ?? "");
     if (!identifier) throw new Error("Enter your phone number or email.");
 
+    const authTabId = getOrCreateAuthTabId();
     const supabase = createSupabaseBrowserClient();
     const isEmail = isEmailIdentifier(identifier);
     const phone = isEmail ? "" : phoneLoginIdentifier(identifier);
@@ -128,7 +130,7 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
           .single()
       : { data: null };
 
-    router.push(next ?? defaultDashboardPath(profile?.role, profile?.is_platform_admin));
+    router.push(withAuthTabParam(next ?? defaultDashboardPath(profile?.role, profile?.is_platform_admin), authTabId));
     router.refresh();
   }
 
@@ -157,11 +159,12 @@ function AuthFormContent({ mode }: { mode: "login" | "register" }) {
 
     if (!response.ok) throw new Error(payload.error ?? "Unable to create owner account");
 
+    const authTabId = getOrCreateAuthTabId();
     const supabase = createSupabaseBrowserClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({ email: authEmail, password });
     if (signInError) throw signInError;
 
-    router.push("/dashboard");
+    router.push(withAuthTabParam("/dashboard", authTabId));
     router.refresh();
   }
 

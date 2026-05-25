@@ -3,7 +3,7 @@ import {
   appointmentDecisionSchema,
   isSlotAvailable,
 } from "@/lib/appointments";
-import { hasSupabaseConfig } from "@/lib/config";
+import { hasSupabaseConfig, isDemoModeAllowed } from "@/lib/config";
 import { buildDemoDashboardData } from "@/lib/demo-data";
 import { DEMO_WORKSPACE_COOKIE, normalizeDemoWorkspaceId } from "@/lib/demo-session";
 import {
@@ -41,6 +41,13 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 
   if (!hasSupabaseConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "Appointments need Supabase configuration." },
+        { status: 503 },
+      );
+    }
+
     return updateLocalDemoAppointment(request, appointmentId, parsed.data);
   }
 

@@ -35,6 +35,7 @@ import type {
   SalesShift,
   ShiftExpense,
   StaffInvitation,
+  Subscription,
   Tenant,
   TenantDocumentTemplate,
   TenantStaffUser,
@@ -343,6 +344,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     const normalizedBranches = (branches ?? []) as Branch[];
     const normalizedInventory = (inventory ?? []) as InventoryItem[];
     const normalizedPrescriptions = (prescriptions ?? []) as PrescriptionOrder[];
+    const normalizedSubscriptions = ((subscriptions ?? []) as Subscription[])
+      .map(subscriptionWithTrialExpiry);
     const paidRevenue = normalizedPayments
       .filter((payment) => payment.status === "paid")
       .reduce((sum, payment) => sum + Number(payment.amount), 0);
@@ -351,6 +354,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     ).length;
     const fallbackData = buildDemoDashboardData();
     const normalizedTenant = (tenant as Tenant | null) ?? fallbackData.tenant;
+    const effectiveTenant = tenantWithTrialExpiry(normalizedTenant, normalizedSubscriptions);
     const isPharmacy = normalizedTenant.tenant_kind === "pharmacy";
     const medicineOrderAppointments: Appointment[] = normalizedPrescriptions.map((prescription) => ({
       id: `rx-${prescription.id}`,
@@ -391,7 +395,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 
     return {
       ...fallbackData,
-      tenant: normalizedTenant,
+      tenant: effectiveTenant,
       user: profile,
       doctors: normalizedDoctors.length
         ? normalizedDoctors
@@ -422,11 +426,8 @@ export async function getDashboardData(): Promise<DashboardData> {
             ...(notifications[index] ?? {}),
           }))
         : fallbackData.notifications,
-      subscriptions: subscriptions?.length
-        ? fallbackData.subscriptions.map((item, index) => ({
-            ...item,
-            ...(subscriptions[index] ?? {}),
-          }))
+      subscriptions: normalizedSubscriptions.length
+        ? normalizedSubscriptions
         : fallbackData.subscriptions,
       diagnoses: normalizedDiagnoses.length
         ? normalizedDiagnoses
@@ -509,6 +510,40 @@ export async function getDashboardData(): Promise<DashboardData> {
   } catch {
     return buildDemoDashboardData();
   }
+}
+
+function tenantWithTrialExpiry(tenant: Tenant, subscriptions: Subscription[]) {
+  if (
+    tenant.status === "trialing" &&
+    subscriptions.some((subscription) => subscription.status === "past_due")
+  ) {
+    return {
+      ...tenant,
+      status: "past_due" as const,
+    };
+  }
+
+  return tenant;
+}
+
+function subscriptionWithTrialExpiry(subscription: Subscription): Subscription {
+  if (
+    subscription.status === "trialing" &&
+    isPastDate(subscription.trial_ends_at ?? subscription.current_period_end)
+  ) {
+    return {
+      ...subscription,
+      status: "past_due",
+    };
+  }
+
+  return subscription;
+}
+
+function isPastDate(value: string | null | undefined) {
+  if (!value) return false;
+
+  return new Date(value).getTime() < Date.now();
 }
 
 export async function getPlatformTenants(): Promise<Tenant[]> {

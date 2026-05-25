@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hasSupabaseAdminConfig } from "@/lib/config";
 import { normalizeUgandanPhone, phoneAuthEmail } from "@/lib/phone";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
+
+const trialDays = 7;
 
 const ownerRegisterSchema = z.object({
   businessName: z.string().trim().min(2, "Business name is required."),
@@ -16,6 +19,19 @@ const ownerRegisterSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "local";
+  const limited = rateLimit(`owner-register:${ip}`, 5, 60 * 60_000);
+
+  if (!limited.allowed) {
+    return NextResponse.json(
+      { error: "Too many registration attempts. Please wait and try again." },
+      { status: 429 },
+    );
+  }
+
   if (!hasSupabaseAdminConfig()) {
     return NextResponse.json(
       { error: "Owner registration needs SUPABASE_SERVICE_ROLE_KEY." },
@@ -38,6 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Enter a valid phone number." }, { status: 400 });
   }
   const authEmail = phoneAuthEmail(phone);
+  const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString();
 
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin.auth.admin.createUser({
@@ -52,6 +69,8 @@ export async function POST(request: NextRequest) {
       tenant_slug: slugify(parsed.data.businessName),
       tenant_kind: parsed.data.tenantKind,
       subscription_plan: "starter",
+      trial_days: trialDays,
+      trial_ends_at: trialEndsAt,
       payment_method: "mtn_momo",
       billing_phone: phone,
       region: parsed.data.region || "Uganda",
@@ -67,6 +86,8 @@ export async function POST(request: NextRequest) {
     data: {
       id: data.user?.id,
       phone,
+      trialDays,
+      trialEndsAt,
       next: "/dashboard",
     },
   }, { status: 201 });

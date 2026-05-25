@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
+import { hasSupabaseAdminConfig, hasSupabaseConfig, isDemoModeAllowed } from "@/lib/config";
 import { DEMO_WORKSPACE_COOKIE, normalizeDemoWorkspaceId } from "@/lib/demo-session";
 import { getLocalDemoDocumentTemplate } from "@/lib/local-demo-store";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -17,6 +17,13 @@ export async function GET(request: NextRequest, { params }: TemplateContext) {
   const disposition = responseDisposition(request);
 
   if (!hasSupabaseConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "Document storage needs Supabase configuration." },
+        { status: 503 },
+      );
+    }
+
     const workspaceId = normalizeDemoWorkspaceId(request.cookies.get(DEMO_WORKSPACE_COOKIE)?.value);
     const template = await getLocalDemoDocumentTemplate({ workspaceId, templateId });
 

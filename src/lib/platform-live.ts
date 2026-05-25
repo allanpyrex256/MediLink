@@ -35,6 +35,7 @@ type SubscriptionRow = {
   amount: number | string;
   current_period_start: string;
   current_period_end: string;
+  trial_ends_at: string | null;
   provider: string | null;
   created_at: string;
 };
@@ -64,7 +65,7 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
         .order("created_at", { ascending: false }),
       supabase
         .from("subscriptions")
-        .select("tenant_id, plan, status, amount, current_period_start, current_period_end, provider, created_at"),
+        .select("tenant_id, plan, status, amount, current_period_start, current_period_end, trial_ends_at, provider, created_at"),
       supabase.from("users").select("tenant_id"),
     ]);
 
@@ -112,7 +113,7 @@ function buildPlatformOverview({
 
   const platformTenants = tenants.map((tenant) => {
     const subscription = subscriptionsByTenant.get(tenant.id);
-    const status = resolveTenantStatus(tenant.status, subscription?.status);
+    const status = resolveTenantStatus(tenant.status, subscription);
 
     return {
       id: tenant.id,
@@ -121,7 +122,7 @@ function buildPlatformOverview({
       plan: planLabel(subscription?.plan, tenant.tenant_kind),
       status,
       lastPayment: subscription?.status === "active" ? formatShortDate(subscription.current_period_start) : "Trial",
-      nextDue: formatShortDate(subscription?.current_period_end),
+      nextDue: formatShortDate(subscription?.trial_ends_at ?? subscription?.current_period_end),
       amount: Number(subscription?.amount ?? 0),
       region: tenant.region,
       users: usersByTenant[tenant.id] ?? 0,
@@ -210,11 +211,20 @@ function buildSubscriptionStatus(tenants: PlatformTenant[]): SubscriptionStatusP
 
 function resolveTenantStatus(
   tenantStatus: TenantStatus,
-  subscriptionStatus?: SubscriptionRow["status"],
+  subscription?: Pick<SubscriptionRow, "status" | "current_period_end" | "trial_ends_at">,
 ): TenantStatus {
+  const subscriptionStatus = subscription?.status;
+
   if (tenantStatus === "disabled" || subscriptionStatus === "cancelled") return "disabled";
   if (tenantStatus === "past_due" || subscriptionStatus === "past_due") return "past_due";
   if (tenantStatus === "active" || subscriptionStatus === "active") return "active";
+  if (
+    subscriptionStatus === "trialing" &&
+    isPastDate(subscription?.trial_ends_at ?? subscription?.current_period_end)
+  ) {
+    return "past_due";
+  }
+
   return "trialing";
 }
 
@@ -251,6 +261,12 @@ function formatShortDate(value: string | null | undefined) {
     day: "numeric",
     month: "short",
   }).format(new Date(value));
+}
+
+function isPastDate(value: string | null | undefined) {
+  if (!value) return false;
+
+  return new Date(value).getTime() < Date.now();
 }
 
 function isSameMonth(value: string, date: Date) {

@@ -1,9 +1,14 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { canManageFinance, getAuthenticatedApiProfile } from "@/lib/api-profile";
+import { hasSupabaseConfig, isDemoModeAllowed } from "@/lib/config";
 import { getDashboardData } from "@/lib/data/repositories";
 import type { DailySale, SalesShift } from "@/lib/types";
 import { formatUgandanCurrency } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
+  const accessError = await requireReportAccess();
+  if (accessError) return accessError;
+
   const date = normalizeDate(request.nextUrl.searchParams.get("date")) ?? todayInEastAfrica();
   const disposition = request.nextUrl.searchParams.get("mode") === "inline" ? "inline" : "attachment";
   const data = await getDashboardData();
@@ -61,6 +66,32 @@ export async function GET(request: NextRequest) {
       "Content-Disposition": `${disposition}; filename="medilink-sales-report-${date}.pdf"`,
     },
   });
+}
+
+async function requireReportAccess() {
+  if (!hasSupabaseConfig()) {
+    return isDemoModeAllowed()
+      ? null
+      : NextResponse.json(
+          { error: "Sales reports need Supabase configuration." },
+          { status: 503 },
+        );
+  }
+
+  const { profile } = await getAuthenticatedApiProfile();
+
+  if (!profile) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!canManageFinance(profile.role)) {
+    return NextResponse.json(
+      { error: "Only finance staff can export sales reports." },
+      { status: 403 },
+    );
+  }
+
+  return null;
 }
 
 function topSellingItems(sales: DailySale[]) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
+import { getAuthenticatedApiProfile } from "@/lib/api-profile";
+import { hasSupabaseAdminConfig, hasSupabaseConfig, isDemoModeAllowed } from "@/lib/config";
 import { buildDemoDashboardData } from "@/lib/demo-data";
 import { DEMO_WORKSPACE_COOKIE, normalizeDemoWorkspaceId } from "@/lib/demo-session";
 import { getTenantDocumentTemplates } from "@/lib/data/repositories";
@@ -16,6 +17,9 @@ const allowedExtensions = [".pdf", ".doc", ".docx", ".html", ".htm", ".txt", ".p
 const uploadRoles: UserRole[] = ["owner", "admin", "seller", "receptionist"];
 
 export async function GET() {
+  const accessError = await requireTemplateAccess();
+  if (accessError) return accessError;
+
   const templates = await getTenantDocumentTemplates();
 
   return NextResponse.json({ data: templates });
@@ -36,6 +40,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (!hasSupabaseConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "File uploads need Supabase configuration." },
+        { status: 503 },
+      );
+    }
+
     const workspaceId = normalizeDemoWorkspaceId(request.cookies.get(DEMO_WORKSPACE_COOKIE)?.value);
     const demo = buildDemoDashboardData(workspaceId);
     const arrayBuffer = await uploadedFile.arrayBuffer();
@@ -126,6 +137,25 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ data: data as TenantDocumentTemplate }, { status: 201 });
+}
+
+async function requireTemplateAccess() {
+  if (!hasSupabaseConfig()) {
+    return isDemoModeAllowed()
+      ? null
+      : NextResponse.json(
+          { error: "Document templates need Supabase configuration." },
+          { status: 503 },
+        );
+  }
+
+  const { profile } = await getAuthenticatedApiProfile();
+
+  if (!profile) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return null;
 }
 
 function validateTemplateFile(file: File) {

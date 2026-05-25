@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasSupabaseConfig } from "@/lib/config";
+import { hasSupabaseConfig, isDemoModeAllowed } from "@/lib/config";
 import { getDemoTenantForHost, tenantSlugFromHost } from "@/lib/tenant";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -8,6 +8,13 @@ export async function GET(request: NextRequest) {
   const slug = tenantSlugFromHost(host);
 
   if (!hasSupabaseConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "Tenant resolution needs Supabase configuration." },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json({ data: getDemoTenantForHost(host), demo: true });
   }
 

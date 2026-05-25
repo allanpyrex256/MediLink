@@ -108,6 +108,7 @@ export default async function DailySalesPage({
         selectedShiftType={selectedShiftType}
         dailyTotal={dayTotal}
         tenantKind={data.tenant.tenant_kind}
+        tenantName={data.tenant.name}
         activeShift={activeShift}
         shifts={data.salesShifts}
         user={data.user}

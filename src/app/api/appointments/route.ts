@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appointmentCreateSchema, isSlotAvailable } from "@/lib/appointments";
-import { hasSupabaseConfig } from "@/lib/config";
+import { hasSupabaseConfig, isDemoModeAllowed } from "@/lib/config";
 import { buildDemoDashboardData } from "@/lib/demo-data";
 import { DEMO_WORKSPACE_COOKIE, normalizeDemoWorkspaceId } from "@/lib/demo-session";
 import {
@@ -11,12 +11,52 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/security/rate-limit";
 
 export async function GET(request: NextRequest) {
-  const workspaceId = normalizeDemoWorkspaceId(request.cookies.get(DEMO_WORKSPACE_COOKIE)?.value);
-  const demo = await hydrateLocalDemoDashboardData(
-    buildDemoDashboardData(workspaceId),
-    workspaceId,
-  );
-  return NextResponse.json({ data: demo.appointments });
+  if (!hasSupabaseConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "Appointments need Supabase configuration." },
+        { status: 503 },
+      );
+    }
+
+    const workspaceId = normalizeDemoWorkspaceId(request.cookies.get(DEMO_WORKSPACE_COOKIE)?.value);
+    const demo = await hydrateLocalDemoDashboardData(
+      buildDemoDashboardData(workspaceId),
+      workspaceId,
+    );
+    return NextResponse.json({ data: demo.appointments, demo: true });
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("tenant_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("*, doctor:doctors(*), patient:patients(*)")
+    .eq("tenant_id", profile.tenant_id)
+    .order("scheduled_at", { ascending: true });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  return NextResponse.json({ data });
 }
 
 export async function POST(request: NextRequest) {
@@ -44,6 +84,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (!hasSupabaseConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "Appointments need Supabase configuration." },
+        { status: 503 },
+      );
+    }
+
     const workspaceId = normalizeDemoWorkspaceId(request.cookies.get(DEMO_WORKSPACE_COOKIE)?.value);
     const demo = await hydrateLocalDemoDashboardData(
       buildDemoDashboardData(workspaceId),

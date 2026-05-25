@@ -78,9 +78,12 @@ If your browser or Windows setup does not resolve `*.localhost`, open Notepad as
 2. Run `supabase/schema.sql` in the Supabase SQL editor.
 3. Enable Supabase email/password and Google auth providers.
 4. Copy `.env.example` to `.env.local` and fill the Supabase keys.
-5. Add payment provider credentials for Flutterwave, MTN MoMo, Airtel Money, and optionally Stripe.
-6. Add Meta WhatsApp Cloud API credentials with `WHATSAPP_CLOUD_API_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` if you want appointment confirmations sent over WhatsApp.
-7. Deploy to Vercel and copy the same env vars into the Vercel project.
+5. New owner/admin signups automatically receive a 7-day free trial with the subscription marked `trialing` until `trial_ends_at`.
+6. Add payment provider credentials for Flutterwave, MTN MoMo, Airtel Money, and optionally Stripe.
+7. Add Meta WhatsApp Cloud API credentials with `WHATSAPP_CLOUD_API_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` if you want appointment confirmations sent over WhatsApp.
+8. Set `ENABLE_DEMO_MODE=false` and `ALLOW_DEMO_PAYMENTS=false` for real production.
+9. Add webhook verification secrets: `FLUTTERWAVE_WEBHOOK_SECRET_HASH`, `MTN_MOMO_WEBHOOK_SECRET`, `AIRTEL_MONEY_WEBHOOK_SECRET`, and `STRIPE_WEBHOOK_SECRET` where those providers are enabled.
+10. Deploy to Vercel and copy the same env vars into the Vercel project.
 
 ## Multi-tenancy model
 
@@ -103,3 +106,5 @@ Payment adapters are intentionally env-driven:
 - Stripe is available for global card payment expansion.
 
 In non-production environments, missing provider credentials can return demo payment references when `ALLOW_DEMO_PAYMENTS=true`.
+
+For MTN MoMo and Airtel Money callbacks, include the configured secret as either an `x-medilink-webhook-secret` header or a `?secret=` query parameter on the webhook URL.

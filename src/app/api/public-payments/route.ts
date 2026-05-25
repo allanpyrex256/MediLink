@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { hasSupabaseAdminConfig } from "@/lib/config";
+import { hasSupabaseAdminConfig, isDemoModeAllowed } from "@/lib/config";
 import {
   getPublicTenantProfile,
   publicReference,
@@ -48,6 +48,13 @@ export async function POST(request: NextRequest) {
   const reference = publicReference("MLK-PAY");
 
   if (!hasSupabaseAdminConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "Public payments need Supabase admin configuration." },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json(
       {
         data: {

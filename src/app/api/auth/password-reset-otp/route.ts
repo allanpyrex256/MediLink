@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hasSupabaseAdminConfig, hasSupabaseConfig } from "@/lib/config";
+import {
+  canReceivePasswordResetOtp,
+  getPasswordResetAccountByEmail,
+  isDeliverablePasswordResetEmail,
+  passwordResetOtpMessage,
+  sendPasswordResetOtp,
+} from "@/lib/password-reset";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const resetSchema = z.object({
   email: z.string().email(),
 });
-
-const genericMessage =
-  "If this is the account creator email, a reset OTP has been sent.";
 
 export async function POST(request: NextRequest) {
   const ip =
@@ -34,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   if (!hasSupabaseAdminConfig()) {
     return NextResponse.json(
-      { error: "Password reset needs SUPABASE_SERVICE_ROLE_KEY so creator emails can be verified." },
+      { error: "Password reset needs SUPABASE_SERVICE_ROLE_KEY so owner/admin emails can be verified." },
       { status: 503 },
     );
   }
@@ -43,37 +47,25 @@ export async function POST(request: NextRequest) {
   const parsed = resetSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Enter a valid account creator email." }, { status: 400 });
+    return NextResponse.json({ error: "Enter a valid owner or admin email." }, { status: 400 });
   }
 
   const email = parsed.data.email.trim().toLowerCase();
   const supabase = createSupabaseAdminClient();
-  const { data: profile } = await supabase
-    .from("users")
-    .select("id, role, is_platform_admin")
-    .ilike("email", email)
-    .maybeSingle();
+  const profile = await getPasswordResetAccountByEmail(supabase, email);
 
-  const isCreator = profile?.role === "admin" || profile?.is_platform_admin;
-
-  if (!isCreator) {
-    return NextResponse.json({ data: { message: genericMessage } });
+  if (!canReceivePasswordResetOtp(profile) || !isDeliverablePasswordResetEmail(profile?.email ?? "")) {
+    return NextResponse.json({ data: { message: passwordResetOtpMessage } });
   }
 
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${request.nextUrl.origin}/reset-password`,
-      shouldCreateUser: false,
-    },
-  });
-
-  if (error) {
+  try {
+    await sendPasswordResetOtp(supabase, email, `${request.nextUrl.origin}/reset-password`);
+  } catch {
     return NextResponse.json(
       { error: "Unable to send the reset OTP right now. Please try again." },
       { status: 500 },
     );
   }
 
-  return NextResponse.json({ data: { message: genericMessage } });
+  return NextResponse.json({ data: { message: passwordResetOtpMessage } });
 }

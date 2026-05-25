@@ -387,7 +387,8 @@ create table public.prescription_orders (
   currency text not null default 'UGX',
   billing_cycle text not null default 'monthly' check (billing_cycle in ('monthly', 'annual')),
   current_period_start timestamptz not null default now(),
-  current_period_end timestamptz not null default (now() + interval '30 days'),
+  current_period_end timestamptz not null default (now() + interval '7 days'),
+  trial_ends_at timestamptz not null default (now() + interval '7 days'),
   provider text,
   provider_subscription_id text,
   created_at timestamptz not null default now(),
@@ -428,6 +429,7 @@ create index on public.daily_sales (tenant_id, shift_id, created_at desc);
   create index on public.prescription_orders (tenant_id, status, created_at);
   create index on public.notifications (tenant_id, status, created_at);
   create index on public.document_templates (tenant_id, created_at);
+  create index on public.subscriptions (status, trial_ends_at);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -529,6 +531,8 @@ declare
   subscription_plan text;
   subscription_amount numeric(12, 2);
   subscription_billing_cycle text;
+  trial_started_at timestamptz;
+  trial_ends_at timestamptz;
   payment_method text;
   billing_phone text;
 begin
@@ -583,6 +587,8 @@ begin
   subscription_billing_cycle := coalesce(new.raw_user_meta_data->>'subscription_billing_cycle', 'monthly');
   payment_method := coalesce(new.raw_user_meta_data->>'payment_method', 'stripe');
   billing_phone := coalesce(new.raw_user_meta_data->>'billing_phone', new.raw_user_meta_data->>'phone', '+256');
+  trial_started_at := now();
+  trial_ends_at := trial_started_at + interval '7 days';
 
   if subscription_plan not in ('starter', 'growth', 'dental', 'enterprise') then
     subscription_plan := 'starter';
@@ -642,7 +648,18 @@ begin
     (created_tenant_id, 'patient', 'Patient portal access', '{"view_own_records": true}'::jsonb)
   on conflict (tenant_id, name) do nothing;
 
-  insert into public.subscriptions (tenant_id, plan, status, amount, currency, billing_cycle, provider)
+  insert into public.subscriptions (
+    tenant_id,
+    plan,
+    status,
+    amount,
+    currency,
+    billing_cycle,
+    current_period_start,
+    current_period_end,
+    trial_ends_at,
+    provider
+  )
   values (
     created_tenant_id,
     subscription_plan,
@@ -650,6 +667,9 @@ begin
     subscription_amount,
     'UGX',
     subscription_billing_cycle,
+    trial_started_at,
+    trial_ends_at,
+    trial_ends_at,
     payment_method
   )
   on conflict do nothing;

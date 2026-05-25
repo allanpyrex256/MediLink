@@ -1,4 +1,4 @@
-import { hasSupabaseAdminConfig } from "@/lib/config";
+import { hasSupabaseAdminConfig, isDemoModeAllowed } from "@/lib/config";
 import { buildDemoDashboardData } from "@/lib/demo-data";
 import { demoTenantProfileForSlug, demoWorkspaceIdForSlug } from "@/lib/demo-session";
 import { hydrateLocalDemoDashboardData } from "@/lib/local-demo-store";
@@ -22,6 +22,8 @@ export async function getPublicBookingData(slug: string): Promise<PublicBookingD
   const demoWorkspaceId = demoWorkspaceIdForSlug(normalized);
 
   if (!hasSupabaseAdminConfig()) {
+    if (!isDemoModeAllowed()) return null;
+
     if (!demoWorkspaceId) return null;
 
     const data = await hydrateLocalDemoDashboardData(

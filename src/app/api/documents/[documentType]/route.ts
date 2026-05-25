@@ -1,4 +1,6 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedApiProfile } from "@/lib/api-profile";
+import { hasSupabaseConfig, isDemoModeAllowed } from "@/lib/config";
 import { getDashboardData } from "@/lib/data/repositories";
 import type { DashboardData, Patient } from "@/lib/types";
 import { formatUgandanCurrency, slugify } from "@/lib/utils";
@@ -10,6 +12,9 @@ type DocumentContext = {
 };
 
 export async function GET(request: NextRequest, { params }: DocumentContext) {
+  const accessError = await requireDocumentAccess();
+  if (accessError) return accessError;
+
   const { documentType } = await params;
   const data = await getDashboardData();
   const patientId = request.nextUrl.searchParams.get("patientId");
@@ -77,6 +82,25 @@ export async function GET(request: NextRequest, { params }: DocumentContext) {
     default:
       return Response.json({ error: "Unknown document type." }, { status: 404 });
   }
+}
+
+async function requireDocumentAccess() {
+  if (!hasSupabaseConfig()) {
+    return isDemoModeAllowed()
+      ? null
+      : NextResponse.json(
+          { error: "Document exports need Supabase configuration." },
+          { status: 503 },
+        );
+  }
+
+  const { profile } = await getAuthenticatedApiProfile();
+
+  if (!profile) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return null;
 }
 
 function patientSummaryDownload(

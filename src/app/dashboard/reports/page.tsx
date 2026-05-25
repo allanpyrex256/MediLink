@@ -1,4 +1,4 @@
-import { BarChart3, Download, Eye, FileText, TrendingUp } from "lucide-react";
+import { BarChart3, Download, Eye, TrendingUp } from "lucide-react";
 import { PageHeading } from "@/components/dashboard/page-heading";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -25,13 +25,6 @@ export default async function ReportsPage() {
           change: "Low stock or expiring drugs",
           tone: "amber" as const,
         },
-        {
-          label: "Unpaid invoices",
-          value: "UGX 32K",
-          change: "1 pending pharmacy sale",
-          tone: "blue" as const,
-          icon: FileText,
-        },
       ]
     : [
         {
@@ -46,33 +39,11 @@ export default async function ReportsPage() {
           change: "Down from 24m last month",
           tone: "blue" as const,
         },
-        {
-          label: "Unpaid invoices",
-          value: "UGX 80K",
-          change: "1 pending payment",
-          tone: "amber" as const,
-          icon: FileText,
-        },
       ];
   const metrics = [
     { ...reportMetrics[0], icon: TrendingUp },
     { ...reportMetrics[1], icon: BarChart3 },
-    { ...reportMetrics[2], icon: FileText },
   ];
-  const reportPacks = isPharmacy
-    ? [
-        { label: "Daily sales ledger", href: "/api/documents/daily-sales-ledger" },
-        { label: "Inventory reorder watch", href: "/api/documents/inventory-reorder-watch" },
-        { label: "Mobile money reconciliation", href: "/api/documents/mobile-money-reconciliation" },
-        { label: "Sales growth", href: "/api/documents/sales-growth" },
-      ]
-    : [
-        { label: "Daily appointment register", href: "/api/documents/daily-appointment-register" },
-        { label: "Doctor utilization", href: "/api/documents/doctor-utilization" },
-        { label: "Mobile money reconciliation", href: "/api/documents/mobile-money-reconciliation" },
-        { label: "Patient growth", href: "/api/documents/patient-growth" },
-      ];
-
   return (
     <div>
       <PageHeading
@@ -105,12 +76,12 @@ export default async function ReportsPage() {
           </div>
         }
       />
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {metrics.map((metric) => (
           <StatCard key={metric.label} metric={metric} icon={metric.icon} />
         ))}
       </div>
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
+      <div className="mt-5">
         <Card>
           <CardHeader>
             <Logo
@@ -127,38 +98,6 @@ export default async function ReportsPage() {
           </CardHeader>
           <CardContent>
             <RevenueChart data={data.revenue} volumeLabel={isPharmacy ? "Orders" : "Appointments"} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Report packs</CardTitle>
-            <CardDescription>Prepared exports for {brand.name} leadership.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {reportPacks.map((item) => (
-              <div key={item.href} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 p-3">
-                <span className="text-sm font-medium text-slate-700">{item.label}</span>
-                <div className="flex shrink-0 gap-2">
-                  <a
-                    href={`${item.href}?disposition=inline`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-transparent px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-sky-50 hover:text-slate-950"
-                  >
-                    <Eye className="size-4" aria-hidden="true" />
-                    View
-                  </a>
-                  <a
-                    href={item.href}
-                    download
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-transparent px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-sky-50 hover:text-slate-950"
-                  >
-                    <Download className="size-4" aria-hidden="true" />
-                    Download
-                  </a>
-                </div>
-              </div>
-            ))}
           </CardContent>
         </Card>
       </div>

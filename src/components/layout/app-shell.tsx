@@ -28,6 +28,7 @@ import {
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { AuthTabScope } from "@/components/auth/auth-tab-scope";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { createSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
@@ -142,7 +143,7 @@ export function AppShell({
 
   async function signOut() {
     if (hasSupabaseConfig()) {
-      await createSupabaseBrowserClient().auth.signOut();
+      await createSupabaseBrowserClient().auth.signOut({ scope: "local" });
     } else {
       await fetch("/api/demo-logout", { method: "POST" });
     }
@@ -161,6 +162,7 @@ export function AppShell({
         } as CSSProperties
       }
     >
+      <AuthTabScope />
       <aside
         id="desktop-navigation"
         className={cn(

@@ -6,6 +6,7 @@ import {
   demoWorkspaceIdForSlug,
   normalizeDemoWorkspaceId,
 } from "@/lib/demo-session";
+import { isDemoModeAllowed } from "@/lib/config";
 import { cookieDomainForHost, isLocalDevelopmentHost } from "@/lib/tenant-host";
 import type { UserRole } from "@/lib/types";
 
@@ -34,6 +35,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ workspaceId: string }> },
 ) {
+  if (!isDemoModeAllowed()) {
+    return NextResponse.redirect(new URL("/login", originFromRequest(request)));
+  }
+
   const { workspaceId } = await params;
   const demoWorkspaceId = demoWorkspaceIdForSlug(workspaceId) ?? normalizeDemoWorkspaceId(workspaceId);
   const requestedAccount = request.nextUrl.searchParams.get("account");

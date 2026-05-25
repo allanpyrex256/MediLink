@@ -6,6 +6,7 @@ import {
   demoAccountForPhone,
   normalizeDemoWorkspaceId,
 } from "@/lib/demo-session";
+import { isDemoModeAllowed } from "@/lib/config";
 import { cookieDomainForHost, isLocalDevelopmentHost } from "@/lib/tenant-host";
 
 function safeNextPath(value: unknown) {
@@ -15,6 +16,10 @@ function safeNextPath(value: unknown) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isDemoModeAllowed()) {
+    return NextResponse.json({ error: "Demo mode is disabled." }, { status: 403 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const account = demoAccountForPhone(body.accountPhone) ?? demoAccountForEmail(body.accountEmail);
   const workspaceId = account?.workspaceId ?? normalizeDemoWorkspaceId(body.workspaceId);

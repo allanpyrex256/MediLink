@@ -1,5 +1,5 @@
 import { addDays } from "date-fns";
-import { hasSupabaseAdminConfig } from "@/lib/config";
+import { hasSupabaseAdminConfig, isDemoModeAllowed } from "@/lib/config";
 import { buildDemoDashboardData } from "@/lib/demo-data";
 import {
   demoTenantProfileForSlug,
@@ -28,6 +28,8 @@ export function normalizePublicSlug(value: string) {
 
 export async function getPublicTenantDirectory(): Promise<PublicTenantListing[]> {
   if (!hasSupabaseAdminConfig()) {
+    if (!isDemoModeAllowed()) return [];
+
     const listings = await Promise.all(
       demoWorkspaceOptions.map(async (workspace) => {
         const data = await hydrateLocalDemoDashboardData(
@@ -91,6 +93,8 @@ export async function getPublicTenantProfile(slug: string): Promise<PublicTenant
   const normalized = normalizePublicSlug(slug);
 
   if (!hasSupabaseAdminConfig()) {
+    if (!isDemoModeAllowed()) return null;
+
     const workspaceId = demoWorkspaceIdForSlug(normalized);
     if (!workspaceId) return null;
 

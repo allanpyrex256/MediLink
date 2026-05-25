@@ -3,7 +3,7 @@ import {
   isSlotAvailable,
   publicAppointmentCreateSchema,
 } from "@/lib/appointments";
-import { hasSupabaseAdminConfig } from "@/lib/config";
+import { hasSupabaseAdminConfig, isDemoModeAllowed } from "@/lib/config";
 import { saveLocalDemoPublicBooking } from "@/lib/local-demo-store";
 import { demoWorkspaceIdForSlug, getPublicBookingData } from "@/lib/public-booking";
 import { rateLimit } from "@/lib/security/rate-limit";
@@ -57,6 +57,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (!hasSupabaseAdminConfig()) {
+    if (!isDemoModeAllowed()) {
+      return NextResponse.json(
+        { error: "Public bookings need Supabase admin configuration." },
+        { status: 503 },
+      );
+    }
+
     const workspaceId = demoWorkspaceIdForSlug(parsed.data.tenantSlug);
     if (!workspaceId) {
       return NextResponse.json({ error: "Booking page not found" }, { status: 404 });

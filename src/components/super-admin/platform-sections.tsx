@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DeleteTenantAccountButton } from "@/components/super-admin/delete-tenant-account-button";
+import { TenantAdminPasswordResetButton } from "@/components/super-admin/tenant-admin-password-reset-button";
+import { TenantAccessControlButtons } from "@/components/super-admin/tenant-access-control-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PlatformTenant, SupportTicket } from "@/lib/platform-demo";
@@ -86,7 +88,7 @@ export function TenantDirectory({
         <CardDescription>Manage subscribed businesses and their current status.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto p-0">
-        <table className="w-full min-w-[1100px] text-left text-sm">
+        <table className="w-full min-w-[1280px] text-left text-sm">
           <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-normal text-slate-500">
             <tr>
               <th className="px-5 py-3 font-semibold">Business</th>
@@ -127,11 +129,24 @@ export function TenantDirectory({
                 </td>
                 <td className="px-5 py-4 text-slate-700">{tenant.paymentMethod}</td>
                 <td className="px-5 py-4">
-                  <DeleteTenantAccountButton
-                    tenantId={tenant.id}
-                    business={tenant.business}
-                    disabled={!allowDelete}
-                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <TenantAccessControlButtons
+                      tenantId={tenant.id}
+                      business={tenant.business}
+                      status={tenant.status}
+                      disabled={!allowDelete}
+                    />
+                    <TenantAdminPasswordResetButton
+                      tenantId={tenant.id}
+                      business={tenant.business}
+                      disabled={!allowDelete}
+                    />
+                    <DeleteTenantAccountButton
+                      tenantId={tenant.id}
+                      business={tenant.business}
+                      disabled={!allowDelete}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
